@@ -1,0 +1,629 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ── Dark Mode (default) ─────────────────────────────── */
+    --zm-bg-base:             rgba(5,5,14,1);
+    --zm-sidebar-bg:          rgba(5,5,14,0.97);
+    --zm-topbar-bg:           rgba(5,5,14,0.85);
+    --zm-glass-bg:            rgba(255,255,255,0.024);
+    --zm-glass-hover:         rgba(255,255,255,0.042);
+    --zm-glass-border:        rgba(96,165,250,0.07);
+    --zm-glass-border-hover:  rgba(96,165,250,0.22);
+    --zm-text-primary:        rgba(226,232,240,0.92);
+    --zm-text-secondary:      rgba(148,163,184,0.58);
+    --zm-text-faint:          rgba(148,163,184,0.28);
+
+    /* ── push25: Semantic Color Vars ──────────────────────── */
+    /* Accent / Brand */
+    --zm-accent:              rgba(96,165,250,1);
+    --zm-accent-bg:           rgba(96,165,250,0.10);
+    --zm-accent-border:       rgba(96,165,250,0.25);
+    --zm-accent-dim:          rgba(96,165,250,0.12);
+
+    /* Positive (green) */
+    --zm-positive:            rgba(52,211,153,1);
+    --zm-positive-bg:         rgba(52,211,153,0.10);
+    --zm-positive-border:     rgba(52,211,153,0.25);
+
+    /* Negative (red/rose) */
+    --zm-negative:            rgba(251,113,133,1);
+    --zm-negative-bg:         rgba(251,113,133,0.10);
+    --zm-negative-border:     rgba(251,113,133,0.25);
+
+    /* Warning (amber) */
+    --zm-warning:             rgba(251,191,36,1);
+    --zm-warning-bg:          rgba(251,191,36,0.10);
+    --zm-warning-border:      rgba(251,191,36,0.25);
+
+    /* Purple / AI */
+    --zm-violet:              rgba(167,139,250,1);
+    --zm-violet-bg:           rgba(167,139,250,0.10);
+    --zm-violet-border:       rgba(167,139,250,0.25);
+
+    /* Cyan / Social */
+    --zm-cyan:                rgba(34,211,238,1);
+    --zm-cyan-bg:             rgba(34,211,238,0.10);
+    --zm-cyan-border:         rgba(34,211,238,0.25);
+
+    /* Orange */
+    --zm-orange:              rgba(251,146,60,1);
+    --zm-orange-bg:           rgba(251,146,60,0.10);
+    --zm-orange-border:       rgba(251,146,60,0.25);
+
+    /* Surface variants */
+    --zm-surface-1:           rgba(255,255,255,0.015);
+    --zm-surface-2:           rgba(255,255,255,0.025);
+    --zm-surface-3:           rgba(255,255,255,0.04);
+    --zm-surface-hover:       rgba(255,255,255,0.03);
+    --zm-divider:             rgba(96,165,250,0.05);
+    --zm-divider-strong:      rgba(96,165,250,0.10);
+
+    --background:             240 47% 4%;
+    --foreground:             214 32% 91%;
+    --card:                   230 20% 8%;
+    --card-foreground:        214 32% 91%;
+    --popover:                230 20% 8%;
+    --popover-foreground:     214 32% 91%;
+    --primary:                213 94% 68%;
+    --primary-foreground:     240 47% 4%;
+    --secondary:              230 15% 12%;
+    --secondary-foreground:   214 32% 91%;
+    --muted:                  230 15% 12%;
+    --muted-foreground:       215 20% 52%;
+    --accent:                 213 94% 68%;
+    --accent-foreground:      240 47% 4%;
+    --destructive:            0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border:                 213 30% 18%;
+    --input:                  213 30% 18%;
+    --ring:                   213 94% 68%;
+    --radius:                 0.75rem;
+
+    --sidebar-background:           240 47% 4%;
+    --sidebar-foreground:           214 32% 91%;
+    --sidebar-primary:              213 94% 68%;
+    --sidebar-primary-foreground:   240 47% 4%;
+    --sidebar-accent:               230 15% 12%;
+    --sidebar-accent-foreground:    214 32% 91%;
+    --sidebar-border:               213 30% 18%;
+    --sidebar-ring:                 213 94% 68%;
+
+    /* ── Fluid Typography Scale (CSS clamp) ─────────────── */
+    --text-xs:   clamp(0.65rem, 0.6rem + 0.25vw, 0.75rem);
+    --text-sm:   clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+    --text-base: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
+    --text-lg:   clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
+    --text-xl:   clamp(1.125rem, 1rem + 0.625vw, 1.25rem);
+    --text-2xl:  clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+    --text-3xl:  clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
+    --text-4xl:  clamp(2rem, 1.5rem + 2.5vw, 3rem);
+    --text-5xl:  clamp(2.5rem, 1.8rem + 3.5vw, 4.5rem);
+
+    /* ── Motion tokens ───────────────────────────────────── */
+    --motion-fast:    150ms;
+    --motion-normal:  250ms;
+    --motion-slow:    400ms;
+    --ease-out:       cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-smooth:    cubic-bezier(0.4, 0, 0.2, 1);
+
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* ── LIGHT MODE ─────────────────────────────────────────── */
+  .light {
+    --zm-bg-base:             rgba(15,23,42,0.04);
+    --zm-sidebar-bg:          rgba(241,245,252,1);
+    --zm-topbar-bg:           rgba(248,250,255,0.96);
+    --zm-glass-bg:            rgba(255,255,255,0.92);
+    --zm-glass-hover:         rgba(255,255,255,1);
+    --zm-glass-border:        rgba(30,64,175,0.10);
+    --zm-glass-border-hover:  rgba(30,64,175,0.28);
+    --zm-text-primary:        rgba(15,23,42,0.92);
+    --zm-text-secondary:      rgba(30,58,138,0.55);
+    --zm-text-faint:          rgba(30,58,138,0.35);
+
+    /* push25: Light mode semantic overrides */
+    --zm-accent:              rgba(37,99,235,1);
+    --zm-accent-bg:           rgba(37,99,235,0.08);
+    --zm-accent-border:       rgba(37,99,235,0.20);
+    --zm-accent-dim:          rgba(37,99,235,0.10);
+
+    --zm-positive:            rgba(5,150,105,1);
+    --zm-positive-bg:         rgba(5,150,105,0.08);
+    --zm-positive-border:     rgba(5,150,105,0.20);
+
+    --zm-negative:            rgba(220,38,38,1);
+    --zm-negative-bg:         rgba(220,38,38,0.08);
+    --zm-negative-border:     rgba(220,38,38,0.20);
+
+    --zm-warning:             rgba(180,130,0,1);
+    --zm-warning-bg:          rgba(180,130,0,0.08);
+    --zm-warning-border:      rgba(180,130,0,0.20);
+
+    --zm-violet:              rgba(109,40,217,1);
+    --zm-violet-bg:           rgba(109,40,217,0.08);
+    --zm-violet-border:       rgba(109,40,217,0.20);
+
+    --zm-cyan:                rgba(6,182,212,1);
+    --zm-cyan-bg:             rgba(6,182,212,0.08);
+    --zm-cyan-border:         rgba(6,182,212,0.20);
+
+    --zm-orange:              rgba(234,88,12,1);
+    --zm-orange-bg:           rgba(234,88,12,0.08);
+    --zm-orange-border:       rgba(234,88,12,0.20);
+
+    --zm-surface-1:           rgba(15,23,42,0.02);
+    --zm-surface-2:           rgba(15,23,42,0.04);
+    --zm-surface-3:           rgba(15,23,42,0.06);
+    --zm-surface-hover:       rgba(15,23,42,0.03);
+    --zm-divider:             rgba(30,64,175,0.06);
+    --zm-divider-strong:      rgba(30,64,175,0.12);
+
+    --background:             220 40% 97%;
+    --foreground:             222 84% 10%;
+    --card:                   0 0% 100%;
+    --card-foreground:        222 84% 10%;
+    --popover:                0 0% 100%;
+    --popover-foreground:     222 84% 10%;
+    --primary:                213 94% 42%;
+    --primary-foreground:     0 0% 100%;
+    --secondary:              220 30% 93%;
+    --secondary-foreground:   222 84% 10%;
+    --muted:                  220 25% 94%;
+    --muted-foreground:       220 16% 42%;
+    --accent:                 213 94% 42%;
+    --accent-foreground:      0 0% 100%;
+    --border:                 220 30% 88%;
+    --input:                  220 30% 88%;
+    --ring:                   213 94% 42%;
+
+    --sidebar-background:     220 40% 97%;
+    --sidebar-foreground:     222 84% 10%;
+    --sidebar-border:         220 30% 88%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html { transition: background-color 0.3s ease; }
+  body {
+    background: var(--zm-bg-base);
+    color: var(--zm-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Fluid base font */
+    font-size: var(--text-base);
+  }
+  .light body {
+    background: rgba(235,240,252,1);
+    background-image:
+      radial-gradient(ellipse at 0% 0%, rgba(96,165,250,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 100%, rgba(167,139,250,0.06) 0%, transparent 50%);
+    min-height: 100vh;
+  }
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(96,165,250,0.20); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(96,165,250,0.35); }
+.light ::-webkit-scrollbar-thumb { background: rgba(30,64,175,0.18); }
+.light ::-webkit-scrollbar-thumb:hover { background: rgba(30,64,175,0.32); }
+
+/* ── Fonts ──────────────────────────────────────────────────── */
+.font-mono-data { font-family: 'JetBrains Mono', monospace; }
+.font-mono-ui   { font-family: 'IBM Plex Mono', monospace; }
+.font-body      { font-family: 'Inter', sans-serif; }
+
+/* ── Fluid text utilities ───────────────────────────────────── */
+.text-fluid-xs   { font-size: var(--text-xs); }
+.text-fluid-sm   { font-size: var(--text-sm); }
+.text-fluid-base { font-size: var(--text-base); }
+.text-fluid-lg   { font-size: var(--text-lg); }
+.text-fluid-xl   { font-size: var(--text-xl); }
+.text-fluid-2xl  { font-size: var(--text-2xl); }
+.text-fluid-3xl  { font-size: var(--text-3xl); }
+.text-fluid-4xl  { font-size: var(--text-4xl); }
+.text-fluid-5xl  { font-size: var(--text-5xl); }
+
+/* ── Glass Cards ────────────────────────────────────────────── */
+.zm-glass {
+  background: var(--zm-glass-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--zm-glass-border);
+  border-radius: 12px;
+}
+.zm-glass:hover {
+  border-color: var(--zm-glass-border-hover);
+  transition: border-color var(--motion-fast) var(--ease-out);
+}
+
+/* ── Corner Accents ─────────────────────────────────────────── */
+.zm-corners { position: relative; }
+.zm-corners::before, .zm-corners::after {
+  content: '';
+  position: absolute;
+  width: 8px; height: 8px;
+  pointer-events: none; z-index: 1;
+}
+.zm-corners::before {
+  top: -1px; left: -1px;
+  border-top: 1.5px solid rgba(96,165,250,0.30);
+  border-left: 1.5px solid rgba(96,165,250,0.30);
+}
+.zm-corners::after {
+  top: -1px; right: -1px;
+  border-top: 1.5px solid rgba(96,165,250,0.30);
+  border-right: 1.5px solid rgba(96,165,250,0.30);
+}
+.light .zm-corners::before,
+.light .zm-corners::after { border-color: rgba(30,64,175,0.25); }
+
+/* ── Topbar Light ───────────────────────────────────────────── */
+.light header {
+  background: rgba(248,250,255,0.97) !important;
+  border-bottom-color: rgba(30,64,175,0.10) !important;
+  box-shadow: 0 1px 8px rgba(15,23,42,0.07);
+}
+
+/* ── Sidebar Light ──────────────────────────────────────────── */
+.light aside {
+  background: rgba(241,245,252,1) !important;
+  border-right-color: rgba(30,64,175,0.10) !important;
+  box-shadow: 2px 0 12px rgba(15,23,42,0.05);
+}
+
+/* ── Aurora Background ──────────────────────────────────────── */
+.zm-aurora { position: relative; }
+.zm-aurora::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(ellipse at 15% 0%, rgba(96,165,250,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse at 85% 100%, rgba(167,139,250,0.05) 0%, transparent 60%);
+  pointer-events: none;
+  animation: aurora-shift 12s ease-in-out infinite;
+  z-index: 0;
+}
+.light .zm-aurora::before {
+  background:
+    radial-gradient(ellipse at 10% 0%, rgba(96,165,250,0.10) 0%, transparent 55%),
+    radial-gradient(ellipse at 90% 100%, rgba(167,139,250,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(52,211,153,0.04) 0%, transparent 60%);
+}
+
+/* ── Scanline ───────────────────────────────────────────────── */
+.zm-scanline::after {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: rgba(96,165,250,0.5);
+  opacity: 0.07;
+  animation: scan-sweep 14s linear infinite;
+  animation-delay: 10s;
+  pointer-events: none; z-index: 50;
+}
+.light .zm-scanline::after {
+  background: rgba(30,64,175,0.4);
+  opacity: 0.05;
+}
+
+/* ── Keyframes ──────────────────────────────────────────────── */
+@keyframes aurora-shift {
+  0%, 100% { opacity: 0.7; transform: scale(1) translateX(0); }
+  50% { opacity: 1; transform: scale(1.08) translateX(20px); }
+}
+@keyframes scan-sweep {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(500%); }
+}
+@keyframes flash-pos {
+  0%, 100% { background-color: transparent; }
+  30% { background-color: rgba(52,211,153,0.22); color: rgba(16,130,80,1); }
+}
+@keyframes flash-neg {
+  0%, 100% { background-color: transparent; }
+  30% { background-color: rgba(251,113,133,0.22); color: rgba(200,30,60,1); }
+}
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(96,165,250,0.3); }
+  50% { box-shadow: 0 0 40px rgba(96,165,250,0.6), 0 0 80px rgba(96,165,250,0.2); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes gradient-text {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes slide-in-right {
+  from { transform: translateX(12px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes slide-in-up {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scale-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+@keyframes number-flip {
+  0%   { transform: translateY(0);    opacity: 1; }
+  40%  { transform: translateY(-8px); opacity: 0; }
+  60%  { transform: translateY(8px);  opacity: 0; }
+  100% { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Animation Classes ──────────────────────────────────────── */
+.animate-flash-pos    { animation: flash-pos 300ms ease-out; }
+.animate-flash-neg    { animation: flash-neg 300ms ease-out; }
+.animate-pulse-glow   { animation: pulse-glow 4.5s ease-in-out infinite; }
+.animate-float        { animation: float 6s ease-in-out infinite; }
+.animate-slide-right  { animation: slide-in-right var(--motion-normal) var(--ease-out); }
+.animate-slide-up     { animation: slide-in-up var(--motion-normal) var(--ease-out); }
+.animate-fade-in      { animation: fade-in var(--motion-normal) var(--ease-smooth); }
+.animate-scale-in     { animation: scale-in var(--motion-fast) var(--ease-spring); }
+.animate-number-flip  { animation: number-flip 350ms var(--ease-spring); }
+
+/* ── ✅ FIX: Gradient Text — rgba() ONLY, zero hsl() ───────── */
+.zm-gradient-text {
+  background: linear-gradient(135deg,
+    rgba(96,165,250,1),
+    rgba(34,211,238,1),
+    rgba(167,139,250,1)
+  );
+  background-size: 200% 200%;
+  animation: gradient-text 4s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.light .zm-gradient-text {
+  background: linear-gradient(135deg,
+    rgba(30,64,175,1),
+    rgba(6,182,212,1),
+    rgba(109,40,217,1)
+  );
+  background-size: 200% 200%;
+  animation: gradient-text 4s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Market Regime Badges ───────────────────────────────────── */
+.regime-surge { color: rgba(34,211,238,1); }
+.regime-bull  { color: rgba(52,211,153,1); }
+.regime-crab  { color: rgba(251,191,36,1); }
+.regime-bear  { color: rgba(251,113,133,1); }
+.regime-bg-surge { background-color: rgba(34,211,238,0.12); border-color: rgba(34,211,238,0.30); }
+.regime-bg-bull  { background-color: rgba(52,211,153,0.12); border-color: rgba(52,211,153,0.30); }
+.regime-bg-crab  { background-color: rgba(251,191,36,0.12);  border-color: rgba(251,191,36,0.30); }
+.regime-bg-bear  { background-color: rgba(251,113,133,0.12); border-color: rgba(251,113,133,0.30); }
+.light .regime-surge { color: rgba(6,182,212,1); }
+.light .regime-bull  { color: rgba(5,150,105,1); }
+.light .regime-crab  { color: rgba(180,130,0,1); }
+.light .regime-bear  { color: rgba(200,30,60,1); }
+.light .regime-bg-surge { background-color: rgba(6,182,212,0.10);  border-color: rgba(6,182,212,0.28); }
+.light .regime-bg-bull  { background-color: rgba(5,150,105,0.10);  border-color: rgba(5,150,105,0.28); }
+.light .regime-bg-crab  { background-color: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.28); }
+.light .regime-bg-bear  { background-color: rgba(239,68,68,0.10);  border-color: rgba(239,68,68,0.28); }
+
+/* ── Text Colors ────────────────────────────────────────────── */
+.text-positive       { color: rgba(52,211,153,1); }
+.text-negative       { color: rgba(251,113,133,1); }
+.text-neutral-change { color: rgba(251,191,36,1); }
+.light .text-positive { color: rgba(5,150,105,1); }
+.light .text-negative { color: rgba(220,38,38,1); }
+.light .text-neutral-change { color: rgba(180,130,0,1); }
+
+/* ── Heatmap Tiles Light Mode ───────────────────────────────── */
+.light .zm-heatmap-pos-strong { background: rgba(5,150,105,0.22) !important; border-color: rgba(5,150,105,0.30) !important; }
+.light .zm-heatmap-pos-mid    { background: rgba(5,150,105,0.13) !important; border-color: rgba(5,150,105,0.20) !important; }
+.light .zm-heatmap-pos-weak   { background: rgba(5,150,105,0.07) !important; border-color: rgba(5,150,105,0.14) !important; }
+.light .zm-heatmap-neg-weak   { background: rgba(220,38,38,0.07) !important; border-color: rgba(220,38,38,0.14) !important; }
+.light .zm-heatmap-neg-mid    { background: rgba(220,38,38,0.13) !important; border-color: rgba(220,38,38,0.20) !important; }
+.light .zm-heatmap-neg-strong { background: rgba(220,38,38,0.22) !important; border-color: rgba(220,38,38,0.30) !important; }
+
+/* ── Table Rows Light ───────────────────────────────────────── */
+.light tr:hover td { background: rgba(30,64,175,0.04) !important; }
+
+/* ── Input Light ────────────────────────────────────────────── */
+.light input {
+  background: rgba(255,255,255,0.9) !important;
+  border-color: rgba(30,64,175,0.15) !important;
+  color: rgba(15,23,42,0.92) !important;
+}
+.light input:focus {
+  border-color: rgba(30,64,175,0.40) !important;
+  box-shadow: 0 0 0 3px rgba(30,64,175,0.08) !important;
+}
+.light input::placeholder { color: rgba(30,58,138,0.35) !important; }
+
+/* ── Shimmer ────────────────────────────────────────────────── */
+.zm-shimmer { background-size: 200% 100%; }
+.zm-shimmer:hover { animation: shimmer 1.5s ease infinite; }
+
+/* ── CSS Container Queries 2026 ─────────────────────────────── */
+/* Enable container queries on key layout wrappers */
+.zm-container { container-type: inline-size; }
+
+/* MetricCard responsive via container query */
+@container (max-width: 280px) {
+  .zm-metric-compact .zm-metric-value { font-size: var(--text-lg); }
+  .zm-metric-compact .zm-metric-label { font-size: var(--text-xs); }
+}
+
+/* Heatmap grid responsive */
+@container (max-width: 600px) {
+  .zm-heatmap-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@container (min-width: 601px) and (max-width: 900px) {
+  .zm-heatmap-grid { grid-template-columns: repeat(6, 1fr); }
+}
+@container (min-width: 901px) {
+  .zm-heatmap-grid { grid-template-columns: repeat(8, 1fr); }
+}
+
+/* ── CSS Subgrid support ────────────────────────────────────── */
+.zm-subgrid {
+  display: grid;
+  grid-template-columns: subgrid;
+}
+
+/* ── Focus visible (WCAG 2.2 accessibility) ─────────────────── */
+:focus-visible {
+  outline: 2px solid rgba(96,165,250,0.8);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.light :focus-visible {
+  outline-color: rgba(37,99,235,0.8);
+}
+
+/* ── Reduced motion support ─────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .animate-pulse-glow,
+  .animate-float,
+  .zm-aurora::before,
+  .zm-scanline::after {
+    animation: none !important;
+  }
+}
+
+/* ── Print ───────────────────────────────────────────────────── */
+@media print {
+  .zm-aurora::before,
+  .zm-scanline::after { display: none; }
+  aside, header { display: none; }
+  main { margin: 0 !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CSS HOUDINI — ZERØ MERIDIAN Phase 9
+   Paint Worklet: /houdini/zmPaint.js
+   Paints: zm-aurora-grid | zm-price-bg | zm-noise-tile
+   ═══════════════════════════════════════════════════════════════ */
+:root { --zm-trend: 0; --zm-intensity: 0.5; --zm-hue: 220; }
+
+.zm-houdini-aurora { background: paint(zm-aurora-grid); will-change: background; }
+@supports not (background: paint(zm-aurora-grid)) {
+  .zm-houdini-aurora {
+    background: radial-gradient(ellipse at 15% 30%, rgba(52,211,153,0.05) 0%, transparent 60%),
+                radial-gradient(ellipse at 85% 70%, rgba(96,165,250,0.04) 0%, transparent 60%),
+                rgba(5,5,14,0.98);
+  }
+}
+.zm-houdini-price { background: paint(zm-price-bg); will-change: background; }
+@supports not (background: paint(zm-price-bg)) { .zm-houdini-price { background: rgba(8,10,18,0.97); } }
+.zm-houdini-noise { background: paint(zm-noise-tile); will-change: background; }
+@supports not (background: paint(zm-noise-tile)) { .zm-houdini-noise { background: rgba(8,10,18,1); } }
+
+.zm-wasm-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.06em;
+  border-radius: 4px; padding: 2px 6px;
+  background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2);
+  color: rgba(52,211,153,0.85); will-change: transform;
+}
+.zm-houdini-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.06em;
+  border-radius: 4px; padding: 2px 6px;
+  background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.2); color: rgba(168,85,247,0.8);
+}
+.zm-proto-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.06em;
+  border-radius: 4px; padding: 2px 6px;
+  background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.15); color: rgba(251,191,36,0.7);
+}
+.zm-phase9-section {
+  margin-top: 32px; margin-bottom: 16px;
+  font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.16em;
+  color: rgba(168,85,247,0.4); text-transform: uppercase; display: flex; align-items: center; gap: 8px;
+}
+.zm-phase9-section::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, rgba(168,85,247,0.15), transparent); }
+
+/* ── push26: iOS Safari Fallbacks ────────────────────────────────────────── */
+
+/* backdrop-filter fallback for iOS Safari < 15 */
+@supports not (backdrop-filter: blur(1px)) {
+  .zm-glass {
+    background: var(--zm-surface-2) !important;
+  }
+}
+
+/* Safe area insets for iPhone notch/Dynamic Island */
+.zm-bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Prevent iOS double-tap zoom on interactive elements */
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* iOS momentum scrolling */
+.zm-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+
+/* Prevent text selection on tap hold (iOS UX) */
+.zm-no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ── push26: Mobile content padding (for BottomNavBar) ───────────────────── */
+
+@media (max-width: 767px) {
+  /* Ensure content doesn't hide under BottomNavBar */
+  .zm-page-content {
+    padding-bottom: 72px;
+  }
+  
+  /* Spin animation for Loader2 replace of animate-spin */
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+}
+
+/* ── push26: SharedArrayBuffer iOS fallback note ─────────────────────────── */
+/* SharedArrayBuffer requires COOP+COEP headers (set in vercel.json ✅)       */
+/* iOS Safari 16.4+ supports SharedArrayBuffer with these headers             */
+/* Fallback: graceful degradation in useSharedBuffer.ts hook                  */
