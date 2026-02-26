@@ -161,7 +161,10 @@ const GlobalStatsBar = memo(() => {
       <div
         className="w-full px-4 flex items-center"
         style={{
-          height: 32,
+          position: 'sticky' as const,
+        top: 0,
+        zIndex: 100,
+        height: 32,
           background: 'rgba(2,6,23,0.9)',
           borderBottom: '1px solid rgba(96,165,250,0.08)',
         }}
@@ -178,11 +181,6 @@ const GlobalStatsBar = memo(() => {
     <div
       className="w-full px-4 flex items-center gap-4 overflow-hidden"
       style={{
-        position:   'fixed' as const,
-        top:        0,
-        left:       0,
-        right:      0,
-        zIndex:     100,
         height:     32,
         background: 'rgba(2,6,23,0.95)',
         borderBottom: '1px solid rgba(96,165,250,0.1)',
