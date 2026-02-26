@@ -58,7 +58,7 @@ export default defineConfig(({ mode }) => ({
           'vendor-query':  ['@tanstack/react-query'],
           'vendor-motion': ['framer-motion'],
           'vendor-three':  ['three'],
-          'vendor-gsap':   ['gsap'],
+          // push75: gsap removed (dead dependency — zero imports in src/)
           'vendor-radix': [
             '@radix-ui/react-dialog',
             '@radix-ui/react-dropdown-menu',
