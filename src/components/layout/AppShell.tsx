@@ -1,5 +1,6 @@
 /**
- * AppShell.tsx — ZERØ MERIDIAN 2026 push27
+ * AppShell.tsx — ZERØ MERIDIAN 2026 push74
+ * push74: PWAInstallPrompt semua breakpoint (mobile + tablet + desktop)
  * push27: PWAInstallPrompt integrated
  * push26: Mobile drawer mode + BottomNavBar integration
  * push23: var(--zm-bg-base) + max-width 1800px
@@ -8,10 +9,8 @@
  * - var(--zm-*) theme-aware ✓
  * - useCallback + useMemo ✓
  * - mountedRef ✓
- * - Mobile: sidebar hidden + overlay drawer + BottomNavBar ✓
  * - Zero className ✓
  * - Zero template literals ✓
- * - PWAInstallPrompt ✓ push27
  */
 
 import React, { useRef, useCallback, useMemo } from 'react';
@@ -32,10 +31,7 @@ interface AppShellProps {
 
 const shellVariants = Object.freeze({
   initial: { opacity: 0 },
-  animate: {
-    opacity:    1,
-    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
-  },
+  animate: { opacity: 1, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
 });
 
 const drawerVariants = Object.freeze({
@@ -51,14 +47,14 @@ const overlayVariants = Object.freeze({
 });
 
 const AppShell: React.FC<AppShellProps> = ({ children, currentPath: propPath }) => {
-  const mountedRef             = useRef(true);
-  const [sidebarExpanded, setSidebarExpanded] = React.useState(true);
-  const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
-  const prefersReducedMotion   = useReducedMotion();
-  const location               = useLocation();
+  const mountedRef = useRef(true);
+  const [sidebarExpanded,   setSidebarExpanded]   = React.useState(true);
+  const [mobileDrawerOpen,  setMobileDrawerOpen]  = React.useState(false);
+  const prefersReducedMotion = useReducedMotion();
+  const location             = useLocation();
   const { isMobile, isTablet } = useBreakpoint();
 
-  const currentPath = propPath ?? location.pathname;
+  const currentPath      = propPath ?? location.pathname;
   const showBottomNav    = isMobile;
   const showMobileDrawer = isMobile || isTablet;
 
@@ -67,21 +63,15 @@ const AppShell: React.FC<AppShellProps> = ({ children, currentPath: propPath }) 
     return () => { mountedRef.current = false; };
   }, []);
 
-  // Close drawer when route changes on mobile
   React.useEffect(() => {
-    if (showMobileDrawer && mobileDrawerOpen) {
-      setMobileDrawerOpen(false);
-    }
+    if (showMobileDrawer && mobileDrawerOpen) setMobileDrawerOpen(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPath]);
 
   const toggleSidebar = useCallback(() => {
     if (!mountedRef.current) return;
-    if (showMobileDrawer) {
-      setMobileDrawerOpen(prev => !prev);
-    } else {
-      setSidebarExpanded(prev => !prev);
-    }
+    if (showMobileDrawer) setMobileDrawerOpen(prev => !prev);
+    else setSidebarExpanded(prev => !prev);
   }, [showMobileDrawer]);
 
   const closeDrawer = useCallback(() => {
@@ -115,11 +105,11 @@ const AppShell: React.FC<AppShellProps> = ({ children, currentPath: propPath }) 
   }), [showBottomNav]);
 
   const overlayStyle = useMemo(() => ({
-    position:   'fixed'  as const,
-    inset:      0,
-    zIndex:     149,
-    background: 'rgba(5,5,14,0.7)',
-    backdropFilter: 'blur(2px)',
+    position:             'fixed'  as const,
+    inset:                0,
+    zIndex:               149,
+    background:           'rgba(5,5,14,0.7)',
+    backdropFilter:       'blur(2px)',
     WebkitBackdropFilter: 'blur(2px)',
   }), []);
 
@@ -140,12 +130,12 @@ const AppShell: React.FC<AppShellProps> = ({ children, currentPath: propPath }) 
       animate="animate"
       style={{ display: 'flex', minHeight: '100vh', background: 'var(--zm-bg-base)' }}
     >
-      {/* ── Desktop sidebar (lg+) ── */}
+      {/* Desktop sidebar */}
       {!showMobileDrawer && (
         <ZMSidebar expanded={sidebarExpanded} onToggle={toggleSidebar} currentPath={currentPath} />
       )}
 
-      {/* ── Mobile/Tablet overlay drawer ── */}
+      {/* Mobile/Tablet overlay drawer */}
       <AnimatePresence>
         {showMobileDrawer && mobileDrawerOpen && (
           <>
@@ -168,17 +158,13 @@ const AppShell: React.FC<AppShellProps> = ({ children, currentPath: propPath }) 
               exit="exit"
               style={drawerStyle}
             >
-              <ZMSidebar
-                expanded={true}
-                onToggle={closeDrawer}
-                currentPath={currentPath}
-              />
+              <ZMSidebar expanded={true} onToggle={closeDrawer} currentPath={currentPath} />
             </motion.div>
           </>
         )}
       </AnimatePresence>
 
-      {/* ── Main content ── */}
+      {/* Main content */}
       <motion.main
         animate={mainAnimate}
         variants={mainVariants}
@@ -197,15 +183,14 @@ const AppShell: React.FC<AppShellProps> = ({ children, currentPath: propPath }) 
         </div>
       </motion.main>
 
-      {/* ── Bottom nav (mobile only) ── */}
+      {/* Bottom nav — mobile only */}
       {showBottomNav && <BottomNavBar />}
 
-      {/* ── PWA Install Prompt (mobile only) ── */}
-      {showBottomNav && <PWAInstallPrompt />}
+      {/* PWA Install Prompt — ALL breakpoints (mobile + tablet + desktop) */}
+      <PWAInstallPrompt />
     </motion.div>
   );
 };
 
 AppShell.displayName = 'AppShell';
-
 export default React.memo(AppShell);
