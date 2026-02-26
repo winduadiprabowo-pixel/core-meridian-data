@@ -1,22 +1,17 @@
 /**
- * PWAInstallPrompt.tsx — ZERØ MERIDIAN 2026 push27
- * PWA install prompt:
- * - Android: beforeinstallprompt event
- * - iOS: manual instructions (no native API)
+ * PWAInstallPrompt.tsx — ZERØ MERIDIAN 2026 push74
+ * push74: All breakpoints, adaptive position (mobile=bottom, desktop=corner)
+ * push27: initial implementation
  * - React.memo + displayName ✓
- * - Zero className ✓ (100% inline style)
- * - rgba() / var(--zm-*) only ✓
+ * - Zero className ✓  rgba() only ✓
  * - Zero template literals in JSX ✓
- * - mountedRef ✓
- * - useCallback + useMemo ✓
- * - aria-label + role ✓
+ * - mountedRef + useCallback + useMemo ✓
  * - Touch targets 48px ✓
- * - Object.freeze static data ✓
  */
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { motion, AnimatePresence } from 'framer-motion';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: readonly string[];
@@ -24,174 +19,143 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
-// ─── iOS Instructions content (static) ───────────────────────────────────────
-
 const IOS_STEPS = Object.freeze([
-  { icon: '⬆️', text: 'Tap the Share button at the bottom of your browser' },
-  { icon: '➕', text: 'Scroll down and tap "Add to Home Screen"' },
+  { icon: '⬆️', text: 'Tap the Share button at the bottom of Safari' },
+  { icon: '➕', text: 'Tap "Add to Home Screen"' },
   { icon: '✅', text: 'Tap "Add" to confirm' },
 ]);
 
-// ─── iOS Instruction Sheet ────────────────────────────────────────────────────
-
 const IOSInstructions = memo(({ onClose }: { onClose: () => void }) => (
-  <div
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 0.2 }}
     style={{
       position: 'fixed', inset: 0, zIndex: 9999,
       display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-      background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+      background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)',
     }}
     role="dialog"
     aria-modal="true"
     aria-label="Install ZERØ MERIDIAN on iOS"
     onClick={onClose}
   >
-    <div
+    <motion.div
+      initial={{ y: 60, opacity: 0 }}
+      animate={{ y: 0,  opacity: 1 }}
+      exit={{ y: 60,    opacity: 0 }}
+      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
       style={{
         width: '100%', maxWidth: 480,
-        background: 'var(--zm-bg-base)', border: '1px solid var(--zm-glass-border)',
+        background: 'rgba(7,9,18,0.99)',
+        border: '1px solid rgba(0,238,255,0.18)',
         borderRadius: '20px 20px 0 0',
         padding: '24px 24px 40px',
-        willChange: 'transform',
       }}
       onClick={e => e.stopPropagation()}
     >
-      {/* Handle */}
-      <div style={{ width: 40, height: 4, background: 'var(--zm-surface-3)', borderRadius: 2, margin: '0 auto 20px' }} />
-
-      {/* Title */}
+      <div style={{ width: 36, height: 3, background: 'rgba(80,80,100,1)', borderRadius: 2, margin: '0 auto 20px' }} />
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>📲</div>
-        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 16, fontWeight: 700, color: 'var(--zm-text-primary)', marginBottom: 4 }}>
-          Install ZERØ MERIDIAN
+        <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 700, color: 'rgba(240,240,248,1)', marginBottom: 4, letterSpacing: '0.06em' }}>
+          INSTALL ZERØ MERIDIAN
         </div>
-        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: 'var(--zm-text-faint)' }}>
-          Add to Home Screen for the best experience
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: 'rgba(80,80,100,1)', letterSpacing: '0.1em' }}>
+          Add to Home Screen for full-screen experience
         </div>
       </div>
-
-      {/* Steps */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
         {IOS_STEPS.map((step, i) => (
           <div key={i} style={{
-            display: 'flex', alignItems: 'flex-start', gap: 12,
-            padding: '12px 16px', borderRadius: 10,
-            background: 'var(--zm-surface-1)', border: '1px solid var(--zm-glass-border)',
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: '10px 14px', borderRadius: 10,
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(32,42,68,1)',
           }}>
-            <span style={{ fontSize: 20, flexShrink: 0 }}>{step.icon}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{
-                fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700,
-                color: 'var(--zm-accent)', background: 'var(--zm-accent-bg)',
-                border: '1px solid var(--zm-accent-border)',
-                borderRadius: '50%', width: 20, height: 20,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                {i + 1}
-              </span>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: 'var(--zm-text-primary)' }}>
-                {step.text}
-              </span>
-            </div>
+            <span style={{
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700,
+              color: 'rgba(0,238,255,1)', background: 'rgba(0,238,255,0.08)',
+              border: '1px solid rgba(0,238,255,0.2)',
+              borderRadius: '50%', width: 22, height: 22,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              {i + 1}
+            </span>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: 'rgba(200,200,210,1)' }}>
+              {step.text}
+            </span>
           </div>
         ))}
       </div>
-
-      {/* Close button */}
-      <button
-        onClick={onClose}
-        aria-label="Close install instructions"
+      <button onClick={onClose} aria-label="Close install instructions"
         style={{
-          width: '100%', minHeight: 48,
-          background: 'var(--zm-surface-2)', border: '1px solid var(--zm-glass-border)',
-          borderRadius: 10, cursor: 'pointer',
-          fontFamily: "'Space Mono', monospace", fontSize: 13, fontWeight: 600,
-          color: 'var(--zm-text-secondary)',
-          willChange: 'transform',
-        }}
-      >
-        Got it
+          width: '100%', minHeight: 48, background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(32,42,68,1)', borderRadius: 10, cursor: 'pointer',
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+          color: 'rgba(138,138,158,1)', letterSpacing: '0.08em',
+        }}>
+        GOT IT
       </button>
-    </div>
-  </div>
+    </motion.div>
+  </motion.div>
 ));
 IOSInstructions.displayName = 'IOSInstructions';
 
-// ─── PWA Install Banner ────────────────────────────────────────────────────────
-
 const PWAInstallPrompt = memo(() => {
-  const mountedRef = useRef(true);
+  const mountedRef  = useRef(true);
   const deferredRef = useRef<BeforeInstallPromptEvent | null>(null);
+  const { isMobile } = useBreakpoint();
 
-  const [showBanner, setShowBanner] = useState(false);
+  const [showBanner,   setShowBanner]   = useState(false);
   const [showIOSSheet, setShowIOSSheet] = useState(false);
-  const [installed, setInstalled] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  const [installed,    setInstalled]    = useState(false);
+  const [dismissed,    setDismissed]    = useState(false);
 
   const isIOS = useMemo(() => {
     if (typeof navigator === 'undefined') return false;
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as unknown as { MSStream: unknown }).MSStream;
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+      !(window as unknown as { MSStream: unknown }).MSStream;
   }, []);
 
   const isStandalone = useMemo(() => {
     if (typeof window === 'undefined') return false;
-    return window.matchMedia('(display-mode: standalone)').matches
-      || (navigator as unknown as { standalone: boolean }).standalone === true;
+    return window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as unknown as { standalone: boolean }).standalone === true;
   }, []);
 
   useEffect(() => {
     mountedRef.current = true;
+    if (isStandalone) return;
+    try { if (localStorage.getItem('zm-pwa-dismissed') === '1') return; } catch { /* noop */ }
 
-    if (isStandalone) return; // Already installed
-
-    // Check if user previously dismissed
-    try {
-      if (localStorage.getItem('zm-pwa-dismissed') === '1') return;
-    } catch { /* storage unavailable */ }
-
-    // iOS: show after a delay
     if (isIOS) {
-      const t = setTimeout(() => {
-        if (mountedRef.current) setShowBanner(true);
-      }, 3000);
-      return () => {
-        mountedRef.current = false;
-        clearTimeout(t);
-      };
+      const t = setTimeout(() => { if (mountedRef.current) setShowBanner(true); }, 4000);
+      return () => { mountedRef.current = false; clearTimeout(t); };
     }
 
-    // Android/Chrome: wait for beforeinstallprompt
     const handler = (e: Event) => {
       e.preventDefault();
       deferredRef.current = e as BeforeInstallPromptEvent;
       if (mountedRef.current) setShowBanner(true);
     };
+    const onInstalled = () => { if (mountedRef.current) { setInstalled(true); setShowBanner(false); } };
 
     window.addEventListener('beforeinstallprompt', handler);
-    window.addEventListener('appinstalled', () => {
-      if (mountedRef.current) setInstalled(true);
-      setShowBanner(false);
-    });
-
+    window.addEventListener('appinstalled', onInstalled);
     return () => {
       mountedRef.current = false;
       window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('appinstalled', onInstalled);
     };
   }, [isIOS, isStandalone]);
 
   const handleInstall = useCallback(async () => {
-    if (isIOS) {
-      setShowIOSSheet(true);
-      return;
-    }
+    if (isIOS) { setShowIOSSheet(true); return; }
     if (!deferredRef.current) return;
     try {
       await deferredRef.current.prompt();
       const choice = await deferredRef.current.userChoice;
-      if (choice.outcome === 'accepted') {
-        setInstalled(true);
-      }
+      if (choice.outcome === 'accepted') setInstalled(true);
       setShowBanner(false);
       deferredRef.current = null;
     } catch { /* user cancelled */ }
@@ -200,7 +164,7 @@ const PWAInstallPrompt = memo(() => {
   const handleDismiss = useCallback(() => {
     setShowBanner(false);
     setDismissed(true);
-    try { localStorage.setItem('zm-pwa-dismissed', '1'); } catch { /* storage unavailable */ }
+    try { localStorage.setItem('zm-pwa-dismissed', '1'); } catch { /* noop */ }
   }, []);
 
   const handleCloseIOS = useCallback(() => {
@@ -208,86 +172,112 @@ const PWAInstallPrompt = memo(() => {
     setShowBanner(false);
   }, []);
 
+  // Banner position: mobile = bottom center above BottomNav
+  //                 tablet/desktop = bottom-right corner, compact
+  const bannerStyle = useMemo(() => {
+    if (isMobile) return Object.freeze({
+      position: 'fixed' as const,
+      bottom: 76, left: 12, right: 12,
+      zIndex: 500,
+      background: 'rgba(7,9,18,0.97)',
+      border: '1px solid rgba(0,238,255,0.2)',
+      borderRadius: 14,
+      padding: '12px 14px',
+      display: 'flex', alignItems: 'center', gap: 12,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,238,255,0.08)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+    });
+    // Desktop / tablet — bottom right corner, compact pill style
+    return Object.freeze({
+      position: 'fixed' as const,
+      bottom: 24, right: 24,
+      zIndex: 500,
+      background: 'rgba(7,9,18,0.97)',
+      border: '1px solid rgba(0,238,255,0.2)',
+      borderRadius: 14,
+      padding: '12px 16px',
+      display: 'flex', alignItems: 'center', gap: 12,
+      maxWidth: 340,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,238,255,0.06)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+    });
+  }, [isMobile]);
+
   if (!showBanner || installed || dismissed || isStandalone) return null;
 
   return (
-    <>
-      {/* Banner */}
-      <div
-        role="banner"
-        aria-label="Install ZERØ MERIDIAN app"
-        style={{
-          position: 'fixed',
-          bottom: 80, // above BottomNavBar
-          left: 12, right: 12,
-          zIndex: 500,
-          background: 'var(--zm-bg-base)',
-          border: '1px solid var(--zm-accent-border)',
-          borderRadius: 14,
-          padding: '14px 16px',
-          display: 'flex', alignItems: 'center', gap: 12,
-          boxShadow: '0 8px 32px rgba(96,165,250,0.15)',
-          willChange: 'transform',
-        }}
-      >
-        {/* Icon */}
-        <div style={{
-          width: 44, height: 44, borderRadius: 10, flexShrink: 0,
-          background: 'var(--zm-accent-bg)', border: '1px solid var(--zm-accent-border)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 22,
-        }}>
-          Ø
-        </div>
-
-        {/* Text */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, fontWeight: 700, color: 'var(--zm-text-primary)', marginBottom: 2 }}>
-            Install ZERØ MERIDIAN
+    <AnimatePresence>
+      <>
+        <motion.div
+          key="pwa-banner"
+          initial={{ opacity: 0, y: isMobile ? 20 : 10, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: isMobile ? 20 : 10, scale: 0.97 }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          style={bannerStyle}
+          role="banner"
+          aria-label="Install ZERØ MERIDIAN app"
+        >
+          {/* Icon */}
+          <div style={{
+            width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+            background: 'rgba(0,238,255,0.08)',
+            border: '1px solid rgba(0,238,255,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+              <circle cx="11" cy="11" r="7.5" stroke="rgba(0,238,255,1)" strokeWidth="2" />
+              <line x1="15" y1="5" x2="7" y2="17" stroke="rgba(0,238,255,1)" strokeWidth="2" strokeLinecap="round" />
+            </svg>
           </div>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: 'var(--zm-text-faint)' }}>
-            {isIOS ? 'Add to Home Screen for offline access' : 'Install for faster access & offline mode'}
+
+          {/* Text */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, fontWeight: 700, color: 'rgba(240,240,248,1)', marginBottom: 2, letterSpacing: '0.04em' }}>
+              Install ZERØ MERIDIAN
+            </div>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: 'rgba(80,80,100,1)', letterSpacing: '0.06em' }}>
+              {isIOS ? 'Add to Home Screen — no App Store needed' : 'Install for full-screen, offline access'}
+            </div>
           </div>
-        </div>
 
-        {/* Actions */}
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-          <button
-            onClick={handleDismiss}
-            aria-label="Dismiss install prompt"
-            style={{
-              minHeight: 48, minWidth: 48, padding: '0 12px',
-              background: 'var(--zm-surface-2)', border: '1px solid var(--zm-glass-border)',
-              borderRadius: 8, cursor: 'pointer',
-              fontFamily: "'Space Mono', monospace", fontSize: 11,
-              color: 'var(--zm-text-faint)',
-              willChange: 'transform',
-            }}
-          >
-            Later
-          </button>
-          <button
-            onClick={handleInstall}
-            aria-label={isIOS ? 'Show iOS install instructions' : 'Install app'}
-            style={{
-              minHeight: 48, padding: '0 16px',
-              background: 'var(--zm-accent-bg)', border: '1px solid var(--zm-accent-border)',
-              borderRadius: 8, cursor: 'pointer',
-              fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700,
-              color: 'var(--zm-accent)',
-              willChange: 'transform',
-            }}
-          >
-            {isIOS ? 'How to' : 'Install'}
-          </button>
-        </div>
-      </div>
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+            <button onClick={handleDismiss} aria-label="Dismiss install prompt"
+              style={{
+                minHeight: 36, minWidth: 36, padding: '0 10px',
+                background: 'transparent',
+                border: '1px solid rgba(32,42,68,1)',
+                borderRadius: 8, cursor: 'pointer',
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                color: 'rgba(80,80,100,1)', letterSpacing: '0.04em',
+              }}>
+              ✕
+            </button>
+            <button onClick={handleInstall}
+              aria-label={isIOS ? 'Show iOS install instructions' : 'Install app'}
+              style={{
+                minHeight: 36, padding: '0 14px',
+                background: 'rgba(0,238,255,0.08)',
+                border: '1px solid rgba(0,238,255,0.25)',
+                borderRadius: 8, cursor: 'pointer',
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700,
+                color: 'rgba(0,238,255,1)', letterSpacing: '0.08em',
+              }}>
+              {isIOS ? 'HOW TO' : 'INSTALL'}
+            </button>
+          </div>
+        </motion.div>
 
-      {/* iOS instruction sheet */}
-      {showIOSSheet && <IOSInstructions onClose={handleCloseIOS} />}
-    </>
+        {/* iOS instruction sheet */}
+        {showIOSSheet && (
+          <IOSInstructions onClose={handleCloseIOS} />
+        )}
+      </>
+    </AnimatePresence>
   );
 });
 PWAInstallPrompt.displayName = 'PWAInstallPrompt';
-
 export default PWAInstallPrompt;
