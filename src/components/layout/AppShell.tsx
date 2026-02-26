@@ -185,8 +185,8 @@ const AppShell: React.FC<AppShellProps> = ({ children, currentPath: propPath }) 
         transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         style={{ ...mainStyle, flex: 1, minWidth: 0 }}
       >
-        <GlobalStatsBar />
         <Topbar onMenuToggle={toggleSidebar} sidebarExpanded={sidebarExpanded} />
+        <GlobalStatsBar />
 
         <div style={contentStyle}>
           <AnimatePresence mode="wait">
