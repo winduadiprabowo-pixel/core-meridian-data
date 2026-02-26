@@ -1,10 +1,12 @@
 /**
- * MetricCard.tsx — ZERØ MERIDIAN 2026
- * Upgraded: Framer Motion AnimatedValue, skeleton state, will-change.
+ * MetricCard.tsx — ZERØ MERIDIAN 2026 push75
+ * push75: ZERO className — all inline styles. Skeleton state rebuilt.
  * - React.memo + displayName ✓
  * - rgba() only ✓
- * - Zero template literals in JSX attrs ✓
+ * - Zero className ✓
+ * - Zero template literals ✓
  * - useCallback + useMemo ✓
+ * - Object.freeze static styles ✓
  */
 
 import { memo, useMemo, useRef, useEffect } from 'react';
@@ -23,14 +25,50 @@ interface MetricCardProps {
   subtitle?:    string;
 }
 
+const CARD_BASE = Object.freeze({
+  position:  'relative'  as const,
+  willChange: 'transform' as const,
+  background: 'rgba(14,17,28,1)',
+  borderRadius: 12,
+  padding: 16,
+  display: 'flex',
+  flexDirection: 'column' as const,
+  gap: 4,
+  minHeight: 88,
+});
+
+const SKELETON_BASE = Object.freeze({
+  background:   'rgba(255,255,255,0.05)',
+  border:       '1px solid rgba(32,42,68,1)',
+  borderRadius: 12,
+  padding:      16,
+  display:      'flex',
+  flexDirection: 'column' as const,
+  gap:          8,
+  minHeight:    88,
+});
+
+const SKELETON_ROW = Object.freeze({
+  display:        'flex',
+  alignItems:     'center',
+  justifyContent: 'space-between',
+});
+
 // Animated number that flips when value changes
 const AnimatedValue = memo(({ value }: { value: string }) => {
   const prevRef = useRef(value);
   const changed = prevRef.current !== value;
 
-  useEffect(() => {
-    prevRef.current = value;
-  });
+  useEffect(() => { prevRef.current = value; });
+
+  const style = useMemo(() => ({
+    display:    'inline-block',
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize:   '1.25rem',
+    fontWeight: 700,
+    color:      'rgba(240,240,248,1)',
+    willChange: 'transform, opacity',
+  }), []);
 
   return (
     <AnimatePresence mode="wait" initial={false}>
@@ -41,14 +79,7 @@ const AnimatedValue = memo(({ value }: { value: string }) => {
         animate="animate"
         exit="exit"
         transition={changed ? TRANSITION.springBouncy : TRANSITION.fast}
-        style={{
-          display:  'inline-block',
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: '1.25rem',
-          fontWeight: 700,
-          color: 'var(--zm-text-primary)',
-          willChange: 'transform, opacity',
-        }}
+        style={style}
       >
         {value}
       </motion.span>
@@ -66,10 +97,11 @@ const MetricCard = memo(({
   loading = false,
   subtitle,
 }: MetricCardProps) => {
-  const borderColor = useMemo(() =>
-    accentColor ? accentColor.replace('1)', '0.25)') : 'var(--zm-glass-border)',
-    [accentColor]
-  );
+
+  const cardStyle = useMemo(() => ({
+    ...CARD_BASE,
+    border: '1px solid ' + (accentColor ? accentColor.replace('1)', '0.25)') : 'rgba(32,42,68,1)'),
+  }), [accentColor]);
 
   const changeColor = useMemo(() => {
     if (change === undefined) return undefined;
@@ -82,21 +114,45 @@ const MetricCard = memo(({
   }, [change]);
 
   const topLineStyle = useMemo(() => ({
-    position: 'absolute' as const,
+    position:   'absolute' as const,
     top: 0, left: 0, right: 0,
-    height: 1,
+    height:     1,
     background: 'linear-gradient(90deg, transparent, ' + (accentColor ?? 'rgba(96,165,250,0.5)') + ', transparent)',
     borderRadius: '12px 12px 0 0',
-    opacity: 0.5,
+    opacity:    0.5,
   }), [accentColor]);
 
+  const labelStyle = useMemo(() => ({
+    fontFamily:    "'IBM Plex Mono', monospace",
+    fontSize:      10,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.08em',
+    color:         'rgba(80,80,100,1)',
+  }), []);
+
+  const changeStyle = useMemo(() => ({
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize:   11,
+    color:      changeColor,
+  }), [changeColor]);
+
+  const subtitleStyle = useMemo(() => ({
+    fontFamily: "'IBM Plex Mono', monospace",
+    fontSize:   10,
+    color:      'rgba(80,80,100,1)',
+  }), []);
+
+  const headerRowStyle = useMemo(() => ({
+    display:        'flex',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+  }), []);
+
+  // ── Skeleton ──────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div
-        className="zm-glass zm-corners p-4 flex flex-col gap-2"
-        style={{ minHeight: 88 }}
-      >
-        <div className="flex items-center justify-between">
+      <div style={SKELETON_BASE}>
+        <div style={SKELETON_ROW}>
           <Skeleton width={70} height={10} />
           <Skeleton width={14} height={14} borderRadius={4} />
         </div>
@@ -108,30 +164,20 @@ const MetricCard = memo(({
 
   return (
     <motion.div
-      className="zm-glass zm-corners p-4 flex flex-col gap-1"
-      style={{
-        borderColor,
-        position: 'relative',
-        willChange: 'transform',
-      }}
+      style={cardStyle}
       whileHover={{ scale: 1.02, y: -2 }}
       transition={TRANSITION.spring}
     >
       {/* Accent top line */}
       <div style={topLineStyle} />
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <span
-          className="text-[10px] font-mono-ui uppercase tracking-wider"
-          style={{ color: 'var(--zm-text-faint)' }}
-        >
-          {label}
-        </span>
+      {/* Header row */}
+      <div style={headerRowStyle}>
+        <span style={labelStyle}>{label}</span>
         {Icon && (
           <Icon
             size={14}
-            style={{ color: accentColor ?? 'var(--zm-text-faint)', flexShrink: 0 }}
+            style={{ color: accentColor ?? 'rgba(80,80,100,1)', flexShrink: 0 }}
           />
         )}
       </div>
@@ -141,26 +187,16 @@ const MetricCard = memo(({
 
       {/* Change */}
       {changeStr !== undefined && (
-        <span
-          className="text-xs font-mono"
-          style={{ color: changeColor }}
-        >
-          {changeStr}
-        </span>
+        <span style={changeStyle}>{changeStr}</span>
       )}
 
       {/* Subtitle */}
       {subtitle && (
-        <span
-          className="text-[10px] font-mono-ui"
-          style={{ color: 'var(--zm-text-faint)' }}
-        >
-          {subtitle}
-        </span>
+        <span style={subtitleStyle}>{subtitle}</span>
       )}
     </motion.div>
   );
 });
-MetricCard.displayName = 'MetricCard';
 
+MetricCard.displayName = 'MetricCard';
 export default MetricCard;
