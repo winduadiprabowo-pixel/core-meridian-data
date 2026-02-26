@@ -197,12 +197,19 @@ function drawBubbles(
 const LiquidationTile = memo(() => {
   const { events, stats, wsStatus } = useLiquidations();
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const bubblesRef = useRef<Bubble[]>([]);
-  const rafRef = useRef<number>(0);
+  const mountedRef    = useRef(true);  // push75: mountedRef
+  const canvasRef     = useRef<HTMLCanvasElement>(null);
+  const containerRef  = useRef<HTMLDivElement>(null);
+  const bubblesRef    = useRef<Bubble[]>([]);
+  const rafRef        = useRef<number>(0);
   const lastEvCountRef = useRef(0);
-  const lastFrameRef = useRef(Date.now());
+  const lastFrameRef  = useRef(Date.now());
+
+  // push75: mountedRef cleanup
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   // Spawn new bubbles from new events
   useEffect(() => {
