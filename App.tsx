@@ -9,14 +9,14 @@
 
 import { memo, lazy, Suspense } from 'react';
 import { ThemeProvider } from 'next-themes';
-import { Toaster } from '@/components/ui/toaster';
-import { Toaster as Sonner } from '@/components/ui/sonner';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { Toaster } from './src/components/ui/toaster';
+import { Toaster as Sonner } from './src/components/ui/sonner';
+import { TooltipProvider } from './src/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { CryptoProvider } from '@/contexts/CryptoContext';
 import { useCryptoData } from '@/hooks/useCryptoData';
-import Skeleton from '@/components/shared/Skeleton';
+import Skeleton from './src/components/shared/Skeleton';
 import {
   Landmark, ShieldCheck,
   Coins, Gem, DollarSign, Brain, Bot,
@@ -35,7 +35,7 @@ const Alerts        = lazy(() => import('./pages/Alerts'));
 const Watchlist     = lazy(() => import('./pages/Watchlist'));
 const Converter     = lazy(() => import('./pages/Converter'));
 const Defi          = lazy(() => import('./pages/Defi'));
-const PageStub      = lazy(() => import('./components/shared/PageStub'));
+const PageStub      = lazy(() => import('./src/components/shared/PageStub'));
 const OnChain       = lazy(() => import('./pages/OnChain'));
 const Intelligence  = lazy(() => import('./pages/Intelligence'));
 const Charts        = lazy(() => import('./pages/Charts'));
@@ -44,7 +44,7 @@ const Portfolio     = lazy(() => import('./pages/Portfolio'));
 const Networks      = lazy(() => import('./pages/Networks'));
 const Tokens        = lazy(() => import('./pages/Tokens'));
 const NotFound      = lazy(() => import('./pages/NotFound'));
-import AppShell     from './components/layout/AppShell';
+import AppShell     from './src/components/layout/AppShell';
 
 // ─── QueryClient ──────────────────────────────────────────────────────────────
 
