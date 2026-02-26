@@ -73,7 +73,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
 
   const topbarStyle = useMemo(() => ({
     position:       'fixed' as const,
-    top:            0, right: 0, left: 0,
+    top:            32, right: 0, left: 0,
     zIndex:         50,
     height:         '64px',
     background:     'var(--zm-topbar-bg)',
