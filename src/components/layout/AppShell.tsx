@@ -108,7 +108,7 @@ const AppShell: React.FC<AppShellProps> = ({ children, currentPath: propPath }) 
 
   const contentStyle = useMemo(() => ({
     padding:       '0 24px 24px',
-    paddingTop:    '80px',
+    paddingTop:    '96px',
     paddingBottom: showBottomNav ? '80px' : '24px',
     maxWidth:      '1800px',
     margin:        '0 auto',
