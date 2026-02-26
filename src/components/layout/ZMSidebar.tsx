@@ -251,6 +251,7 @@ const ZMSidebar = memo(({ expanded, onToggle, currentPath }: ZMSidebarProps) => 
 
   const logoAreaStyle = useMemo(() => ({
     height: '64px',
+    paddingTop: '32px',
     display: 'flex',
     alignItems: 'center',
     padding: '0 20px',
