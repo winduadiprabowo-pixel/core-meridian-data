@@ -178,10 +178,16 @@ const GlobalStatsBar = memo(() => {
     <div
       className="w-full px-4 flex items-center gap-4 overflow-hidden"
       style={{
-        height: 32,
+        position:   'fixed' as const,
+        top:        0,
+        left:       0,
+        right:      0,
+        zIndex:     100,
+        height:     32,
         background: 'rgba(2,6,23,0.95)',
         borderBottom: '1px solid rgba(96,165,250,0.1)',
         backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
       }}
     >
       {/* Left: stats */}
