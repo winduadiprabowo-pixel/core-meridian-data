@@ -1,4 +1,4 @@
-/* ─────────────────────────────────────────────────────────────────────────────
+﻿/* ─────────────────────────────────────────────────────────────────────────────
    ZERØ MERIDIAN — index.css — CYBER-NEON PRO 2026
    BG: #050507 | Panel: #0f0f14 | Accent: #00eeff | Bull: #22ffaa | Bear: #ff4488
    ───────────────────────────────────────────────────────────────────────────── */
@@ -578,3 +578,4 @@ button, a, [role="button"] { touch-action: manipulation; }
   aside, header { display: none; }
   main { margin: 0 !important; }
 }
+
