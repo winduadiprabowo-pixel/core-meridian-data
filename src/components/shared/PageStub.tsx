@@ -1,27 +1,148 @@
-import { memo } from 'react';
+/**
+ * PageStub.tsx — ZERØ MERIDIAN 2026 push75
+ * push75: FULL REBUILD — zero className, all inline styles.
+ * - React.memo + displayName ✓
+ * - rgba() only ✓
+ * - Zero className ✓
+ * - Zero template literals in JSX ✓
+ * - useMemo() for all style objects ✓
+ * - Object.freeze() static styles ✓
+ */
+
+import React, { memo, useMemo } from 'react';
 import { type LucideIcon } from 'lucide-react';
 
 interface PageStubProps {
-  title: string;
+  title:       string;
   description: string;
-  icon: LucideIcon;
+  icon:        LucideIcon;
 }
 
-const PageStub = memo(({ title, description, icon: Icon }: PageStubProps) => (
-  <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-    <div className="zm-glass p-8 rounded-2xl flex flex-col items-center gap-4 max-w-md">
-      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-        <Icon size={32} className="text-primary" />
-      </div>
-      <h1 className="text-2xl font-bold font-mono-ui zm-gradient-text">{title}</h1>
-      <p className="text-sm" style={{ color: 'var(--zm-text-secondary)' }}>{description}</p>
-      <div className="flex items-center gap-2 mt-2">
-        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-        <span className="text-xs font-mono-ui" style={{ color: 'var(--zm-text-faint)' }}>Coming soon in v8.1</span>
+const STATIC = Object.freeze({
+  outer: {
+    display:        'flex',
+    flexDirection:  'column' as const,
+    alignItems:     'center',
+    justifyContent: 'center',
+    minHeight:      '60vh',
+    textAlign:      'center' as const,
+    padding:        '24px',
+  },
+  card: {
+    background:          'rgba(14,17,28,1)',
+    border:              '1px solid rgba(32,42,68,1)',
+    borderRadius:        20,
+    padding:             40,
+    display:             'flex',
+    flexDirection:       'column' as const,
+    alignItems:          'center',
+    gap:                 20,
+    maxWidth:            420,
+    width:               '100%',
+    boxShadow:           '0 0 40px rgba(0,238,255,0.04), 0 24px 48px rgba(0,0,0,0.4)',
+    position:            'relative' as const,
+    overflow:            'hidden' as const,
+  },
+  topLine: {
+    position:     'absolute' as const,
+    top:          0,
+    left:         0,
+    right:        0,
+    height:       1,
+    background:   'linear-gradient(90deg, transparent, rgba(0,238,255,0.4), transparent)',
+    borderRadius: '20px 20px 0 0',
+  },
+  iconWrap: {
+    width:          64,
+    height:         64,
+    borderRadius:   16,
+    background:     'rgba(0,238,255,0.07)',
+    border:         '1px solid rgba(0,238,255,0.18)',
+    display:        'flex',
+    alignItems:     'center',
+    justifyContent: 'center',
+    flexShrink:     0,
+    boxShadow:      '0 0 20px rgba(0,238,255,0.12)',
+  },
+  title: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize:   22,
+    fontWeight: 700,
+    background: 'linear-gradient(135deg, rgba(240,240,248,1) 0%, rgba(0,238,255,0.9) 100%)',
+    WebkitBackgroundClip: 'text' as const,
+    WebkitTextFillColor:  'transparent' as const,
+    backgroundClip:       'text' as const,
+    lineHeight:           1.2,
+    margin:               0,
+  },
+  description: {
+    fontFamily: "'Space Grotesk', sans-serif",
+    fontSize:   13,
+    color:      'rgba(138,138,158,1)',
+    lineHeight: 1.65,
+    maxWidth:   340,
+    margin:     0,
+  },
+  badge: {
+    display:     'flex',
+    alignItems:  'center',
+    gap:         8,
+    marginTop:   4,
+  },
+  dot: {
+    width:        7,
+    height:       7,
+    borderRadius: '50%',
+    background:   'rgba(0,238,255,1)',
+    boxShadow:    '0 0 8px rgba(0,238,255,0.7)',
+    flexShrink:   0,
+    animation:    'none', // no tailwind animate-pulse
+  },
+  badgeText: {
+    fontFamily:    "'IBM Plex Mono', monospace",
+    fontSize:      11,
+    color:         'rgba(80,80,100,1)',
+    letterSpacing: '0.04em',
+  },
+});
+
+const PageStub = memo(({ title, description, icon: Icon }: PageStubProps) => {
+  // pulse animation via inline keyframes injected once
+  useMemo(() => {
+    if (typeof document === 'undefined') return;
+    if (document.getElementById('zm-pagestub-pulse')) return;
+    const style = document.createElement('style');
+    style.id = 'zm-pagestub-pulse';
+    style.textContent = '@keyframes zm-pulse{0%,100%{opacity:1}50%{opacity:0.35}}';
+    document.head.appendChild(style);
+  }, []);
+
+  const dotStyle = useMemo(() => ({
+    ...STATIC.dot,
+    animation: 'zm-pulse 2s ease-in-out infinite',
+  }), []);
+
+  return (
+    <div style={STATIC.outer}>
+      <div style={STATIC.card}>
+        <div style={STATIC.topLine} />
+
+        <div style={STATIC.iconWrap}>
+          <Icon size={28} style={{ color: 'rgba(0,238,255,1)', display: 'block' }} />
+        </div>
+
+        <h1 style={STATIC.title}>{title}</h1>
+
+        <p style={STATIC.description}>{description}</p>
+
+        <div style={STATIC.badge}>
+          <span style={dotStyle} />
+          <span style={STATIC.badgeText}>Coming soon in v8.1</span>
+        </div>
       </div>
     </div>
-  </div>
-));
-PageStub.displayName = 'PageStub';
+  );
+});
 
+PageStub.displayName = 'PageStub';
 export default PageStub;
