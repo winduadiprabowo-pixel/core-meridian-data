@@ -28,18 +28,18 @@ interface MetricCardProps {
 const CARD_BASE = Object.freeze({
   position:  'relative'  as const,
   willChange: 'transform' as const,
-  background: 'rgba(14,17,28,1)',
-  borderRadius: 12,
-  padding: 16,
+  background: 'rgba(255,255,255,0.03)',
+  borderRadius: 10,
+  padding: 18,
   display: 'flex',
   flexDirection: 'column' as const,
-  gap: 4,
-  minHeight: 88,
+  gap: 6,
+  minHeight: 92,
 });
 
 const SKELETON_BASE = Object.freeze({
   background:   'rgba(255,255,255,0.05)',
-  border:       '1px solid rgba(32,42,68,1)',
+  border:       '1px solid rgba(255,255,255,0.07)',
   borderRadius: 12,
   padding:      16,
   display:      'flex',
@@ -64,7 +64,7 @@ const AnimatedValue = memo(({ value }: { value: string }) => {
   const style = useMemo(() => ({
     display:    'inline-block',
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize:   '1.25rem',
+    fontSize:   '1.35rem',
     fontWeight: 700,
     color:      'rgba(240,240,248,1)',
     willChange: 'transform, opacity',
@@ -100,12 +100,12 @@ const MetricCard = memo(({
 
   const cardStyle = useMemo(() => ({
     ...CARD_BASE,
-    border: '1px solid ' + (accentColor ? accentColor.replace('1)', '0.25)') : 'rgba(32,42,68,1)'),
+    border: '1px solid ' + (accentColor ? accentColor.replace('1)', '0.15)') : 'rgba(255,255,255,0.06)'),
   }), [accentColor]);
 
   const changeColor = useMemo(() => {
     if (change === undefined) return undefined;
-    return change >= 0 ? 'rgba(52,211,153,1)' : 'rgba(251,113,133,1)';
+    return change >= 0 ? 'rgba(61,214,140,1)' : 'rgba(255,102,102,1)';
   }, [change]);
 
   const changeStr = useMemo(() => {
@@ -124,10 +124,10 @@ const MetricCard = memo(({
 
   const labelStyle = useMemo(() => ({
     fontFamily:    "'IBM Plex Mono', monospace",
-    fontSize:      10,
+    fontSize:      9,
     textTransform: 'uppercase' as const,
-    letterSpacing: '0.08em',
-    color:         'rgba(80,80,100,1)',
+    letterSpacing: '0.1em',
+    color:         'rgba(80,85,115,1)',
   }), []);
 
   const changeStyle = useMemo(() => ({
