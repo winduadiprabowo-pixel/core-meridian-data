@@ -80,7 +80,7 @@ const AppShell: React.FC<AppShellProps> = ({ children, currentPath: propPath }) 
 
   const mainVariants = useMemo(() => Object.freeze({
     collapsed: { marginLeft: 72  },
-    expanded:  { marginLeft: 240 },
+    expanded:  { marginLeft: 260 },
     mobile:    { marginLeft: 0   },
   }), []);
 
@@ -97,9 +97,9 @@ const AppShell: React.FC<AppShellProps> = ({ children, currentPath: propPath }) 
   }), [prefersReducedMotion]);
 
   const contentStyle = useMemo(() => ({
-    padding:       isMobile ? '0 12px 24px' : '0 24px 24px',
-    paddingTop:    '96px',
-    paddingBottom: showBottomNav ? '84px' : '24px',
+    padding:       isMobile ? '0 16px 32px' : '0 32px 32px',
+    paddingTop:    '100px',
+    paddingBottom: showBottomNav ? '88px' : '32px',
     maxWidth:      '1800px',
     margin:        '0 auto',
     boxSizing:     'border-box' as const,
