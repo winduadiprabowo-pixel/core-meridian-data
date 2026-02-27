@@ -1,10 +1,14 @@
 /**
- * ZMSidebar.tsx — ZERØ MERIDIAN 2026 push87
- * TOTAL ROMBAK — sidebar bersih kayak Coinbase
- * - Logo area full tinggi, ga kepotong
- * - Nav items spacing lega
- * - Warna blue bukan cyan
- * Props baru: headerHeight, expandedWidth, collapsedWidth
+ * ZMSidebar.tsx — ZERØ MERIDIAN 2026 push85
+ * push85: FULL REDESIGN — minimal premium layout
+ *   - Sidebar lebih lebar (260px expanded / 72px collapsed)
+ *   - Nav items spacing lega, font lebih besar
+ *   - Subtle green glow accent pada active item
+ *   - Logo area clean
+ *   - Group separator antar section
+ * - React.memo + displayName ✓
+ * - rgba() only ✓  Zero className ✓  Zero template literals in JSX ✓
+ * - useCallback + useMemo + mountedRef ✓
  */
 
 import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
@@ -21,184 +25,229 @@ interface NavItem {
 }
 
 interface ZMSidebarProps {
-  expanded:       boolean;
-  onToggle:       () => void;
-  currentPath:    string;
-  headerHeight:   number;
-  expandedWidth:  number;
-  collapsedWidth: number;
+  expanded:    boolean;
+  onToggle:    () => void;
+  currentPath: string;
 }
-
-const mkIcon = (d: string, extra?: React.ReactNode) => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <path d={d} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    {extra}
-  </svg>
-);
 
 const NAV_ITEMS: readonly NavItem[] = Object.freeze([
   {
-    id:'dashboard', label:'Dashboard', path:'/dashboard', group:'OVERVIEW',
-    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="9" y="9" width="5.5" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>),
+    id: 'dashboard', label: 'Dashboard', path: '/dashboard', group: 'OVERVIEW',
+    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="9" y="9" width="5.5" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>),
   },
   {
-    id:'markets', label:'Markets', path:'/markets', group:'OVERVIEW',
-    icon: mkIcon('M1 12 L4.5 7 L7.5 9.5 L11 4 L15 6'),
+    id: 'markets', label: 'Markets', path: '/markets', group: 'OVERVIEW',
+    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><polyline points="1,12 4.5,7 7.5,9.5 11,4 15,6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>),
   },
   {
-    id:'watchlist', label:'Watchlist', path:'/watchlist', group:'OVERVIEW',
-    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L9.9 5.4L14 6L11 8.9L11.8 13L8 11L4.2 13L5 8.9L2 6L6.1 5.4L8 1.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>),
+    id: 'watchlist', label: 'Watchlist', path: '/watchlist', group: 'OVERVIEW',
+    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5L9.9 5.4L14 6L11 8.9L11.8 13L8 11L4.2 13L5 8.9L2 6L6.1 5.4L8 1.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>),
   },
   {
-    id:'charts', label:'Charts', path:'/charts', group:'TRADING',
-    icon: mkIcon('M1 13 L4.5 8 L7.5 10.5 L11.5 5 L15 7'),
+    id: 'charts', label: 'Charts', path: '/charts', group: 'TRADING',
+    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><polyline points="1,13 4.5,8 7.5,10.5 11.5,5 15,7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><line x1="1" y1="14" x2="15" y2="14" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.3"/></svg>),
   },
   {
-    id:'orderbook', label:'Order Book', path:'/orderbook', group:'TRADING',
-    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><line x1="2" y1="3" x2="9" y2="3" stroke="rgba(79,127,255,0.85)" strokeWidth="1.5" strokeLinecap="round"/><line x1="2" y1="6" x2="6.5" y2="6" stroke="rgba(79,127,255,0.45)" strokeWidth="1.5" strokeLinecap="round"/><line x1="2" y1="10" x2="11" y2="10" stroke="rgba(255,102,102,0.85)" strokeWidth="1.5" strokeLinecap="round"/><line x1="2" y1="13" x2="7.5" y2="13" stroke="rgba(255,102,102,0.45)" strokeWidth="1.5" strokeLinecap="round"/></svg>),
+    id: 'orderbook', label: 'Order Book', path: '/orderbook', group: 'TRADING',
+    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><line x1="2" y1="3" x2="9" y2="3" stroke="rgba(52,211,153,0.9)" strokeWidth="1.5" strokeLinecap="round"/><line x1="2" y1="6" x2="6.5" y2="6" stroke="rgba(52,211,153,0.5)" strokeWidth="1.5" strokeLinecap="round"/><line x1="2" y1="10" x2="11" y2="10" stroke="rgba(248,113,113,0.9)" strokeWidth="1.5" strokeLinecap="round"/><line x1="2" y1="13" x2="7.5" y2="13" stroke="rgba(248,113,113,0.5)" strokeWidth="1.5" strokeLinecap="round"/></svg>),
   },
   {
-    id:'derivatives', label:'Derivatives', path:'/derivatives', group:'TRADING',
-    icon: mkIcon('M1 13 L4 6 L8 9.5 L12 3 L15 7'),
+    id: 'derivatives', label: 'Derivatives', path: '/derivatives', group: 'TRADING',
+    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1 13 L4 6 L8 9.5 L12 3 L15 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="4" cy="6" r="1.6" fill="currentColor" opacity="0.5"/><circle cx="12" cy="3" r="1.6" fill="currentColor" opacity="0.5"/></svg>),
   },
   {
-    id:'defi', label:'DeFi', path:'/defi', group:'ANALYTICS',
-    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="3" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.5"/><circle cx="13" cy="3.5" r="2.2" stroke="currentColor" strokeWidth="1.5"/><circle cx="13" cy="12.5" r="2.2" stroke="currentColor" strokeWidth="1.5"/><line x1="5.2" y1="7" x2="10.8" y2="4.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><line x1="5.2" y1="9" x2="10.8" y2="11.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>),
+    id: 'defi', label: 'DeFi', path: '/defi', group: 'ANALYTICS',
+    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="3" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.5"/><circle cx="13" cy="3.5" r="2.2" stroke="currentColor" strokeWidth="1.5"/><circle cx="13" cy="12.5" r="2.2" stroke="currentColor" strokeWidth="1.5"/><line x1="5.2" y1="7" x2="10.8" y2="4.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><line x1="5.2" y1="9" x2="10.8" y2="11.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>),
   },
   {
-    id:'onchain', label:'On-Chain', path:'/onchain', badge:'NEW', group:'ANALYTICS',
-    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="7.5" width="3" height="7" rx="1" stroke="currentColor" strokeWidth="1.5"/><rect x="6.5" y="4.5" width="3" height="10" rx="1" stroke="currentColor" strokeWidth="1.5"/><rect x="11.5" y="1.5" width="3" height="13" rx="1" stroke="currentColor" strokeWidth="1.5"/></svg>),
+    id: 'onchain', label: 'On-Chain', path: '/onchain', badge: 'NEW', group: 'ANALYTICS',
+    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="1.5" y="7.5" width="3" height="7" rx="1" stroke="currentColor" strokeWidth="1.5"/><rect x="6.5" y="4.5" width="3" height="10" rx="1" stroke="currentColor" strokeWidth="1.5"/><rect x="11.5" y="1.5" width="3" height="13" rx="1" stroke="currentColor" strokeWidth="1.5"/></svg>),
   },
   {
-    id:'intelligence', label:'AI Intel', path:'/intelligence', group:'ANALYTICS',
-    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="8" r="2" fill="currentColor" opacity="0.5"/></svg>),
+    id: 'intelligence', label: 'AI Intel', path: '/intelligence', group: 'ANALYTICS',
+    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="8" r="2" fill="currentColor" opacity="0.6"/><line x1="8" y1="2" x2="8" y2="5.8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/><line x1="8" y1="10.2" x2="8" y2="14" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/><line x1="2" y1="8" x2="5.8" y2="8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/><line x1="10.2" y1="8" x2="14" y2="8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/></svg>),
   },
   {
-    id:'portfolio', label:'Portfolio', path:'/portfolio', group:'PERSONAL',
-    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8 8 L8 1.5 A6.5 6.5 0 0 1 14.5 8 Z" fill="currentColor" opacity="0.2"/></svg>),
+    id: 'portfolio', label: 'Portfolio', path: '/portfolio', group: 'PERSONAL',
+    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8 8 L8 1.5 A6.5 6.5 0 0 1 14.5 8 Z" fill="currentColor" opacity="0.25"/></svg>),
   },
   {
-    id:'alerts', label:'Alerts', path:'/alerts', group:'PERSONAL',
-    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2C5.8 2 4 3.8 4 6v4L2.5 12.5h11L12 10V6c0-2.2-1.8-4-4-4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M6.5 13.5a1.5 1.5 0 0 0 3 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>),
+    id: 'alerts', label: 'Alerts', path: '/alerts', group: 'PERSONAL',
+    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2C5.8 2 4 3.8 4 6v4L2.5 12.5h11L12 10V6c0-2.2-1.8-4-4-4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M6.5 13.5a1.5 1.5 0 0 0 3 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>),
   },
   {
-    id:'converter', label:'Converter', path:'/converter', group:'PERSONAL',
-    icon: mkIcon('M2 5h12M10 2l4 3-4 3M14 11H2M6 8l-4 3 4 3'),
+    id: 'converter', label: 'Converter', path: '/converter', group: 'PERSONAL',
+    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 5h12M10 2l4 3-4 3M14 11H2M6 8l-4 3 4 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>),
   },
 ]);
 
 const BOTTOM_ITEMS: readonly NavItem[] = Object.freeze([
   {
-    id:'settings', label:'Settings', path:'/settings',
-    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M2.93 2.93l1.07 1.07M12 12l1.07 1.07M2.93 13.07l1.07-1.07M12 4l1.07-1.07" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>),
+    id: 'settings', label: 'Settings', path: '/settings',
+    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M2.93 2.93l1.07 1.07M12 12l1.07 1.07M2.93 13.07l1.07-1.07M12 4l1.07-1.07" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>),
   },
 ]);
 
-const GROUP_ORDER = Object.freeze(['OVERVIEW','TRADING','ANALYTICS','PERSONAL']);
+const GROUP_ORDER = Object.freeze(['OVERVIEW', 'TRADING', 'ANALYTICS', 'PERSONAL']);
 
 const LogoMark = memo(() => (
-  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-    <circle cx="14" cy="14" r="11" stroke="rgba(79,127,255,0.15)" strokeWidth="1" fill="rgba(79,127,255,0.05)"/>
-    <circle cx="14" cy="14" r="7.5" stroke="rgba(79,127,255,0.9)" strokeWidth="1.6" fill="none"/>
-    <line x1="17" y1="9" x2="11" y2="19" stroke="rgba(79,127,255,1)" strokeWidth="1.6" strokeLinecap="round"/>
+  <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+    <defs>
+      <filter id="lmglow" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="1.8" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <linearGradient id="lmgrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="rgba(52,211,153,1)"/>
+        <stop offset="100%" stopColor="rgba(0,238,255,0.85)"/>
+      </linearGradient>
+    </defs>
+    <circle cx="15" cy="15" r="12" stroke="rgba(52,211,153,0.12)" strokeWidth="1" fill="rgba(52,211,153,0.04)"/>
+    <circle cx="15" cy="15" r="8.5" stroke="url(#lmgrad)" strokeWidth="1.8" fill="none" filter="url(#lmglow)"/>
+    <line x1="18.5" y1="9.5" x2="11.5" y2="20.5" stroke="url(#lmgrad)" strokeWidth="1.8" strokeLinecap="round" filter="url(#lmglow)"/>
+    <circle cx="15" cy="15" r="8.5" stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" fill="none" strokeDasharray="8 18"/>
   </svg>
 ));
 LogoMark.displayName = 'LogoMark';
 
-const ZMSidebar = memo(({ expanded, onToggle, currentPath, headerHeight, expandedWidth, collapsedWidth }: ZMSidebarProps) => {
-  const rm = useReducedMotion();
-  const [hovered, setHovered] = useState<string|null>(null);
+const sidebarVariants = Object.freeze({
+  expanded:  { width: 260 },
+  collapsed: { width: 72 },
+});
+
+const ZMSidebar = memo(({ expanded, onToggle, currentPath }: ZMSidebarProps) => {
+  const prefersReducedMotion = useReducedMotion();
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const mountedRef = useRef(true);
   const navigate   = useNavigate();
 
-  React.useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+  React.useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
-  const hover  = useCallback((id: string|null) => { if (mountedRef.current) setHovered(id); }, []);
-  const nav    = useCallback((path: string) => { if (mountedRef.current) navigate(path); }, [navigate]);
-  const toggle = useCallback(() => onToggle(), [onToggle]);
+  const handleHover  = useCallback((id: string | null) => { if (mountedRef.current) setHoveredItem(id); }, []);
+  const handleNav    = useCallback((path: string) => { if (mountedRef.current) navigate(path); }, [navigate]);
+  const handleToggle = useCallback(() => onToggle(), [onToggle]);
+
+  const sidebarStyle = useMemo(() => ({
+    position:             'fixed' as const,
+    top:                  0, left: 0,
+    height:               '100vh',
+    background:           'rgba(7,9,17,0.98)',
+    borderRight:          '1px solid rgba(255,255,255,0.05)',
+    display:              'flex',
+    flexDirection:        'column' as const,
+    zIndex:               60,
+    overflow:             'hidden',
+  }), []);
 
   const isActive = useCallback((path: string) =>
     currentPath === path || (path !== '/dashboard' && currentPath.startsWith(path))
   , [currentPath]);
 
-  const groups = useMemo(() => {
-    const map: Record<string, NavItem[]> = {};
-    NAV_ITEMS.forEach(item => { const g = item.group ?? 'OTHER'; if (!map[g]) map[g]=[]; map[g].push(item); });
-    return map;
-  }, []);
-
-  const sidebarStyle = useMemo(() => ({
-    position:      'fixed' as const,
-    top:           0, left: 0,
-    height:        '100vh',
-    width:         expanded ? expandedWidth : collapsedWidth,
-    background:    'rgba(6,7,13,1)',
-    borderRight:   '1px solid rgba(255,255,255,0.05)',
-    display:       'flex',
-    flexDirection: 'column' as const,
-    zIndex:        180,
-    overflow:      'hidden',
-    transition:    rm ? 'none' : 'width 0.22s cubic-bezier(0.22,1,0.36,1)',
-  }), [expanded, expandedWidth, collapsedWidth, rm]);
-
   const getItemStyle = useCallback((id: string, path: string) => {
     const active  = isActive(path);
-    const isHov   = hovered === id && !active;
+    const hovered = hoveredItem === id && !active;
     return {
       display:        'flex',
       alignItems:     'center',
-      gap:            12,
-      padding:        expanded ? '8px 10px 8px 14px' : '8px',
+      gap:            '12px',
+      padding:        expanded ? '9px 12px 9px 16px' : '9px',
       justifyContent: expanded ? 'flex-start' as const : 'center' as const,
-      borderRadius:   8,
-      background:     active ? 'rgba(79,127,255,0.08)' : isHov ? 'rgba(255,255,255,0.04)' : 'transparent',
-      border:         '1px solid ' + (active ? 'rgba(79,127,255,0.18)' : 'transparent'),
-      color:          active ? 'rgba(99,147,255,1)' : isHov ? 'rgba(195,200,225,1)' : 'rgba(95,100,130,1)',
+      borderRadius:   '10px',
+      background:     active  ? 'rgba(52,211,153,0.07)' : hovered ? 'rgba(255,255,255,0.04)' : 'transparent',
+      border:         '1px solid ' + (active ? 'rgba(52,211,153,0.16)' : 'transparent'),
+      color:          active  ? 'rgba(52,211,153,1)' : hovered ? 'rgba(200,205,225,1)' : 'rgba(105,110,138,1)',
       cursor:         'pointer',
-      transition:     'all 0.12s ease',
+      transition:     'all 0.13s ease',
+      willChange:     'transform',
       userSelect:     'none' as const,
       width:          '100%',
       textAlign:      'left' as const,
       position:       'relative' as const,
-      marginBottom:   1,
+      marginBottom:   '1px',
     };
-  }, [currentPath, hovered, expanded, isActive]);
+  }, [currentPath, hoveredItem, expanded, isActive]);
+
+  const labelStyle = useMemo(() => ({
+    fontFamily:    "'Space Mono', monospace",
+    fontSize:      '11.5px',
+    letterSpacing: '0.01em',
+    whiteSpace:    'nowrap' as const,
+    overflow:      'hidden',
+    textOverflow:  'ellipsis',
+    fontWeight:    500,
+  }), []);
+
+  const iconWrap = useMemo(() => ({
+    display:        'flex',
+    alignItems:     'center',
+    justifyContent: 'center',
+    width:          '18px',
+    height:         '18px',
+    flexShrink:     0,
+  }), []);
+
+  const groups = useMemo(() => {
+    const map: Record<string, NavItem[]> = {};
+    NAV_ITEMS.forEach(item => {
+      const g = item.group ?? 'OTHER';
+      if (!map[g]) map[g] = [];
+      map[g].push(item);
+    });
+    return map;
+  }, []);
 
   const renderItem = useCallback((item: NavItem) => {
     const active = isActive(item.path);
     return (
-      <button key={item.id} type="button"
-        onClick={() => nav(item.path)}
-        onMouseEnter={() => hover(item.id)}
-        onMouseLeave={() => hover(null)}
+      <button
+        key={item.id}
+        type="button"
+        onClick={() => handleNav(item.path)}
+        onMouseEnter={() => handleHover(item.id)}
+        onMouseLeave={() => handleHover(null)}
         aria-label={item.label}
+        aria-current={currentPath === item.path ? 'page' : undefined}
         style={getItemStyle(item.id, item.path)}
       >
+        {/* Active indicator */}
         {active && (
           <div style={{
-            position:'absolute', left:0, top:'20%', bottom:'20%',
-            width:3, borderRadius:'0 3px 3px 0',
-            background:'rgba(79,127,255,1)',
+            position:     'absolute',
+            left:         0,
+            top:          '22%',
+            bottom:       '22%',
+            width:        '3px',
+            borderRadius: '0 3px 3px 0',
+            background:   'rgba(52,211,153,1)',
+            boxShadow:    '0 0 8px rgba(52,211,153,0.6)',
           }} />
         )}
-        <span style={{ display:'flex',alignItems:'center',justifyContent:'center',width:17,height:17,flexShrink:0 }}>
-          {item.icon}
-        </span>
+        <span style={iconWrap}>{item.icon}</span>
         <AnimatePresence>
           {expanded && (
             <motion.span
-              initial={{ opacity:0, x:-4 }} animate={{ opacity:1, x:0 }}
-              exit={{ opacity:0, x:-4 }} transition={{ duration:0.12 }}
-              style={{ display:'flex',alignItems:'center',justifyContent:'space-between',flex:1,overflow:'hidden' }}
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -6 }}
+              transition={{ duration: 0.13 }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1, overflow: 'hidden' }}
             >
-              <span style={{ fontFamily:"'Space Mono',monospace",fontSize:'11px',letterSpacing:'0.01em',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',fontWeight:500 }}>
-                {item.label}
-              </span>
+              <span style={labelStyle}>{item.label}</span>
               {item.badge && (
                 <span style={{
-                  fontFamily:"'Space Mono',monospace",fontSize:'7px',padding:'1px 4px',borderRadius:3,
-                  background:'rgba(79,127,255,0.08)',border:'1px solid rgba(79,127,255,0.18)',
-                  color:'rgba(79,127,255,0.8)',letterSpacing:'0.06em',flexShrink:0,marginLeft:6,
+                  fontFamily:    "'Space Mono', monospace",
+                  fontSize:      '7.5px',
+                  padding:       '1px 5px',
+                  borderRadius:  '3px',
+                  background:    'rgba(52,211,153,0.09)',
+                  border:        '1px solid rgba(52,211,153,0.2)',
+                  color:         'rgba(52,211,153,0.85)',
+                  letterSpacing: '0.06em',
+                  flexShrink:    0,
+                  marginLeft:    '6px',
                 }}>
                   {item.badge}
                 </span>
@@ -208,76 +257,104 @@ const ZMSidebar = memo(({ expanded, onToggle, currentPath, headerHeight, expande
         </AnimatePresence>
       </button>
     );
-  }, [expanded, currentPath, getItemStyle, nav, hover, isActive]);
+  }, [expanded, currentPath, getItemStyle, handleNav, handleHover, iconWrap, labelStyle, isActive]);
 
   return (
-    <nav style={sidebarStyle} aria-label="Main navigation" role="navigation">
-
-      {/* Logo area — full headerHeight */}
+    <motion.nav
+      variants={sidebarVariants}
+      animate={expanded ? 'expanded' : 'collapsed'}
+      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+      style={sidebarStyle}
+      aria-label="Main navigation"
+      role="navigation"
+    >
+      {/* Logo area */}
       <div style={{
-        height:       headerHeight,
+        height:       '68px',
         display:      'flex',
         alignItems:   'center',
-        padding:      expanded ? '0 16px' : '0',
-        justifyContent: expanded ? 'flex-start' as const : 'center' as const,
+        padding:      '0 20px',
         flexShrink:   0,
-        gap:          10,
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        gap:          '12px',
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
       }}>
         <LogoMark />
         <AnimatePresence>
           {expanded && (
-            <motion.div initial={{ opacity:0,x:-6 }} animate={{ opacity:1,x:0 }} exit={{ opacity:0,x:-6 }} transition={{ duration:0.14 }} style={{ flex:1 }}>
-              <div style={{ fontFamily:"'Space Mono',monospace",fontSize:'12.5px',fontWeight:700,letterSpacing:'0.14em',color:'rgba(225,230,255,0.9)' }}>
+            <motion.div
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -8 }}
+              transition={{ duration: 0.15 }}
+              style={{ flex: 1 }}
+            >
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '13px', fontWeight: 700, letterSpacing: '0.15em', color: 'rgba(235,238,255,0.95)' }}>
                 ZERØ
               </div>
-              <div style={{ fontFamily:"'Space Mono',monospace",fontSize:'7px',letterSpacing:'0.30em',color:'rgba(79,127,255,0.4)',marginTop:2 }}>
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '7.5px', letterSpacing: '0.32em', color: 'rgba(52,211,153,0.45)', marginTop: '2px' }}>
                 MERIDIAN
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-        {expanded && (
-          <button type="button" onClick={toggle} aria-label="Collapse sidebar"
-            style={{
-              width:20,height:20,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.07)',
-              borderRadius:6,color:'rgba(85,90,115,1)',cursor:'pointer',display:'flex',
-              alignItems:'center',justifyContent:'center',flexShrink:0,
-            }}>
-            <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-              <path d="M5.5 1.5L3 4.5L5.5 7.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        )}
-        {!expanded && (
-          <button type="button" onClick={toggle} aria-label="Expand sidebar"
-            style={{
-              position:'absolute',bottom:12,left:'50%',transform:'translateX(-50%)',
-              width:22,height:22,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.07)',
-              borderRadius:6,color:'rgba(85,90,115,1)',cursor:'pointer',display:'flex',
-              alignItems:'center',justifyContent:'center',
-            }}>
-            <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-              <path d="M3.5 1.5L6 4.5L3.5 7.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={handleToggle}
+          aria-label={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
+          style={{
+            width:          '22px',
+            height:         '22px',
+            background:     'rgba(255,255,255,0.04)',
+            border:         '1px solid rgba(255,255,255,0.06)',
+            borderRadius:   '6px',
+            color:          'rgba(90,95,120,1)',
+            cursor:         'pointer',
+            display:        'flex',
+            alignItems:     'center',
+            justifyContent: 'center',
+            flexShrink:     0,
+            transition:     'all 0.15s',
+            marginLeft:     expanded ? '0' : 'auto',
+          }}
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+            {expanded
+              ? <path d="M6.5 1.5L3.5 5L6.5 8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              : <path d="M3.5 1.5L6.5 5L3.5 8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+            }
+          </svg>
+        </button>
       </div>
 
-      {/* Nav scroll area */}
-      <div style={{ flex:1,overflowY:'auto' as const,overflowX:'hidden',padding:'6px 7px',display:'flex',flexDirection:'column' as const }} role="list">
-        {GROUP_ORDER.map(g => {
-          const items = groups[g];
+      {/* Nav */}
+      <div style={{
+        flex:          1,
+        overflowY:     'auto' as const,
+        overflowX:     'hidden' as const,
+        padding:       '8px 8px',
+        display:       'flex',
+        flexDirection: 'column' as const,
+      }} role="list">
+        {GROUP_ORDER.map(groupName => {
+          const items = groups[groupName];
           if (!items) return null;
           return (
-            <div key={g} style={{ marginBottom:4 }}>
+            <div key={groupName} style={{ marginBottom: '4px' }}>
               {expanded && (
-                <div style={{ padding:'8px 8px 4px',fontFamily:"'Space Mono',monospace",fontSize:'8px',letterSpacing:'0.2em',color:'rgba(255,255,255,0.13)',textTransform:'uppercase' as const,fontWeight:700 }}>
-                  {g}
+                <div style={{
+                  padding:       '10px 10px 5px',
+                  fontFamily:    "'Space Mono', monospace",
+                  fontSize:      '8.5px',
+                  letterSpacing: '0.2em',
+                  color:         'rgba(255,255,255,0.15)',
+                  textTransform: 'uppercase' as const,
+                  fontWeight:    700,
+                }}>
+                  {groupName}
                 </div>
               )}
-              {!expanded && g !== 'OVERVIEW' && (
-                <div style={{ height:1,background:'rgba(255,255,255,0.05)',margin:'6px 8px' }} />
+              {!expanded && groupName !== 'OVERVIEW' && (
+                <div style={{ height: '8px', borderTop: '1px solid rgba(255,255,255,0.04)', margin: '4px 6px 8px' }} />
               )}
               {items.map(renderItem)}
             </div>
@@ -286,22 +363,27 @@ const ZMSidebar = memo(({ expanded, onToggle, currentPath, headerHeight, expande
       </div>
 
       {/* Bottom */}
-      <div style={{ padding:'7px 7px 10px',borderTop:'1px solid rgba(255,255,255,0.05)',flexShrink:0 }}>
+      <div style={{ padding: '8px 8px 12px', borderTop: '1px solid rgba(255,255,255,0.04)', flexShrink: 0 }}>
         {BOTTOM_ITEMS.map(item => (
-          <button key={item.id} type="button"
-            onClick={() => nav(item.path)}
-            onMouseEnter={() => hover(item.id)}
-            onMouseLeave={() => hover(null)}
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => handleNav(item.path)}
+            onMouseEnter={() => handleHover(item.id)}
+            onMouseLeave={() => handleHover(null)}
             aria-label={item.label}
             style={getItemStyle(item.id, item.path)}
           >
-            <span style={{ display:'flex',alignItems:'center',justifyContent:'center',width:17,height:17,flexShrink:0 }}>
-              {item.icon}
-            </span>
+            <span style={iconWrap}>{item.icon}</span>
             <AnimatePresence>
               {expanded && (
-                <motion.span initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.12 }}
-                  style={{ fontFamily:"'Space Mono',monospace",fontSize:'11px',letterSpacing:'0.01em',fontWeight:500 }}>
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.13 }}
+                  style={labelStyle}
+                >
                   {item.label}
                 </motion.span>
               )}
@@ -309,7 +391,7 @@ const ZMSidebar = memo(({ expanded, onToggle, currentPath, headerHeight, expande
           </button>
         ))}
       </div>
-    </nav>
+    </motion.nav>
   );
 });
 
