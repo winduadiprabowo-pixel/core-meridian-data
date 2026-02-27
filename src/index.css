@@ -11,14 +11,14 @@
 
 @layer base {
   :root {
-    --zm-bg-base:             rgba(6,8,14,1);
-    --zm-bg-secondary:        rgba(10,12,22,1);
-    --zm-sidebar-bg:          rgba(7,9,18,1);
-    --zm-topbar-bg:           rgba(6,8,14,0.97);
-    --zm-glass-bg:            rgba(255,255,255,0.05);
-    --zm-glass-hover:         rgba(0,238,255,0.04);
-    --zm-glass-border:        rgba(32,42,68,1);
-    --zm-glass-border-hover:  rgba(0,238,255,0.40);
+    --zm-bg-base:             rgba(5,7,13,1);
+    --zm-bg-secondary:        rgba(8,10,18,1);
+    --zm-sidebar-bg:          rgba(7,9,17,0.98);
+    --zm-topbar-bg:           rgba(5,7,13,0.94);
+    --zm-glass-bg:            rgba(255,255,255,0.04);
+    --zm-glass-hover:         rgba(52,211,153,0.03);
+    --zm-glass-border:        rgba(255,255,255,0.06);
+    --zm-glass-border-hover:  rgba(52,211,153,0.25);
     --zm-text-primary:        rgba(240,240,248,1);
     --zm-text-secondary:      rgba(138,138,158,1);
     --zm-text-faint:          rgba(80,80,100,1);
