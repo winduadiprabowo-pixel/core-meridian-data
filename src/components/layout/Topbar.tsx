@@ -74,13 +74,13 @@ const PWAInstallButton = React.memo(() => {
         width:          '32px',
         height:         '32px',
         borderRadius:   '8px',
-        background:     justInstalled ? 'rgba(52,211,153,0.08)' : 'rgba(52,211,153,0.06)',
-        border:         '1px solid ' + (justInstalled ? 'rgba(52,211,153,0.3)' : 'rgba(52,211,153,0.2)'),
+        background:     justInstalled ? 'rgba(79,127,255,0.08)' : 'rgba(79,127,255,0.06)',
+        border:         '1px solid ' + (justInstalled ? 'rgba(79,127,255,0.3)' : 'rgba(79,127,255,0.2)'),
         cursor:         justInstalled ? 'default' : 'pointer',
         display:        'flex',
         alignItems:     'center',
         justifyContent: 'center',
-        color:          'rgba(52,211,153,0.9)',
+        color:          'rgba(79,127,255,0.9)',
         flexShrink:     0,
       }}
     >
@@ -255,18 +255,18 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
             display:       'flex',
             alignItems:    'center',
             gap:           '5px',
-            background:    'rgba(52,211,153,0.06)',
-            border:        '1px solid rgba(52,211,153,0.14)',
+            background:    'rgba(79,127,255,0.06)',
+            border:        '1px solid rgba(79,127,255,0.14)',
             borderRadius:  '16px',
             padding:       '4px 10px',
             fontSize:      '10px',
             fontFamily:    "'Space Mono', monospace",
-            color:         'rgba(52,211,153,0.7)',
+            color:         'rgba(79,127,255,0.7)',
             letterSpacing: '0.08em',
             flexShrink:    0,
           }} role="status" aria-label="Network status: live">
             <motion.div
-              style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(52,211,153,0.9)', flexShrink: 0 }}
+              style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(79,127,255,0.9)', flexShrink: 0 }}
               animate={prefersReducedMotion ? {} : { opacity: [1, 0.35, 1] }}
               transition={{ duration: 1.8, repeat: Infinity }}
               aria-hidden="true"
@@ -281,12 +281,12 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
             width:        '32px',
             height:       '32px',
             borderRadius: '50%',
-            background:   'rgba(52,211,153,0.1)',
-            border:       '1px solid rgba(52,211,153,0.18)',
+            background:   'rgba(79,127,255,0.1)',
+            border:       '1px solid rgba(79,127,255,0.18)',
             cursor:       'pointer',
             fontSize:     '12px',
             fontWeight:   700,
-            color:        'rgba(52,211,153,0.9)',
+            color:        'rgba(79,127,255,0.9)',
             fontFamily:   "'Space Mono', monospace",
             flexShrink:   0,
             display:      'flex',
