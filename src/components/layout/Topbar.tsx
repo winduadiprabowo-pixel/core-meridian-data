@@ -1,17 +1,14 @@
 /**
- * Topbar.tsx — ZERØ MERIDIAN 2026 push85
- * push85: REDESIGN — slim, minimal, premium
- *   - Height 56px (was 64px) — lebih ramping
- *   - Logo + nav lebih bersih
- *   - Right cluster: waktu · live badge · install · theme · avatar
- *   - Hapus FPS badge (noise)
- * - React.memo + displayName ✓
- * - rgba() only ✓  Zero className ✓  Zero template literals in JSX ✓
- * - useCallback + useMemo + mountedRef ✓
+ * Topbar.tsx — ZERØ MERIDIAN 2026 push88
+ * Bloomberg-grade topbar — left ikut sidebarWidth, slim & clean
+ * - Zero className → style={{}} only
+ * - rgba() only
+ * - React.memo + displayName
+ * - useCallback + useMemo + mountedRef
  */
 
 import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
-import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { usePWAInstall } from '@/contexts/PWAInstallContext';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
@@ -19,257 +16,154 @@ import { useBreakpoint } from '@/hooks/useBreakpoint';
 interface TopbarProps {
   onMenuToggle:    () => void;
   sidebarExpanded: boolean;
+  topOffset:       number;
+  height:          number;
+  sidebarWidth:    number;
 }
 
-// ─── Icons ────────────────────────────────────────────────────────────────────
-
-const SunIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2"/>
-    <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-);
-const MoonIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-const MenuIcon = ({ open }: { open: boolean }) => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <rect x="1.5" y="3.5" width={open ? 13 : 9} height="1.4" rx="0.7" fill="currentColor" style={{ transition: 'width 0.2s' }}/>
-    <rect x="1.5" y="7.3" width="9" height="1.4" rx="0.7" fill="currentColor"/>
-    <rect x="1.5" y="11.1" width={open ? 13 : 5} height="1.4" rx="0.7" fill="currentColor" style={{ transition: 'width 0.2s' }}/>
-  </svg>
-);
-
-// ─── PWA Install Button ───────────────────────────────────────────────────────
+const SunIcon  = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>);
+const MoonIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>);
 
 const PWAInstallButton = React.memo(() => {
   const { canInstall, isInstalled, triggerInstall } = usePWAInstall();
-  const [justInstalled, setJustInstalled] = useState(false);
+  const [done, setDone] = useState(false);
   const mountedRef = useRef(true);
-
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
-
   useEffect(() => {
     if (isInstalled && mountedRef.current) {
-      setJustInstalled(true);
-      const t = setTimeout(() => { if (mountedRef.current) setJustInstalled(false); }, 3000);
+      setDone(true);
+      const t = setTimeout(() => { if (mountedRef.current) setDone(false); }, 3000);
       return () => clearTimeout(t);
     }
   }, [isInstalled]);
-
-  const handleClick = useCallback(async () => { await triggerInstall(); }, [triggerInstall]);
-
-  if (!canInstall && !justInstalled) return null;
-
+  const click = useCallback(async () => { await triggerInstall(); }, [triggerInstall]);
+  if (!canInstall && !done) return null;
   return (
-    <motion.button
-      type="button"
-      onClick={justInstalled ? undefined : handleClick}
-      aria-label={justInstalled ? 'App installed' : 'Install ZERØ MERIDIAN'}
-      whileHover={{ scale: 1.06 }}
-      whileTap={{ scale: 0.94 }}
+    <motion.button type="button" onClick={done ? undefined : click}
+      whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
       style={{
-        width:          '32px',
-        height:         '32px',
-        borderRadius:   '8px',
-        background:     justInstalled ? 'rgba(52,211,153,0.08)' : 'rgba(52,211,153,0.06)',
-        border:         '1px solid ' + (justInstalled ? 'rgba(52,211,153,0.3)' : 'rgba(52,211,153,0.2)'),
-        cursor:         justInstalled ? 'default' : 'pointer',
-        display:        'flex',
-        alignItems:     'center',
-        justifyContent: 'center',
-        color:          'rgba(52,211,153,0.9)',
-        flexShrink:     0,
-      }}
-    >
-      {justInstalled ? (
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5l3 3 6-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-      ) : (
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 2v6.5M4 6l2.5 3 2.5-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 10.5h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-      )}
+        width:32,height:32,borderRadius:8,
+        background: done ? 'rgba(61,214,140,0.08)' : 'rgba(255,255,255,0.05)',
+        border: '1px solid ' + (done ? 'rgba(61,214,140,0.25)' : 'rgba(255,255,255,0.08)'),
+        cursor: done ? 'default' : 'pointer',
+        display:'flex',alignItems:'center',justifyContent:'center',
+        color: done ? 'rgba(61,214,140,0.9)' : 'rgba(120,125,155,1)',flexShrink:0,
+      }}>
+      {done
+        ? (<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5l3 3 6-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>)
+        : (<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 2v6.5M4 6l2.5 3 2.5-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 10.5h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>)
+      }
     </motion.button>
   );
 });
 PWAInstallButton.displayName = 'PWAInstallButton';
 
-// ─── Topbar ───────────────────────────────────────────────────────────────────
-
-const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
-  const mountedRef           = useRef(true);
-  const prefersReducedMotion = useReducedMotion();
-  const [time, setTime]      = useState(() => new Date().toLocaleTimeString('en-US', { hour12: false }));
-  const { theme, setTheme }  = useTheme();
+const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded, topOffset, height, sidebarWidth }) => {
+  const mountedRef = useRef(true);
+  const rm         = useReducedMotion();
+  const [time, setTime] = useState(() => new Date().toLocaleTimeString('en-US', { hour12: false }));
+  const { theme, setTheme } = useTheme();
   const { isMobile, isTablet } = useBreakpoint();
-
-  const isDark    = theme !== 'light';
-  const isCompact = isMobile || isTablet;
+  const isDark  = theme !== 'light';
+  const compact = isMobile || isTablet;
 
   useEffect(() => {
     mountedRef.current = true;
-    const iv = setInterval(() => { if (mountedRef.current) setTime(new Date().toLocaleTimeString('en-US', { hour12: false })); }, 1000);
+    const iv = setInterval(() => {
+      if (mountedRef.current) setTime(new Date().toLocaleTimeString('en-US', { hour12: false }));
+    }, 1000);
     return () => { mountedRef.current = false; clearInterval(iv); };
   }, []);
 
-  const handleToggle      = useCallback(() => onMenuToggle(), [onMenuToggle]);
-  const handleThemeToggle = useCallback(() => { if (mountedRef.current) setTheme(isDark ? 'light' : 'dark'); }, [isDark, setTheme]);
+  const toggleTheme = useCallback(() => {
+    if (mountedRef.current) setTheme(isDark ? 'light' : 'dark');
+  }, [isDark, setTheme]);
 
   const topbarStyle = useMemo(() => ({
     position:             'fixed' as const,
-    top:                  28,
+    top:                  topOffset,
+    left:                 sidebarWidth,
     right:                0,
-    left:                 0,
-    zIndex:               50,
-    height:               '56px',
-    background:           'rgba(7,9,17,0.92)',
-    backdropFilter:       'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-    borderBottom:         '1px solid rgba(255,255,255,0.05)',
+    zIndex:               190,
+    height:               height,
+    background:           'rgba(8,10,16,0.95)',
+    backdropFilter:       'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
+    borderBottom:         '1px solid rgba(255,255,255,0.06)',
     display:              'flex',
     alignItems:           'center',
-    padding:              isMobile ? '0 12px' : '0 20px',
-    gap:                  '12px',
-    overflow:             'hidden' as const,
-  }), [isMobile]);
+    padding:              isMobile ? '0 14px' : '0 22px',
+    gap:                  10,
+    transition:           rm ? 'none' : 'left 0.25s cubic-bezier(0.22,1,0.36,1)',
+  }), [topOffset, sidebarWidth, height, isMobile, rm]);
 
-  const iconBtnStyle = useMemo(() => ({
-    width:          '32px',
-    height:         '32px',
-    borderRadius:   '8px',
-    background:     'rgba(255,255,255,0.04)',
-    border:         '1px solid rgba(255,255,255,0.06)',
-    cursor:         'pointer',
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'center',
-    color:          'rgba(130,135,165,1)',
-    flexShrink:     0,
-    transition:     'all 0.15s',
+  const btnStyle = useMemo(() => ({
+    width:32,height:32,borderRadius:8,
+    background:'rgba(255,255,255,0.04)',
+    border:'1px solid rgba(255,255,255,0.07)',
+    cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',
+    color:'rgba(120,125,155,1)',flexShrink:0,transition:'all 0.13s',
   }), []);
 
   return (
-    <header role="banner" style={topbarStyle} aria-label="Application topbar">
+    <header role="banner" style={topbarStyle}>
 
-      {/* Menu toggle */}
-      <button
-        type="button"
-        onClick={handleToggle}
-        style={iconBtnStyle}
-        aria-label={sidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
-        aria-expanded={sidebarExpanded}
-      >
-        <MenuIcon open={sidebarExpanded} />
+      {/* Hamburger */}
+      <button type="button" onClick={onMenuToggle} style={btnStyle} aria-label="Toggle sidebar">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+          <rect x="1.5" y="3"    width={sidebarExpanded ? 12 : 8} height="1.4" rx="0.7" fill="currentColor" style={{ transition:'width 0.2s' }}/>
+          <rect x="1.5" y="6.8" width="8"                         height="1.4" rx="0.7" fill="currentColor"/>
+          <rect x="1.5" y="10.6" width={sidebarExpanded ? 12 : 4} height="1.4" rx="0.7" fill="currentColor" style={{ transition:'width 0.2s' }}/>
+        </svg>
       </button>
 
-      {/* Logo text */}
-      {!isCompact && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          <span style={{
-            fontFamily:    "'Space Mono', monospace",
-            fontSize:      '13px',
-            fontWeight:    700,
-            letterSpacing: '0.14em',
-            color:         'rgba(220,225,245,0.9)',
-          }}>
-            ZERØ MERIDIAN
-          </span>
-        </div>
+      {/* Brand — desktop only */}
+      {!compact && (
+        <span style={{ fontFamily:"'JetBrains Mono',monospace",fontSize:'12px',fontWeight:700,letterSpacing:'0.13em',color:'rgba(210,215,240,0.85)',flexShrink:0 }}>
+          ZER&#216; MERIDIAN
+        </span>
       )}
 
-      {/* Desktop quick nav */}
-      {!isCompact && (
-        <nav role="navigation" aria-label="Quick navigation" style={{ display: 'flex', gap: '2px', marginLeft: '16px' }}>
-          {[
-            { label: 'Dashboard', path: '/dashboard' },
-            { label: 'Markets',   path: '/markets'   },
-            { label: 'DeFi',      path: '/defi'      },
-            { label: 'Portal',    path: '/'          },
-          ].map(item => (
-            <a
-              key={item.path}
-              href={item.path}
-              style={{
-                padding:        '5px 11px',
-                borderRadius:   '6px',
-                fontSize:       '11px',
-                fontFamily:     "'Space Mono', monospace",
-                color:          'rgba(110,115,145,1)',
-                textDecoration: 'none',
-                letterSpacing:  '0.04em',
-                transition:     'all 0.13s',
-              }}
-              onMouseEnter={e => {
-                (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.05)';
-                (e.target as HTMLElement).style.color = 'rgba(200,205,230,1)';
-              }}
-              onMouseLeave={e => {
-                (e.target as HTMLElement).style.background = 'transparent';
-                (e.target as HTMLElement).style.color = 'rgba(110,115,145,1)';
-              }}
-            >
-              {item.label}
+      {/* Quick nav — desktop */}
+      {!compact && (
+        <nav style={{ display:'flex',gap:2,marginLeft:14 }}>
+          {[['Dashboard','/dashboard'],['Markets','/markets'],['DeFi','/defi'],['AI Intel','/intelligence']].map(([l,p]) => (
+            <a key={p} href={p} style={{ padding:'4px 10px',borderRadius:6,fontSize:'11px',fontFamily:"'JetBrains Mono',monospace",color:'rgba(95,100,130,1)',textDecoration:'none',letterSpacing:'0.03em',transition:'all 0.12s' }}
+              onMouseEnter={e=>{ const t=e.target as HTMLElement; t.style.background='rgba(255,255,255,0.05)'; t.style.color='rgba(190,195,225,1)'; }}
+              onMouseLeave={e=>{ const t=e.target as HTMLElement; t.style.background='transparent'; t.style.color='rgba(95,100,130,1)'; }}>
+              {l}
             </a>
           ))}
         </nav>
       )}
 
-      {/* Spacer */}
-      <div style={{ flex: 1 }} />
+      <div style={{ flex:1 }} />
 
       {/* Right cluster */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '8px', flexShrink: 0 }}>
+      <div style={{ display:'flex',alignItems:'center',gap: isMobile ? 5 : 7,flexShrink:0 }}>
 
-        {/* Time */}
+        {/* Clock */}
         {!isMobile && (
-          <span style={{
-            fontFamily:    "'Space Mono', monospace",
-            fontSize:      '11px',
-            color:         'rgba(80,85,110,1)',
-            letterSpacing: '0.08em',
-            whiteSpace:    'nowrap' as const,
-            minWidth:      '70px',
-            textAlign:     'right' as const,
-          }} aria-live="polite" aria-atomic="true">
+          <span style={{ fontFamily:"'JetBrains Mono',monospace",fontSize:'10px',color:'rgba(70,75,100,1)',letterSpacing:'0.08em',whiteSpace:'nowrap' as const,minWidth:68,textAlign:'right' as const }}>
             {time}
           </span>
         )}
 
-        {/* PWA Install */}
         <PWAInstallButton />
 
         {/* Theme toggle */}
-        <motion.button
-          onClick={handleThemeToggle}
-          style={iconBtnStyle}
-          whileHover={prefersReducedMotion ? {} : { scale: 1.06 }}
-          whileTap={prefersReducedMotion ? {} : { scale: 0.94 }}
-          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
+        <motion.button onClick={toggleTheme} style={btnStyle}
+          whileHover={rm ? {} : { scale:1.05 }} whileTap={rm ? {} : { scale:0.95 }}
+          aria-label={isDark ? 'Light mode' : 'Dark mode'}>
           {isDark ? <SunIcon /> : <MoonIcon />}
         </motion.button>
 
-        {/* Live badge */}
+        {/* LIVE badge — desktop */}
         {!isMobile && (
-          <div style={{
-            display:       'flex',
-            alignItems:    'center',
-            gap:           '5px',
-            background:    'rgba(52,211,153,0.06)',
-            border:        '1px solid rgba(52,211,153,0.14)',
-            borderRadius:  '16px',
-            padding:       '4px 10px',
-            fontSize:      '10px',
-            fontFamily:    "'Space Mono', monospace",
-            color:         'rgba(52,211,153,0.7)',
-            letterSpacing: '0.08em',
-            flexShrink:    0,
-          }} role="status" aria-label="Network status: live">
+          <div style={{ display:'flex',alignItems:'center',gap:5,background:'rgba(61,214,140,0.06)',border:'1px solid rgba(61,214,140,0.14)',borderRadius:14,padding:'3px 9px',fontSize:'9px',fontFamily:"'JetBrains Mono',monospace",color:'rgba(61,214,140,0.7)',letterSpacing:'0.09em',flexShrink:0 }}>
             <motion.div
-              style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(52,211,153,0.9)', flexShrink: 0 }}
-              animate={prefersReducedMotion ? {} : { opacity: [1, 0.35, 1] }}
-              transition={{ duration: 1.8, repeat: Infinity }}
-              aria-hidden="true"
+              style={{ width:5,height:5,borderRadius:'50%',background:'rgba(61,214,140,0.85)',flexShrink:0 }}
+              animate={rm ? {} : { opacity:[1,0.3,1] }} transition={{ duration:1.8,repeat:Infinity }}
             />
             LIVE
           </div>
@@ -277,26 +171,8 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
 
         {/* Avatar */}
         <motion.button
-          style={{
-            width:        '32px',
-            height:       '32px',
-            borderRadius: '50%',
-            background:   'rgba(52,211,153,0.1)',
-            border:       '1px solid rgba(52,211,153,0.18)',
-            cursor:       'pointer',
-            fontSize:     '12px',
-            fontWeight:   700,
-            color:        'rgba(52,211,153,0.9)',
-            fontFamily:   "'Space Mono', monospace",
-            flexShrink:   0,
-            display:      'flex',
-            alignItems:   'center',
-            justifyContent: 'center',
-          }}
-          whileHover={prefersReducedMotion ? {} : { scale: 1.06 }}
-          whileTap={prefersReducedMotion ? {} : { scale: 0.94 }}
-          aria-label="User profile"
-        >
+          style={{ width:30,height:30,borderRadius:'50%',background:'rgba(79,127,255,0.10)',border:'1px solid rgba(79,127,255,0.18)',cursor:'pointer',fontSize:'11px',fontWeight:700,color:'rgba(79,127,255,0.9)',fontFamily:"'JetBrains Mono',monospace",flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center' }}
+          whileHover={rm ? {} : { scale:1.05 }} whileTap={rm ? {} : { scale:0.95 }} aria-label="Profile">
           W
         </motion.button>
       </div>
