@@ -1,5 +1,5 @@
 /**
- * Topbar.tsx — ZERØ MERIDIAN 2026 push79
+ * Topbar.tsx — ZERØ MERIDIAN 2026 push81
  * push79: Mobile responsive fix
  *   - Nav links hidden on mobile/tablet (BottomNavBar handles it)
  *   - Time, FPS badge, status badge hidden on mobile
@@ -21,6 +21,7 @@ import { useTheme } from 'next-themes';
 import { usePerformance } from '@/hooks/usePerformance';
 import { usePWAInstall } from '@/contexts/PWAInstallContext';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import XLogo from '@/components/shared/XLogo';
 
 interface TopbarProps {
   onMenuToggle:    () => void;
@@ -310,8 +311,8 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
       </motion.button>
 
       {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-        <div style={indicatorStyle} aria-hidden="true" />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+        <XLogo size={isMobile ? 22 : 28} />
         <span style={logoTextStyle} aria-label="ZERØ MERIDIAN">ZERØ MERIDIAN</span>
       </div>
 
