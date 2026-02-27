@@ -1,16 +1,10 @@
 /**
- * AppShell.tsx — ZERØ MERIDIAN 2026 push74
- * push74: PWAInstallPrompt semua breakpoint (mobile + tablet + desktop)
- * push27: PWAInstallPrompt integrated
- * push26: Mobile drawer mode + BottomNavBar integration
- * push23: var(--zm-bg-base) + max-width 1800px
- * - React.memo + displayName ✓
- * - rgba() only, zero hsl() ✓
- * - var(--zm-*) theme-aware ✓
- * - useCallback + useMemo ✓
- * - mountedRef ✓
- * - Zero className ✓
- * - Zero template literals ✓
+ * AppShell.tsx — ZERØ MERIDIAN 2026 push88
+ * Bloomberg-grade layout: GlobalStatsBar > Topbar > Content
+ * - Zero className → style={{}} only
+ * - rgba() only
+ * - React.memo + displayName
+ * - useCallback + useMemo + mountedRef
  */
 
 import React, { useRef, useCallback, useMemo } from 'react';
@@ -29,169 +23,118 @@ interface AppShellProps {
   currentPath?: string;
 }
 
-const shellVariants = Object.freeze({
-  initial: { opacity: 0 },
-  animate: { opacity: 1, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
-});
+const STATS_H   = 28;
+const TOPBAR_H  = 52;
+const HEADER_H  = STATS_H + TOPBAR_H;
+const SIDEBAR_E = 252;
+const SIDEBAR_C = 68;
 
-const drawerVariants = Object.freeze({
-  hidden:  { x: '-100%', opacity: 0 },
-  visible: { x: '0%',   opacity: 1, transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] } },
-  exit:    { x: '-100%', opacity: 0, transition: { duration: 0.22, ease: [0.36, 0, 0.66, 0] } },
-});
-
-const overlayVariants = Object.freeze({
+const overlayV = Object.freeze({
   hidden:  { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.2 } },
   exit:    { opacity: 0, transition: { duration: 0.2 } },
 });
+const drawerV = Object.freeze({
+  hidden:  { x: '-100%' },
+  visible: { x: '0%', transition: { duration: 0.26, ease: [0.22,1,0.36,1] } },
+  exit:    { x: '-100%', transition: { duration: 0.20, ease: [0.36,0,0.66,0] } },
+});
 
 const AppShell: React.FC<AppShellProps> = ({ children, currentPath: propPath }) => {
-  const mountedRef = useRef(true);
-  const [sidebarExpanded,   setSidebarExpanded]   = React.useState(true);
-  const [mobileDrawerOpen,  setMobileDrawerOpen]  = React.useState(false);
-  const prefersReducedMotion = useReducedMotion();
-  const location             = useLocation();
+  const mountedRef                   = useRef(true);
+  const [expanded,   setExpanded]    = React.useState(true);
+  const [drawerOpen, setDrawerOpen]  = React.useState(false);
+  const rm   = useReducedMotion();
+  const loc  = useLocation();
   const { isMobile, isTablet } = useBreakpoint();
 
-  const currentPath      = propPath ?? location.pathname;
-  const showBottomNav    = isMobile;
-  const showMobileDrawer = isMobile || isTablet;
+  const path    = propPath ?? loc.pathname;
+  const mobile  = isMobile;
+  const tablet  = isTablet;
+  const drawer  = mobile || tablet;
+  const bottomN = mobile;
 
-  React.useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
-  }, []);
+  React.useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+  React.useEffect(() => { if (drawer && drawerOpen) setDrawerOpen(false); }, [path]); // eslint-disable-line
 
-  React.useEffect(() => {
-    if (showMobileDrawer && mobileDrawerOpen) setMobileDrawerOpen(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPath]);
-
-  const toggleSidebar = useCallback(() => {
+  const toggle = useCallback(() => {
     if (!mountedRef.current) return;
-    if (showMobileDrawer) setMobileDrawerOpen(prev => !prev);
-    else setSidebarExpanded(prev => !prev);
-  }, [showMobileDrawer]);
+    if (drawer) setDrawerOpen(p => !p);
+    else        setExpanded(p => !p);
+  }, [drawer]);
 
   const closeDrawer = useCallback(() => {
-    if (mountedRef.current) setMobileDrawerOpen(false);
+    if (mountedRef.current) setDrawerOpen(false);
   }, []);
 
-  const mainVariants = useMemo(() => Object.freeze({
-    collapsed: { marginLeft: 72  },
-    expanded:  { marginLeft: 260 },
-    mobile:    { marginLeft: 0   },
-  }), []);
-
-  const mainAnimate = useMemo(() => {
-    if (showMobileDrawer) return 'mobile';
-    return sidebarExpanded ? 'expanded' : 'collapsed';
-  }, [showMobileDrawer, sidebarExpanded]);
-
-  const mainStyle = useMemo(() => ({
-    minHeight:  '100vh',
-    background: 'var(--zm-bg-base)',
-    transition: prefersReducedMotion ? 'none' : 'margin-left 0.3s cubic-bezier(0.22,1,0.36,1)',
-    willChange: 'margin-left' as const,
-  }), [prefersReducedMotion]);
+  const sw = useMemo(
+    () => drawer ? 0 : expanded ? SIDEBAR_E : SIDEBAR_C,
+    [drawer, expanded]
+  );
 
   const contentStyle = useMemo(() => ({
-    padding:       isMobile ? '0 16px 32px' : '0 32px 32px',
-    paddingTop:    '100px',
-    paddingBottom: showBottomNav ? '88px' : '32px',
-    maxWidth:      '1800px',
-    margin:        '0 auto',
+    marginLeft:    sw,
+    paddingTop:    HEADER_H + 24,
+    paddingLeft:   mobile ? 14 : 26,
+    paddingRight:  mobile ? 14 : 26,
+    paddingBottom: bottomN ? 88 : 40,
+    minHeight:     '100vh',
+    background:    'rgba(8,10,16,1)',
     boxSizing:     'border-box' as const,
-    width:         '100%',
-    overflowX:     'hidden' as const,
-  }), [showBottomNav, isMobile]);
-
-  const overlayStyle = useMemo(() => ({
-    position:             'fixed'  as const,
-    inset:                0,
-    zIndex:               149,
-    background:           'rgba(5,5,14,0.7)',
-    backdropFilter:       'blur(2px)',
-    WebkitBackdropFilter: 'blur(2px)',
-  }), []);
-
-  const drawerStyle = useMemo(() => ({
-    position:   'fixed' as const,
-    top:        0,
-    left:       0,
-    bottom:     0,
-    zIndex:     150,
-    width:      '240px',
-    willChange: 'transform' as const,
-  }), []);
+    transition:    rm ? 'none' : 'margin-left 0.25s cubic-bezier(0.22,1,0.36,1)',
+  }), [sw, mobile, bottomN, rm]);
 
   return (
-    <motion.div
-      variants={shellVariants}
-      initial="initial"
-      animate="animate"
-      style={{ display: 'flex', minHeight: '100vh', background: 'var(--zm-bg-base)' }}
-    >
-      {/* Desktop sidebar */}
-      {!showMobileDrawer && (
-        <ZMSidebar expanded={sidebarExpanded} onToggle={toggleSidebar} currentPath={currentPath} />
+    <div style={{ minHeight: '100vh', background: 'rgba(8,10,16,1)' }}>
+
+      <GlobalStatsBar />
+
+      <Topbar
+        onMenuToggle={toggle}
+        sidebarExpanded={expanded}
+        topOffset={STATS_H}
+        height={TOPBAR_H}
+        sidebarWidth={sw}
+      />
+
+      {!drawer && (
+        <ZMSidebar
+          expanded={expanded}
+          onToggle={toggle}
+          currentPath={path}
+          headerHeight={HEADER_H}
+          expandedWidth={SIDEBAR_E}
+          collapsedWidth={SIDEBAR_C}
+        />
       )}
 
-      {/* Mobile/Tablet overlay drawer */}
       <AnimatePresence>
-        {showMobileDrawer && mobileDrawerOpen && (
+        {drawer && drawerOpen && (
           <>
-            <motion.div
-              key="overlay"
-              variants={overlayVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              style={overlayStyle}
+            <motion.div key="ov" variants={overlayV} initial="hidden" animate="visible" exit="exit"
+              style={{ position:'fixed' as const,inset:0,zIndex:170,background:'rgba(4,5,12,0.80)',backdropFilter:'blur(3px)',WebkitBackdropFilter:'blur(3px)' }}
               onClick={closeDrawer}
-              aria-label="Close navigation drawer"
-              role="button"
             />
-            <motion.div
-              key="drawer"
-              variants={prefersReducedMotion ? {} : drawerVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              style={drawerStyle}
-            >
-              <ZMSidebar expanded={true} onToggle={closeDrawer} currentPath={currentPath} />
+            <motion.div key="dr" variants={rm?{}:drawerV} initial="hidden" animate="visible" exit="exit"
+              style={{ position:'fixed' as const,top:0,left:0,bottom:0,zIndex:180,width:SIDEBAR_E }}>
+              <ZMSidebar expanded={true} onToggle={closeDrawer} currentPath={path}
+                headerHeight={HEADER_H} expandedWidth={SIDEBAR_E} collapsedWidth={SIDEBAR_C} />
             </motion.div>
           </>
         )}
       </AnimatePresence>
 
-      {/* Main content */}
-      <motion.main
-        animate={mainAnimate}
-        variants={mainVariants}
-        transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        style={{ ...mainStyle, flex: 1, minWidth: 0 }}
-      >
-        <Topbar onMenuToggle={toggleSidebar} sidebarExpanded={sidebarExpanded} />
-        <GlobalStatsBar />
-
-        <div style={contentStyle}>
+      <div style={contentStyle}>
+        <div style={{ maxWidth: 1720, margin: '0 auto', width: '100%' }}>
           <AnimatePresence mode="wait">
-            <PageTransition key={currentPath}>
-              {children}
-            </PageTransition>
+            <PageTransition key={path}>{children}</PageTransition>
           </AnimatePresence>
         </div>
-      </motion.main>
+      </div>
 
-      {/* Bottom nav — mobile only */}
-      {showBottomNav && <BottomNavBar />}
-
-      {/* PWA Install Prompt — ALL breakpoints (mobile + tablet + desktop) */}
+      {bottomN && <BottomNavBar />}
       <PWAInstallPrompt />
-    </motion.div>
+    </div>
   );
 };
 
