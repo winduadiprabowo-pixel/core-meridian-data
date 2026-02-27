@@ -1,6 +1,6 @@
 /**
- * Portal.tsx — ZERØ MERIDIAN 2026 push73
- * push73: Logo Ø crystal SVG center of particle field, auto-enter 2.5s
+ * Portal.tsx — ZERØ MERIDIAN 2026 push76
+ * push76: Logo upgrade — crystal shuriken 4-spike + Ø neon 3D glow
  * - React.memo + displayName ✓
  * - rgba() only ✓  Zero className ✓  Zero template literals in JSX ✓
  * - useCallback + useMemo + mountedRef ✓
@@ -30,114 +30,230 @@ function createPRNG(seed: number) {
   };
 }
 
-// ─── Ø Logo — glass crystal, cyan + white specular core ──────────────────────
-const OmegaLogo = React.memo(() => (
+// ─── Crystal Shuriken Logo — 4-spike + Ø neon 3D ─────────────────────────────
+const CrystalLogo = React.memo(() => (
   <svg
-    width="140"
-    height="140"
-    viewBox="0 0 140 140"
+    width="180"
+    height="180"
+    viewBox="0 0 180 180"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     aria-hidden="true"
     style={{ display: 'block' }}
   >
     <defs>
-      <filter id="zmOuterGlow" x="-80%" y="-80%" width="260%" height="260%">
-        <feGaussianBlur stdDeviation="10" result="b1" />
-        <feGaussianBlur stdDeviation="22" result="b2" />
+      {/* Deep outer glow */}
+      <filter id="deepGlow" x="-80%" y="-80%" width="260%" height="260%">
+        <feGaussianBlur stdDeviation="12" result="b1" />
+        <feGaussianBlur stdDeviation="28" result="b2" />
         <feMerge>
           <feMergeNode in="b2" />
           <feMergeNode in="b1" />
           <feMergeNode in="SourceGraphic" />
         </feMerge>
       </filter>
-      <filter id="zmEdgeGlow" x="-40%" y="-40%" width="180%" height="180%">
-        <feGaussianBlur stdDeviation="3" result="b" />
+      {/* Edge glow */}
+      <filter id="edgeGlow" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="3.5" result="b" />
         <feMerge>
           <feMergeNode in="b" />
           <feMergeNode in="SourceGraphic" />
         </feMerge>
       </filter>
-      <filter id="zmWhite" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur stdDeviation="1.5" result="b" />
+      {/* Soft white */}
+      <filter id="softWhite" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="2" result="b" />
         <feMerge>
           <feMergeNode in="b" />
           <feMergeNode in="SourceGraphic" />
         </feMerge>
       </filter>
-      <radialGradient id="zmGlassFill" cx="38%" cy="32%" r="60%">
-        <stop offset="0%"   stopColor="rgba(180,245,255,0.1)" />
-        <stop offset="100%" stopColor="rgba(0,180,220,0.02)" />
-      </radialGradient>
-      <linearGradient id="zmCircleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%"   stopColor="rgba(255,255,255,0.92)" />
-        <stop offset="25%"  stopColor="rgba(140,238,255,1)" />
-        <stop offset="65%"  stopColor="rgba(0,238,255,1)" />
+      {/* Crystal face gradient — dark glass */}
+      <linearGradient id="crystalFaceTop" x1="50%" y1="0%" x2="50%" y2="100%">
+        <stop offset="0%"   stopColor="rgba(140,200,255,0.18)" />
+        <stop offset="50%"  stopColor="rgba(20,40,80,0.55)" />
+        <stop offset="100%" stopColor="rgba(5,10,25,0.75)" />
+      </linearGradient>
+      <linearGradient id="crystalFaceRight" x1="0%" y1="50%" x2="100%" y2="50%">
+        <stop offset="0%"   stopColor="rgba(5,10,25,0.75)" />
+        <stop offset="50%"  stopColor="rgba(20,40,80,0.55)" />
+        <stop offset="100%" stopColor="rgba(100,180,255,0.14)" />
+      </linearGradient>
+      <linearGradient id="crystalFaceBottom" x1="50%" y1="0%" x2="50%" y2="100%">
+        <stop offset="0%"   stopColor="rgba(5,10,25,0.75)" />
+        <stop offset="100%" stopColor="rgba(30,60,100,0.35)" />
+      </linearGradient>
+      <linearGradient id="crystalFaceLeft" x1="100%" y1="50%" x2="0%" y2="50%">
+        <stop offset="0%"   stopColor="rgba(5,10,25,0.75)" />
+        <stop offset="100%" stopColor="rgba(80,160,240,0.12)" />
+      </linearGradient>
+      {/* Ø circle gradient */}
+      <linearGradient id="omegaCircleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"   stopColor="rgba(255,255,255,0.95)" />
+        <stop offset="20%"  stopColor="rgba(180,245,255,1)" />
+        <stop offset="60%"  stopColor="rgba(0,238,255,1)" />
         <stop offset="100%" stopColor="rgba(0,180,220,0.85)" />
       </linearGradient>
-      <linearGradient id="zmSlashGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%"   stopColor="rgba(255,255,255,0.95)" />
-        <stop offset="35%"  stopColor="rgba(140,240,255,1)" />
+      {/* Ø slash gradient */}
+      <linearGradient id="omegaSlashGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"   stopColor="rgba(255,255,255,0.98)" />
+        <stop offset="30%"  stopColor="rgba(160,245,255,1)" />
         <stop offset="70%"  stopColor="rgba(0,238,255,1)" />
-        <stop offset="100%" stopColor="rgba(0,195,235,0.8)" />
+        <stop offset="100%" stopColor="rgba(0,195,235,0.85)" />
+      </linearGradient>
+      {/* Ambient glow radial */}
+      <radialGradient id="ambientGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%"   stopColor="rgba(0,238,255,0.08)" />
+        <stop offset="100%" stopColor="rgba(0,238,255,0)" />
+      </radialGradient>
+      {/* Crystal edge stroke */}
+      <linearGradient id="edgeStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"   stopColor="rgba(120,210,255,0.55)" />
+        <stop offset="50%"  stopColor="rgba(0,238,255,0.25)" />
+        <stop offset="100%" stopColor="rgba(40,100,180,0.4)" />
       </linearGradient>
     </defs>
 
-    {/* Glass fill */}
-    <circle cx="70" cy="70" r="44" fill="url(#zmGlassFill)" />
+    {/* ── Ambient background glow ── */}
+    <circle cx="90" cy="90" r="88" fill="url(#ambientGlow)" />
 
-    {/* Outer glow circle */}
-    <circle cx="70" cy="70" r="44"
-      stroke="rgba(0,238,255,0.32)"
-      strokeWidth="13"
-      fill="none"
-      filter="url(#zmOuterGlow)"
+    {/* ── TOP spike ── */}
+    {/* Shadow face left */}
+    <polygon points="90,8 72,72 90,60" fill="rgba(5,10,25,0.8)" />
+    {/* Light face right */}
+    <polygon points="90,8 108,72 90,60" fill="rgba(100,170,240,0.18)" />
+    {/* Inner face */}
+    <polygon points="90,8 72,72 90,60 108,72" fill="url(#crystalFaceTop)" />
+    {/* Edge highlights */}
+    <line x1="90" y1="8" x2="72" y2="72" stroke="rgba(80,160,240,0.35)" strokeWidth="0.8" />
+    <line x1="90" y1="8" x2="108" y2="72" stroke="rgba(180,230,255,0.55)" strokeWidth="0.8" />
+    {/* Specular on right edge */}
+    <line x1="90" y1="8" x2="104" y2="58" stroke="rgba(255,255,255,0.2)" strokeWidth="0.5" />
+
+    {/* ── RIGHT spike ── */}
+    <polygon points="172,90 108,72 120,90" fill="rgba(140,200,255,0.15)" />
+    <polygon points="172,90 108,108 120,90" fill="rgba(5,10,25,0.75)" />
+    <polygon points="172,90 108,72 120,90 108,108" fill="url(#crystalFaceRight)" />
+    <line x1="172" y1="90" x2="108" y2="72" stroke="rgba(180,230,255,0.5)" strokeWidth="0.8" />
+    <line x1="172" y1="90" x2="108" y2="108" stroke="rgba(40,80,160,0.3)" strokeWidth="0.8" />
+
+    {/* ── BOTTOM spike ── */}
+    <polygon points="90,172 108,108 90,120" fill="rgba(5,10,25,0.85)" />
+    <polygon points="90,172 72,108 90,120" fill="rgba(60,120,200,0.12)" />
+    <polygon points="90,172 108,108 90,120 72,108" fill="url(#crystalFaceBottom)" />
+    <line x1="90" y1="172" x2="108" y2="108" stroke="rgba(40,80,160,0.3)" strokeWidth="0.8" />
+    <line x1="90" y1="172" x2="72" y2="108" stroke="rgba(80,140,220,0.25)" strokeWidth="0.8" />
+
+    {/* ── LEFT spike ── */}
+    <polygon points="8,90 72,108 60,90" fill="rgba(5,10,25,0.8)" />
+    <polygon points="8,90 72,72 60,90" fill="rgba(80,150,230,0.14)" />
+    <polygon points="8,90 72,108 60,90 72,72" fill="url(#crystalFaceLeft)" />
+    <line x1="8" y1="90" x2="72" y2="72" stroke="rgba(120,190,255,0.35)" strokeWidth="0.8" />
+    <line x1="8" y1="90" x2="72" y2="108" stroke="rgba(30,60,140,0.25)" strokeWidth="0.8" />
+
+    {/* ── Center diamond face ── */}
+    <polygon points="90,60 120,90 90,120 60,90"
+      fill="rgba(8,16,35,0.88)"
+      stroke="url(#edgeStroke)"
+      strokeWidth="0.6"
     />
+    {/* Center face inner facets */}
+    <polygon points="90,60 120,90 90,90" fill="rgba(0,238,255,0.04)" />
+    <polygon points="90,60 60,90 90,90" fill="rgba(0,0,0,0.15)" />
+    <polygon points="90,120 120,90 90,90" fill="rgba(0,0,0,0.2)" />
+    <polygon points="90,120 60,90 90,90" fill="rgba(0,238,255,0.02)" />
 
+    {/* ── Ø Logo — neon 3D ── */}
+    {/* Deep outer glow layer */}
+    <circle cx="90" cy="90" r="32"
+      stroke="rgba(0,238,255,0.15)"
+      strokeWidth="18"
+      fill="none"
+      filter="url(#deepGlow)"
+    />
+    {/* Mid glow */}
+    <circle cx="90" cy="90" r="32"
+      stroke="rgba(0,238,255,0.45)"
+      strokeWidth="10"
+      fill="none"
+      filter="url(#edgeGlow)"
+    />
     {/* Main circle */}
-    <circle cx="70" cy="70" r="44"
-      stroke="url(#zmCircleGrad)"
-      strokeWidth="7"
+    <circle cx="90" cy="90" r="32"
+      stroke="url(#omegaCircleGrad)"
+      strokeWidth="5.5"
       fill="none"
-      filter="url(#zmEdgeGlow)"
     />
-
     {/* White specular arc — top-left hotspot */}
-    <circle cx="70" cy="70" r="44"
-      stroke="rgba(255,255,255,0.5)"
+    <circle cx="90" cy="90" r="32"
+      stroke="rgba(255,255,255,0.55)"
       strokeWidth="2"
       fill="none"
-      strokeDasharray="55 222"
-      strokeDashoffset="25"
-      filter="url(#zmWhite)"
+      strokeDasharray="42 160"
+      strokeDashoffset="18"
+      filter="url(#softWhite)"
     />
 
-    {/* Slash outer glow */}
-    <line x1="97" y1="29" x2="43" y2="111"
-      stroke="rgba(0,238,255,0.38)"
-      strokeWidth="13"
+    {/* Slash deep glow */}
+    <line x1="114" y1="60" x2="66" y2="120"
+      stroke="rgba(0,238,255,0.2)"
+      strokeWidth="14"
       strokeLinecap="round"
-      filter="url(#zmOuterGlow)"
+      filter="url(#deepGlow)"
     />
-
+    {/* Slash mid glow */}
+    <line x1="114" y1="60" x2="66" y2="120"
+      stroke="rgba(0,238,255,0.5)"
+      strokeWidth="8"
+      strokeLinecap="round"
+      filter="url(#edgeGlow)"
+    />
     {/* Slash main */}
-    <line x1="97" y1="29" x2="43" y2="111"
-      stroke="url(#zmSlashGrad)"
-      strokeWidth="7"
+    <line x1="114" y1="60" x2="66" y2="120"
+      stroke="url(#omegaSlashGrad)"
+      strokeWidth="5.5"
       strokeLinecap="round"
-      filter="url(#zmEdgeGlow)"
+    />
+    {/* Slash white core — top specular */}
+    <line x1="112" y1="63" x2="88" y2="96"
+      stroke="rgba(255,255,255,0.7)"
+      strokeWidth="2"
+      strokeLinecap="round"
+      filter="url(#softWhite)"
     />
 
-    {/* Slash white core — top hotspot */}
-    <line x1="95" y1="32" x2="67" y2="74"
-      stroke="rgba(255,255,255,0.65)"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      filter="url(#zmWhite)"
+    {/* ── Outer edge glow on crystal spikes ── */}
+    {/* Top spike glow edge */}
+    <polyline points="72,72 90,8 108,72"
+      stroke="rgba(0,238,255,0.12)"
+      strokeWidth="1.5"
+      fill="none"
+      filter="url(#edgeGlow)"
+    />
+    {/* Right spike glow edge */}
+    <polyline points="108,72 172,90 108,108"
+      stroke="rgba(0,238,255,0.1)"
+      strokeWidth="1.5"
+      fill="none"
+      filter="url(#edgeGlow)"
+    />
+    {/* Bottom spike glow edge */}
+    <polyline points="108,108 90,172 72,108"
+      stroke="rgba(0,238,255,0.08)"
+      strokeWidth="1.5"
+      fill="none"
+      filter="url(#edgeGlow)"
+    />
+    {/* Left spike glow edge */}
+    <polyline points="72,108 8,90 72,72"
+      stroke="rgba(0,238,255,0.1)"
+      strokeWidth="1.5"
+      fill="none"
+      filter="url(#edgeGlow)"
     />
   </svg>
 ));
-OmegaLogo.displayName = 'OmegaLogo';
+CrystalLogo.displayName = 'CrystalLogo';
 
 // ─── Thin progress bar ────────────────────────────────────────────────────────
 const EnterProgress = React.memo(({ duration }: { duration: number }) => {
@@ -313,14 +429,19 @@ const Portal: React.FC = () => {
 
   const logoWrapStyle = useMemo(() => Object.freeze({
     position: 'relative' as const,
-    width: '160px', height: '160px',
+    width: '200px', height: '200px',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
   }), []);
 
   const logoAmbientStyle = useMemo(() => Object.freeze({
-    position: 'absolute' as const, inset: '-24px', borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(0,238,255,0.1) 0%, rgba(0,238,255,0.03) 55%, transparent 80%)',
-    filter: 'blur(10px)', pointerEvents: 'none' as const,
+    position: 'absolute' as const, inset: '-32px', borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(0,238,255,0.12) 0%, rgba(0,238,255,0.04) 50%, transparent 75%)',
+    filter: 'blur(14px)', pointerEvents: 'none' as const,
+  }), []);
+
+  // Slow rotation on the logo
+  const logoMotionStyle = useMemo(() => ({
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
   }), []);
 
   const titleStyle = useMemo(() => Object.freeze({
@@ -330,7 +451,7 @@ const Portal: React.FC = () => {
     letterSpacing: '0.2em',
     color: 'rgba(255,255,255,0)',
     WebkitTextStroke: '1px rgba(240,240,248,0.88)',
-    margin: '18px 0 0',
+    margin: '20px 0 0',
     lineHeight: 1,
     textAlign: 'center' as const,
     userSelect: 'none' as const,
@@ -378,14 +499,20 @@ const Portal: React.FC = () => {
               {logoVisible && (
                 <motion.div
                   key="logo"
-                  initial={{ opacity: 0, scale: 0.75, y: 8 }}
+                  initial={{ opacity: 0, scale: 0.7, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 1.1 }}
-                  transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+                  exit={{ opacity: 0, scale: 1.15 }}
+                  transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
                   style={logoWrapStyle}
                 >
                   <div style={logoAmbientStyle} />
-                  <OmegaLogo />
+                  <motion.div
+                    style={logoMotionStyle}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 30, ease: 'linear', repeat: Infinity }}
+                  >
+                    <CrystalLogo />
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -397,7 +524,7 @@ const Portal: React.FC = () => {
                   initial={{ opacity: 0, y: 14 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  transition={{ delay: 0.28, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ delay: 0.32, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                   style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', pointerEvents: 'none' as const }}
                 >
                   <div style={titleStyle}>ZERØ</div>
