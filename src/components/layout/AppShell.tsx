@@ -1,138 +1,177 @@
 /**
- * AppShell.tsx — ZERØ MERIDIAN 2026 push88
- * Bloomberg-grade layout: GlobalStatsBar > Topbar > Content
- * - Zero className → style={{}} only
- * - rgba() only
- * - React.memo + displayName
- * - useCallback + useMemo + mountedRef
+ * AppShell.tsx — ZERØ MERIDIAN v30
+ * Bloomberg-grade layout system
+ * - Fixed GlobalStatsBar (28px) + Topbar (52px) = 80px header
+ * - Collapsible sidebar desktop / drawer mobile+tablet
+ * - BottomNavBar mobile only
  */
 
-import React, { useRef, useCallback, useMemo } from 'react';
+import React, { useRef, useCallback, useMemo, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import ZMSidebar from './ZMSidebar';
 import Topbar from './Topbar';
 import BottomNavBar from './BottomNavBar';
-import PageTransition from '../shared/PageTransition';
 import GlobalStatsBar from '../shared/GlobalStatsBar';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import PWAInstallPrompt from '@/components/shared/PWAInstallPrompt';
 
 interface AppShellProps {
-  children:     React.ReactNode;
-  currentPath?: string;
+  children: React.ReactNode;
 }
 
 const STATS_H   = 28;
 const TOPBAR_H  = 52;
 const HEADER_H  = STATS_H + TOPBAR_H;
-const SIDEBAR_E = 252;
-const SIDEBAR_C = 68;
+const SIDEBAR_E = 240;
+const SIDEBAR_C = 64;
 
-const overlayV = Object.freeze({
-  hidden:  { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.2 } },
-  exit:    { opacity: 0, transition: { duration: 0.2 } },
-});
-const drawerV = Object.freeze({
-  hidden:  { x: '-100%' },
-  visible: { x: '0%', transition: { duration: 0.26, ease: [0.22,1,0.36,1] } },
-  exit:    { x: '-100%', transition: { duration: 0.20, ease: [0.36,0,0.66,0] } },
-});
-
-const AppShell: React.FC<AppShellProps> = ({ children, currentPath: propPath }) => {
-  const mountedRef                   = useRef(true);
-  const [expanded,   setExpanded]    = React.useState(true);
-  const [drawerOpen, setDrawerOpen]  = React.useState(false);
-  const rm   = useReducedMotion();
-  const loc  = useLocation();
+const AppShell: React.FC<AppShellProps> = ({ children }) => {
+  const rm           = useReducedMotion();
+  const loc          = useLocation();
   const { isMobile, isTablet } = useBreakpoint();
+  const mountedRef   = useRef(true);
 
-  const path    = propPath ?? loc.pathname;
-  const mobile  = isMobile;
-  const tablet  = isTablet;
-  const drawer  = mobile || tablet;
-  const bottomN = mobile;
+  const [expanded,   setExpanded]   = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  React.useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
-  React.useEffect(() => { if (drawer && drawerOpen) setDrawerOpen(false); }, [path]); // eslint-disable-line
+  const isDrawer  = isMobile || isTablet;
+  const showBottom = isMobile;
+
+  React.useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  // Close drawer on route change
+  React.useEffect(() => {
+    if (isDrawer && drawerOpen) setDrawerOpen(false);
+  }, [loc.pathname]); // eslint-disable-line
 
   const toggle = useCallback(() => {
     if (!mountedRef.current) return;
-    if (drawer) setDrawerOpen(p => !p);
-    else        setExpanded(p => !p);
-  }, [drawer]);
+    if (isDrawer) setDrawerOpen(p => !p);
+    else setExpanded(p => !p);
+  }, [isDrawer]);
 
   const closeDrawer = useCallback(() => {
     if (mountedRef.current) setDrawerOpen(false);
   }, []);
 
-  const sw = useMemo(
-    () => drawer ? 0 : expanded ? SIDEBAR_E : SIDEBAR_C,
-    [drawer, expanded]
+  const sidebarW = useMemo(() =>
+    isDrawer ? 0 : expanded ? SIDEBAR_E : SIDEBAR_C,
+    [isDrawer, expanded]
   );
 
   const contentStyle = useMemo(() => ({
-    marginLeft:    sw,
-    paddingTop:    HEADER_H + 24,
-    paddingLeft:   mobile ? 14 : 26,
-    paddingRight:  mobile ? 14 : 26,
-    paddingBottom: bottomN ? 88 : 40,
-    minHeight:     '100vh',
-    background:    'rgba(8,10,16,1)',
-    boxSizing:     'border-box' as const,
-    transition:    rm ? 'none' : 'margin-left 0.25s cubic-bezier(0.22,1,0.36,1)',
-  }), [sw, mobile, bottomN, rm]);
+    marginLeft:   sidebarW,
+    paddingTop:   HEADER_H + 20,
+    paddingLeft:  isMobile ? 14 : 24,
+    paddingRight: isMobile ? 14 : 24,
+    paddingBottom: showBottom ? 80 : 36,
+    minHeight:    '100vh',
+    background:   'var(--zm-bg)',
+    boxSizing:    'border-box' as const,
+    transition:   rm ? 'none' : `margin-left ${220}ms cubic-bezier(0.22,1,0.36,1)`,
+  }), [sidebarW, isMobile, showBottom, rm]);
+
+  const overlayStyle = useMemo(() => ({
+    position: 'fixed' as const,
+    inset: 0,
+    zIndex: 170,
+    background: 'rgba(4,5,12,0.75)',
+    backdropFilter: 'blur(4px)',
+    WebkitBackdropFilter: 'blur(4px)',
+  }), []);
+
+  const drawerStyle = useMemo(() => ({
+    position: 'fixed' as const,
+    top: 0,
+    left: 0,
+    bottom: 0,
+    zIndex: 180,
+    width: SIDEBAR_E,
+  }), []);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'rgba(8,10,16,1)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--zm-bg)' }}>
 
+      {/* Stats bar */}
       <GlobalStatsBar />
 
+      {/* Topbar */}
       <Topbar
         onMenuToggle={toggle}
         sidebarExpanded={expanded}
         topOffset={STATS_H}
         height={TOPBAR_H}
-        sidebarWidth={sw}
+        sidebarWidth={sidebarW}
       />
 
-      {!drawer && (
+      {/* Sidebar — desktop only */}
+      {!isDrawer && (
         <ZMSidebar
           expanded={expanded}
           onToggle={toggle}
-          currentPath={path}
+          currentPath={loc.pathname}
           headerHeight={HEADER_H}
           expandedWidth={SIDEBAR_E}
           collapsedWidth={SIDEBAR_C}
         />
       )}
 
+      {/* Drawer — mobile / tablet */}
       <AnimatePresence>
-        {drawer && drawerOpen && (
+        {isDrawer && drawerOpen && (
           <>
-            <motion.div key="ov" variants={overlayV} initial="hidden" animate="visible" exit="exit"
-              style={{ position:'fixed' as const,inset:0,zIndex:170,background:'rgba(4,5,12,0.80)',backdropFilter:'blur(3px)',WebkitBackdropFilter:'blur(3px)' }}
+            <motion.div
+              key="overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              style={overlayStyle}
               onClick={closeDrawer}
             />
-            <motion.div key="dr" variants={rm?{}:drawerV} initial="hidden" animate="visible" exit="exit"
-              style={{ position:'fixed' as const,top:0,left:0,bottom:0,zIndex:180,width:SIDEBAR_E }}>
-              <ZMSidebar expanded={true} onToggle={closeDrawer} currentPath={path}
-                headerHeight={HEADER_H} expandedWidth={SIDEBAR_E} collapsedWidth={SIDEBAR_C} />
+            <motion.div
+              key="drawer"
+              initial={rm ? {} : { x: '-100%' }}
+              animate={rm ? {} : { x: '0%' }}
+              exit={rm ? {} : { x: '-100%' }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              style={drawerStyle}
+            >
+              <ZMSidebar
+                expanded={true}
+                onToggle={closeDrawer}
+                currentPath={loc.pathname}
+                headerHeight={0}
+                expandedWidth={SIDEBAR_E}
+                collapsedWidth={SIDEBAR_C}
+              />
             </motion.div>
           </>
         )}
       </AnimatePresence>
 
-      <div style={contentStyle}>
-        <div style={{ maxWidth: 1720, margin: '0 auto', width: '100%' }}>
+      {/* Main content */}
+      <main style={contentStyle}>
+        <div style={{ maxWidth: 1680, margin: '0 auto', width: '100%' }}>
           <AnimatePresence mode="wait">
-            <PageTransition key={path}>{children}</PageTransition>
+            <motion.div
+              key={loc.pathname}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {children}
+            </motion.div>
           </AnimatePresence>
         </div>
-      </div>
+      </main>
 
-      {bottomN && <BottomNavBar />}
+      {showBottom && <BottomNavBar />}
       <PWAInstallPrompt />
     </div>
   );
