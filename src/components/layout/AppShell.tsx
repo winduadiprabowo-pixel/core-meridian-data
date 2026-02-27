@@ -97,12 +97,15 @@ const AppShell: React.FC<AppShellProps> = ({ children, currentPath: propPath }) 
   }), [prefersReducedMotion]);
 
   const contentStyle = useMemo(() => ({
-    padding:       '0 24px 24px',
+    padding:       isMobile ? '0 12px 24px' : '0 24px 24px',
     paddingTop:    '96px',
-    paddingBottom: showBottomNav ? '80px' : '24px',
+    paddingBottom: showBottomNav ? '84px' : '24px',
     maxWidth:      '1800px',
     margin:        '0 auto',
-  }), [showBottomNav]);
+    boxSizing:     'border-box' as const,
+    width:         '100%',
+    overflowX:     'hidden' as const,
+  }), [showBottomNav, isMobile]);
 
   const overlayStyle = useMemo(() => ({
     position:             'fixed'  as const,
