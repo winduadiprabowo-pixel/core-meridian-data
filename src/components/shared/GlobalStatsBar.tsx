@@ -22,11 +22,11 @@ interface FearGreedProps {
 }
 
 const FG_COLORS = Object.freeze([
-  { max: 25,  color: 'rgba(255,68,136,1)',   bg: 'rgba(255,68,136,0.12)'  },
+  { max: 25,  color: 'rgba(255,102,102,1)',   bg: 'rgba(255,102,102,0.12)'  },
   { max: 45,  color: 'rgba(255,187,0,1)',    bg: 'rgba(255,187,0,0.12)'   },
   { max: 55,  color: 'rgba(138,138,158,1)',  bg: 'rgba(138,138,158,0.10)' },
-  { max: 75,  color: 'rgba(34,255,170,1)',   bg: 'rgba(34,255,170,0.10)'  },
-  { max: 100, color: 'rgba(0,238,255,1)',    bg: 'rgba(0,238,255,0.10)'   },
+  { max: 75,  color: 'rgba(61,214,140,1)',   bg: 'rgba(61,214,140,0.10)'  },
+  { max: 100, color: 'rgba(79,127,255,1)',    bg: 'rgba(79,127,255,0.10)'   },
 ]);
 
 const FearGreedBadge = memo(({ value, label }: FearGreedProps) => {
@@ -46,7 +46,7 @@ FearGreedBadge.displayName = 'FearGreedBadge';
 // ─── Divider ─────────────────────────────────────────────────────────────────
 
 const Div = memo(() => (
-  <div style={{ width: 1, height: 14, background: 'rgba(0,238,255,0.12)', flexShrink: 0 }} />
+  <div style={{ width: 1, height: 14, background: 'rgba(79,127,255,0.12)', flexShrink: 0 }} />
 ));
 Div.displayName = 'Div';
 
@@ -61,7 +61,7 @@ interface StatItemProps {
 
 const StatItem = memo(({ label, value, change, accent }: StatItemProps) => {
   const changeColor = change != null
-    ? change >= 0 ? 'rgba(34,255,170,1)' : 'rgba(255,68,136,1)'
+    ? change >= 0 ? 'rgba(61,214,140,1)' : 'rgba(255,102,102,1)'
     : undefined;
 
   return (
@@ -156,7 +156,7 @@ const LiveTicker = memo(() => {
             <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: 'rgba(240,240,248,1)' }}>
               {t.price}
             </span>
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: pos ? 'rgba(34,255,170,1)' : 'rgba(255,68,136,1)' }}>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: pos ? 'rgba(61,214,140,1)' : 'rgba(255,102,102,1)' }}>
               {pos ? '+' : ''}{t.change.toFixed(2)}%
             </span>
           </div>
@@ -178,12 +178,13 @@ const GlobalStatsBar = memo(() => {
   const barStyle = useMemo(() => ({
     position:    'fixed' as const,
     top:         0,
+
     left:        0,
     right:       0,
     zIndex:      100,
-    height:      32,
+    height:      28,
     background:  'rgba(4,5,10,0.97)',
-    borderBottom:'1px solid rgba(0,238,255,0.08)',
+    borderBottom:'1px solid rgba(79,127,255,0.08)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
     display:     'flex',
@@ -200,7 +201,7 @@ const GlobalStatsBar = memo(() => {
   if (stats.loading && stats.lastUpdate === 0) {
     return (
       <div style={loadingBarStyle} aria-label="Global market stats bar">
-        <div style={{ width: 160, height: 8, borderRadius: 4, background: 'rgba(0,238,255,0.08)', animation: 'pulse 2s infinite' }} />
+        <div style={{ width: 160, height: 8, borderRadius: 4, background: 'rgba(79,127,255,0.08)', animation: 'pulse 2s infinite' }} />
       </div>
     );
   }
@@ -209,8 +210,8 @@ const GlobalStatsBar = memo(() => {
     <div style={barStyle} aria-label="Global market stats bar">
       {/* Left: ZM brand */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-        <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(0,238,255,0.8)', boxShadow: '0 0 6px rgba(0,238,255,0.6)' }} />
-        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', color: 'rgba(0,238,255,0.7)' }}>
+        <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(79,127,255,0.8)', boxShadow: '0 0 6px rgba(79,127,255,0.6)' }} />
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', color: 'rgba(79,127,255,0.7)' }}>
           ZERØ
         </span>
       </div>
@@ -236,11 +237,11 @@ const GlobalStatsBar = memo(() => {
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
           <div style={{
             width: 5, height: 5, borderRadius: '50%',
-            background: 'rgba(34,255,170,1)',
-            boxShadow: '0 0 5px rgba(34,255,170,0.8)',
+            background: 'rgba(61,214,140,1)',
+            boxShadow: '0 0 5px rgba(61,214,140,0.8)',
             animation: 'pulse 1.5s infinite',
           }} />
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '0.12em', color: 'rgba(34,255,170,0.85)', fontWeight: 700 }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '0.12em', color: 'rgba(61,214,140,0.85)', fontWeight: 700 }}>
             LIVE
           </span>
         </div>
