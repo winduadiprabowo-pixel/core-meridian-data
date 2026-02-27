@@ -49,7 +49,7 @@ const NAV_ITEMS: readonly NavItem[] = Object.freeze([
   },
   {
     id: 'orderbook', label: 'Order Book', path: '/orderbook', group: 'TRADING',
-    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><line x1="2" y1="3" x2="9" y2="3" stroke="rgba(52,211,153,0.9)" strokeWidth="1.5" strokeLinecap="round"/><line x1="2" y1="6" x2="6.5" y2="6" stroke="rgba(52,211,153,0.5)" strokeWidth="1.5" strokeLinecap="round"/><line x1="2" y1="10" x2="11" y2="10" stroke="rgba(248,113,113,0.9)" strokeWidth="1.5" strokeLinecap="round"/><line x1="2" y1="13" x2="7.5" y2="13" stroke="rgba(248,113,113,0.5)" strokeWidth="1.5" strokeLinecap="round"/></svg>),
+    icon: (<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><line x1="2" y1="3" x2="9" y2="3" stroke="rgba(79,127,255,0.9)" strokeWidth="1.5" strokeLinecap="round"/><line x1="2" y1="6" x2="6.5" y2="6" stroke="rgba(79,127,255,0.5)" strokeWidth="1.5" strokeLinecap="round"/><line x1="2" y1="10" x2="11" y2="10" stroke="rgba(248,113,113,0.9)" strokeWidth="1.5" strokeLinecap="round"/><line x1="2" y1="13" x2="7.5" y2="13" stroke="rgba(248,113,113,0.5)" strokeWidth="1.5" strokeLinecap="round"/></svg>),
   },
   {
     id: 'derivatives', label: 'Derivatives', path: '/derivatives', group: 'TRADING',
@@ -98,11 +98,11 @@ const LogoMark = memo(() => (
         <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
       <linearGradient id="lmgrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="rgba(52,211,153,1)"/>
-        <stop offset="100%" stopColor="rgba(0,238,255,0.85)"/>
+        <stop offset="0%" stopColor="rgba(79,127,255,1)"/>
+        <stop offset="100%" stopColor="rgba(79,127,255,0.85)"/>
       </linearGradient>
     </defs>
-    <circle cx="15" cy="15" r="12" stroke="rgba(52,211,153,0.12)" strokeWidth="1" fill="rgba(52,211,153,0.04)"/>
+    <circle cx="15" cy="15" r="12" stroke="rgba(79,127,255,0.12)" strokeWidth="1" fill="rgba(79,127,255,0.04)"/>
     <circle cx="15" cy="15" r="8.5" stroke="url(#lmgrad)" strokeWidth="1.8" fill="none" filter="url(#lmglow)"/>
     <line x1="18.5" y1="9.5" x2="11.5" y2="20.5" stroke="url(#lmgrad)" strokeWidth="1.8" strokeLinecap="round" filter="url(#lmglow)"/>
     <circle cx="15" cy="15" r="8.5" stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" fill="none" strokeDasharray="8 18"/>
@@ -156,9 +156,9 @@ const ZMSidebar = memo(({ expanded, onToggle, currentPath }: ZMSidebarProps) => 
       padding:        expanded ? '9px 12px 9px 16px' : '9px',
       justifyContent: expanded ? 'flex-start' as const : 'center' as const,
       borderRadius:   '10px',
-      background:     active  ? 'rgba(52,211,153,0.07)' : hovered ? 'rgba(255,255,255,0.04)' : 'transparent',
-      border:         '1px solid ' + (active ? 'rgba(52,211,153,0.16)' : 'transparent'),
-      color:          active  ? 'rgba(52,211,153,1)' : hovered ? 'rgba(200,205,225,1)' : 'rgba(105,110,138,1)',
+      background:     active  ? 'rgba(79,127,255,0.07)' : hovered ? 'rgba(255,255,255,0.04)' : 'transparent',
+      border:         '1px solid ' + (active ? 'rgba(79,127,255,0.16)' : 'transparent'),
+      color:          active  ? 'rgba(79,127,255,1)' : hovered ? 'rgba(200,205,225,1)' : 'rgba(105,110,138,1)',
       cursor:         'pointer',
       transition:     'all 0.13s ease',
       willChange:     'transform',
@@ -221,8 +221,8 @@ const ZMSidebar = memo(({ expanded, onToggle, currentPath }: ZMSidebarProps) => 
             bottom:       '22%',
             width:        '3px',
             borderRadius: '0 3px 3px 0',
-            background:   'rgba(52,211,153,1)',
-            boxShadow:    '0 0 8px rgba(52,211,153,0.6)',
+            background:   'rgba(79,127,255,1)',
+            boxShadow:    '0 0 8px rgba(79,127,255,0.6)',
           }} />
         )}
         <span style={iconWrap}>{item.icon}</span>
@@ -242,9 +242,9 @@ const ZMSidebar = memo(({ expanded, onToggle, currentPath }: ZMSidebarProps) => 
                   fontSize:      '7.5px',
                   padding:       '1px 5px',
                   borderRadius:  '3px',
-                  background:    'rgba(52,211,153,0.09)',
-                  border:        '1px solid rgba(52,211,153,0.2)',
-                  color:         'rgba(52,211,153,0.85)',
+                  background:    'rgba(79,127,255,0.09)',
+                  border:        '1px solid rgba(79,127,255,0.2)',
+                  color:         'rgba(79,127,255,0.85)',
                   letterSpacing: '0.06em',
                   flexShrink:    0,
                   marginLeft:    '6px',
@@ -270,10 +270,11 @@ const ZMSidebar = memo(({ expanded, onToggle, currentPath }: ZMSidebarProps) => 
     >
       {/* Logo area */}
       <div style={{
-        height:       '68px',
+        height:       '84px',
         display:      'flex',
         alignItems:   'center',
         padding:      '0 20px',
+        paddingTop:   '28px',
         flexShrink:   0,
         gap:          '12px',
         borderBottom: '1px solid rgba(255,255,255,0.04)',
@@ -291,7 +292,7 @@ const ZMSidebar = memo(({ expanded, onToggle, currentPath }: ZMSidebarProps) => 
               <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '13px', fontWeight: 700, letterSpacing: '0.15em', color: 'rgba(235,238,255,0.95)' }}>
                 ZERØ
               </div>
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '7.5px', letterSpacing: '0.32em', color: 'rgba(52,211,153,0.45)', marginTop: '2px' }}>
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '7.5px', letterSpacing: '0.32em', color: 'rgba(79,127,255,0.45)', marginTop: '2px' }}>
                 MERIDIAN
               </div>
             </motion.div>
