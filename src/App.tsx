@@ -1,10 +1,11 @@
 /**
- * App.tsx — ZERØ MERIDIAN 2026 Phase 13 (push23)
- * push23: ThemeProvider (next-themes) dipasang di sini.
+ * App.tsx — ZERØ MERIDIAN 2026 push78
+ * push78: PWAInstallProvider added — wraps entire app so Topbar + PWAInstallPrompt
+ *         share one install prompt context (no duplicate event listeners).
+ * push23: ThemeProvider (next-themes)
  * - React.memo + displayName ✓
  * - rgba() only ✓
  * - QueryClient optimized ✓
- * - ThemeProvider ← NEW push23
  */
 
 import { memo, lazy, Suspense } from 'react';
@@ -15,6 +16,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { CryptoProvider } from '@/contexts/CryptoContext';
+import { PWAInstallProvider } from '@/contexts/PWAInstallContext';
 import { useCryptoData } from '@/hooks/useCryptoData';
 import Skeleton from '@/components/shared/Skeleton';
 import {
@@ -127,16 +129,19 @@ const App = memo(() => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <CryptoProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Suspense fallback={null}>
-              <Routes>
-                <Route path="/"  element={<Portal />} />
-                <Route path="/*" element={<DataLoaderShell />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
+          {/* PWAInstallProvider — push78: wraps app so Topbar + Banner share one context */}
+          <PWAInstallProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Suspense fallback={null}>
+                <Routes>
+                  <Route path="/"  element={<Portal />} />
+                  <Route path="/*" element={<DataLoaderShell />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </PWAInstallProvider>
         </CryptoProvider>
       </TooltipProvider>
     </QueryClientProvider>
