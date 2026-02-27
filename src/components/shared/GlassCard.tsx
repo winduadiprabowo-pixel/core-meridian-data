@@ -33,10 +33,10 @@ const GlassCard = memo(({
 }: GlassCardProps) => {
 
   const baseStyle = useMemo((): CSSProperties => ({
-    background:          'rgba(255,255,255,0.05)',
-    backdropFilter:      'blur(20px) saturate(180%)',
-    WebkitBackdropFilter:'blur(20px) saturate(180%)',
-    border:              '1px solid ' + (accentColor ? accentColor.replace('1)', '0.25)') : 'rgba(32,42,68,1)'),
+    background:          'rgba(255,255,255,0.03)',
+    backdropFilter:      'blur(16px)',
+    WebkitBackdropFilter:'blur(16px)',
+    border:              '1px solid ' + (accentColor ? accentColor.replace('1)', '0.2)') : 'rgba(255,255,255,0.06)'),
     borderRadius:        12,
     padding,
     position:            'relative',
