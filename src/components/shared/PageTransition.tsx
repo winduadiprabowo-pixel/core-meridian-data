@@ -1,39 +1,23 @@
 /**
- * PageTransition.tsx — ZERØ MERIDIAN
- * AnimatePresence wrapper for route-level page transitions.
- * - React.memo + displayName ✓
- * - rgba() only ✓
- * - Zero template literals in JSX attrs ✓
+ * PageTransition.tsx — ZERØ MERIDIAN 2026 push88
  */
+import React, { memo } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 
-import { memo, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useLocation } from 'react-router-dom';
-import { VARIANTS, TRANSITION } from '@/lib/motion';
-
-interface PageTransitionProps {
-  children: ReactNode;
-}
-
-const PageTransition = memo(({ children }: PageTransitionProps) => {
-  const location = useLocation();
-
+const PageTransition: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const rm = useReducedMotion();
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      <motion.div
-        key={location.pathname}
-        variants={VARIANTS.pageSlideUp}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        transition={TRANSITION.normal}
-        style={{ width: '100%' }}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+    <motion.div
+      initial={rm ? {} : { opacity:0, y:6 }}
+      animate={rm ? {} : { opacity:1, y:0 }}
+      exit={rm   ? {} : { opacity:0, y:-4 }}
+      transition={{ duration:0.18, ease:[0.22,1,0.36,1] }}
+      style={{ width:'100%' }}
+    >
+      {children}
+    </motion.div>
   );
-});
-PageTransition.displayName = 'PageTransition';
+};
 
-export default PageTransition;
+PageTransition.displayName = 'PageTransition';
+export default memo(PageTransition);
