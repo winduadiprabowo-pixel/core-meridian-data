@@ -1,10 +1,10 @@
 /**
- * Topbar.tsx — ZERØ MERIDIAN 2026 push78
+ * Topbar.tsx — ZERØ MERIDIAN 2026 push79
+ * push79: Mobile responsive fix
+ *   - Nav links hidden on mobile/tablet (BottomNavBar handles it)
+ *   - Time, FPS badge, status badge hidden on mobile
+ *   - Topbar stays 1 row on all screen sizes — no overflow/crop
  * push78: PWA Install button — real-time native install trigger in Topbar.
- *   - Animated install icon button (download + Ø glow)
- *   - Pulse ring animation when install available
- *   - usePWAInstall() from PWAInstallContext
- *   - "Installed" checkmark state
  * push23: Theme toggle, var(--zm-*), live clock
  * - React.memo + displayName ✓
  * - rgba() only ✓
@@ -20,6 +20,7 @@ import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { usePerformance } from '@/hooks/usePerformance';
 import { usePWAInstall } from '@/contexts/PWAInstallContext';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 
 interface TopbarProps {
   onMenuToggle:    () => void;
@@ -52,7 +53,6 @@ const MoonIcon = () => (
   </svg>
 );
 
-// Download arrow + base line icon
 const DownloadIcon = () => (
   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
     <path d="M7 2v7M4 6.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -91,47 +91,40 @@ const PWAInstallButton = React.memo(() => {
     await triggerInstall();
   }, [triggerInstall]);
 
-  // Only show if can install OR just installed
   if (!canInstall && !justInstalled) return null;
 
-  const btnStyle = useMemo(() => ({
-    position:       'relative' as const,
+  const btnStyle: React.CSSProperties = {
+    position:       'relative',
     width:          '32px',
     height:         '32px',
     borderRadius:   '8px',
-    background:     justInstalled
-      ? 'rgba(34,255,170,0.08)'
-      : 'rgba(0,238,255,0.07)',
+    background:     justInstalled ? 'rgba(34,255,170,0.08)' : 'rgba(0,238,255,0.07)',
     border:         '1px solid ' + (justInstalled ? 'rgba(34,255,170,0.3)' : 'rgba(0,238,255,0.28)'),
     cursor:         justInstalled ? 'default' : 'pointer',
     display:        'flex',
     alignItems:     'center',
     justifyContent: 'center',
     color:          justInstalled ? 'rgba(34,255,170,1)' : 'rgba(0,238,255,1)',
-    willChange:     'transform' as const,
-    boxShadow:      justInstalled
-      ? '0 0 10px rgba(34,255,170,0.15)'
-      : '0 0 10px rgba(0,238,255,0.1)',
+    willChange:     'transform',
+    boxShadow:      justInstalled ? '0 0 10px rgba(34,255,170,0.15)' : '0 0 10px rgba(0,238,255,0.1)',
     flexShrink:     0,
-  }), [justInstalled]);
+  };
 
   return (
     <div style={{ position: 'relative', flexShrink: 0 }}>
-      {/* Pulse ring — only when can install and not yet triggered */}
       {canInstall && !justInstalled && !prefersReducedMotion && (
         <motion.div
           style={{
-            position:     'absolute',
-            inset:        -3,
-            borderRadius: 11,
-            border:       '1px solid rgba(0,238,255,0.35)',
-            pointerEvents:'none',
+            position:      'absolute',
+            inset:         -3,
+            borderRadius:  11,
+            border:        '1px solid rgba(0,238,255,0.35)',
+            pointerEvents: 'none',
           }}
           animate={{ opacity: [0.8, 0, 0.8], scale: [1, 1.15, 1] }}
           transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
         />
       )}
-
       <motion.button
         type="button"
         style={btnStyle}
@@ -144,55 +137,20 @@ const PWAInstallButton = React.memo(() => {
       >
         <AnimatePresence mode="wait">
           {justInstalled ? (
-            <motion.span
-              key="check"
-              initial={{ opacity: 0, scale: 0.6 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.6 }}
-              transition={{ duration: 0.22 }}
+            <motion.span key="check"
+              initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.6 }} transition={{ duration: 0.22 }}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <CheckIcon />
-            </motion.span>
+            ><CheckIcon /></motion.span>
           ) : (
-            <motion.span
-              key="dl"
-              initial={{ opacity: 0, scale: 0.6 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.6 }}
-              transition={{ duration: 0.22 }}
+            <motion.span key="dl"
+              initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.6 }} transition={{ duration: 0.22 }}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <DownloadIcon />
-            </motion.span>
+            ><DownloadIcon /></motion.span>
           )}
         </AnimatePresence>
       </motion.button>
-
-      {/* Tooltip label */}
-      {canInstall && !justInstalled && (
-        <div style={{
-          position:       'absolute',
-          top:            '110%',
-          right:          0,
-          marginTop:      4,
-          background:     'rgba(7,9,18,0.98)',
-          border:         '1px solid rgba(0,238,255,0.18)',
-          borderRadius:   6,
-          padding:        '4px 8px',
-          fontFamily:     "'JetBrains Mono', monospace",
-          fontSize:       9,
-          fontWeight:     700,
-          color:          'rgba(0,238,255,0.9)',
-          letterSpacing:  '0.1em',
-          whiteSpace:     'nowrap' as const,
-          pointerEvents:  'none',
-          boxShadow:      '0 4px 16px rgba(0,0,0,0.4)',
-          zIndex:         100,
-        }}>
-          INSTALL APP
-        </div>
-      )}
     </div>
   );
 });
@@ -206,8 +164,10 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
   const [time, setTime]      = useState(() => new Date().toLocaleTimeString('en-US', { hour12: false }));
   const { theme, setTheme }  = useTheme();
   const { metrics }          = usePerformance(IS_DEV);
+  const { isMobile, isTablet } = useBreakpoint();
 
-  const isDark = theme !== 'light';
+  const isDark    = theme !== 'light';
+  const isCompact = isMobile || isTablet; // hide nav + extra badges
 
   useEffect(() => {
     mountedRef.current = true;
@@ -217,8 +177,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
     return () => { mountedRef.current = false; clearInterval(interval); };
   }, []);
 
-  const handleToggle = useCallback(() => { onMenuToggle(); }, [onMenuToggle]);
-
+  const handleToggle      = useCallback(() => { onMenuToggle(); }, [onMenuToggle]);
   const handleThemeToggle = useCallback(() => {
     if (mountedRef.current) setTheme(isDark ? 'light' : 'dark');
   }, [isDark, setTheme]);
@@ -234,26 +193,29 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
     borderBottom:         '1px solid var(--zm-glass-border)',
     display:              'flex',
     alignItems:           'center',
-    padding:              '0 24px',
-    gap:                  '16px',
-  }), []);
+    padding:              isMobile ? '0 12px' : '0 24px',
+    gap:                  isMobile ? '8px' : '16px',
+    overflow:             'hidden' as const,
+  }), [isMobile]);
 
   const logoTextStyle = useMemo(() => ({
     fontFamily:           "'Space Mono', monospace",
-    fontSize:             '16px',
+    fontSize:             isMobile ? '13px' : '16px',
     fontWeight:           700,
     letterSpacing:        '0.12em',
     background:           'linear-gradient(135deg, rgba(99,179,237,1) 0%, rgba(154,230,180,1) 100%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor:  'transparent',
     backgroundClip:       'text',
-  }), []);
+    whiteSpace:           'nowrap' as const,
+  }), [isMobile]);
 
   const indicatorStyle = useMemo(() => ({
     width: '8px', height: '8px',
     borderRadius: '50%',
-    background: 'rgba(154,230,180,1)',
-    boxShadow: '0 0 8px rgba(154,230,180,0.6)',
+    background:   'rgba(154,230,180,1)',
+    boxShadow:    '0 0 8px rgba(154,230,180,0.6)',
+    flexShrink:   0,
   }), []);
 
   const menuBtnStyle = useMemo(() => ({
@@ -267,6 +229,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
     justifyContent: 'center',
     color:          'var(--zm-text-secondary)',
     willChange:     'transform' as const,
+    flexShrink:     0,
   }), []);
 
   const timeStyle = useMemo(() => ({
@@ -274,6 +237,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
     fontSize:      '12px',
     color:         'var(--zm-text-faint)',
     letterSpacing: '0.08em',
+    whiteSpace:    'nowrap' as const,
   }), []);
 
   const statusBadgeStyle = useMemo(() => ({
@@ -288,6 +252,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
     fontFamily:    "'Space Mono', monospace",
     color:         'rgba(154,230,180,0.9)',
     letterSpacing: '0.06em',
+    flexShrink:    0,
   }), []);
 
   const themeBtnStyle = useMemo(() => ({
@@ -302,6 +267,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
     justifyContent: 'center',
     color:          'var(--zm-text-secondary)',
     willChange:     'transform' as const,
+    flexShrink:     0,
   }), []);
 
   const fpsBadgeStyle = useMemo(() => ({
@@ -317,10 +283,13 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
     color:         metrics.isSmooth ? 'rgba(52,211,153,0.8)' : 'rgba(251,113,133,0.8)',
     letterSpacing: '0.04em',
     willChange:    'transform' as const,
+    flexShrink:    0,
   }), [metrics.isSmooth]);
 
   return (
     <header role="banner" style={topbarStyle} aria-label="Application topbar">
+
+      {/* Hamburger menu */}
       <motion.button
         onClick={handleToggle}
         style={menuBtnStyle}
@@ -340,41 +309,50 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
         </svg>
       </motion.button>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      {/* Logo */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
         <div style={indicatorStyle} aria-hidden="true" />
         <span style={logoTextStyle} aria-label="ZERØ MERIDIAN">ZERØ MERIDIAN</span>
       </div>
 
-      <nav role="navigation" aria-label="Main navigation" style={{ display: 'flex', gap: '4px', marginLeft: '32px' }}>
-        {NAV_ITEMS.map((item) => (
-          <motion.a
-            key={item.path}
-            href={item.path}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '6px',
-              fontSize: '12px',
-              fontFamily: "'Space Mono', monospace",
-              color: 'var(--zm-text-secondary)',
-              textDecoration: 'none',
-              letterSpacing: '0.06em',
-            }}
-            whileHover={prefersReducedMotion ? {} : {
-              background: 'var(--zm-glass-bg)',
-              color: 'var(--zm-text-primary)',
-            }}
-            aria-label={item.label}
-          >
-            {item.label}
-          </motion.a>
-        ))}
-      </nav>
+      {/* Desktop nav — hidden on mobile/tablet */}
+      {!isCompact && (
+        <nav role="navigation" aria-label="Main navigation" style={{ display: 'flex', gap: '4px', marginLeft: '32px' }}>
+          {NAV_ITEMS.map((item) => (
+            <motion.a
+              key={item.path}
+              href={item.path}
+              style={{
+                padding:        '6px 12px',
+                borderRadius:   '6px',
+                fontSize:       '12px',
+                fontFamily:     "'Space Mono', monospace",
+                color:          'var(--zm-text-secondary)',
+                textDecoration: 'none',
+                letterSpacing:  '0.06em',
+              }}
+              whileHover={prefersReducedMotion ? {} : {
+                background: 'var(--zm-glass-bg)',
+                color:      'var(--zm-text-primary)',
+              }}
+              aria-label={item.label}
+            >
+              {item.label}
+            </motion.a>
+          ))}
+        </nav>
+      )}
 
-      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={timeStyle} aria-live="polite" aria-atomic="true">{time}</span>
+      {/* Spacer */}
+      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '10px', flexShrink: 0 }}>
 
-        {/* FPS monitor — dev only */}
-        {IS_DEV && (
+        {/* Time — desktop only */}
+        {!isMobile && (
+          <span style={timeStyle} aria-live="polite" aria-atomic="true">{time}</span>
+        )}
+
+        {/* FPS monitor — dev + desktop only */}
+        {IS_DEV && !isMobile && (
           <div style={fpsBadgeStyle} role="status" aria-label={'FPS: ' + metrics.fps}>
             <span>{metrics.fps}</span>
             <span style={{ opacity: 0.5 }}>fps</span>
@@ -386,7 +364,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
           </div>
         )}
 
-        {/* ── PWA Install button — push78 NEW ── */}
+        {/* PWA Install button */}
         <PWAInstallButton />
 
         {/* Theme toggle */}
@@ -401,28 +379,34 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded }) => {
           {isDark ? <SunIcon /> : <MoonIcon />}
         </motion.button>
 
-        {/* Live badge */}
-        <div style={statusBadgeStyle} role="status" aria-label="Network status: live">
-          <motion.div
-            style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(154,230,180,1)' }}
-            animate={prefersReducedMotion ? {} : { opacity: [1, 0.3, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-            aria-hidden="true"
-          />
-          LIVE
-        </div>
+        {/* Live badge — hidden on mobile */}
+        {!isMobile && (
+          <div style={statusBadgeStyle} role="status" aria-label="Network status: live">
+            <motion.div
+              style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(154,230,180,1)', flexShrink: 0 }}
+              animate={prefersReducedMotion ? {} : { opacity: [1, 0.3, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              aria-hidden="true"
+            />
+            LIVE
+          </div>
+        )}
 
-        {/* Profile */}
+        {/* Profile avatar */}
         <motion.button
           style={{
-            width: '32px', height: '32px', borderRadius: '50%',
+            width:      '32px',
+            height:     '32px',
+            borderRadius: '50%',
             background: 'linear-gradient(135deg, rgba(99,179,237,0.3) 0%, rgba(154,230,180,0.3) 100%)',
-            border: '1px solid var(--zm-glass-border)',
-            cursor: 'pointer',
-            fontSize: '12px', fontWeight: 700,
-            color: 'var(--zm-text-primary)',
+            border:     '1px solid var(--zm-glass-border)',
+            cursor:     'pointer',
+            fontSize:   '12px',
+            fontWeight: 700,
+            color:      'var(--zm-text-primary)',
             fontFamily: "'Space Mono', monospace",
             willChange: 'transform' as const,
+            flexShrink: 0,
           }}
           whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
           whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
