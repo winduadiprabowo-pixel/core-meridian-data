@@ -181,10 +181,10 @@ const GlobalStatsBar = memo(() => {
 
     left:        0,
     right:       0,
-    zIndex:      100,
+    zIndex:      200,
     height:      28,
-    background:  'rgba(4,5,10,0.97)',
-    borderBottom:'1px solid rgba(79,127,255,0.08)',
+    background:  'rgba(5,6,12,1)',
+    borderBottom:'1px solid rgba(255,255,255,0.05)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
     display:     'flex',
