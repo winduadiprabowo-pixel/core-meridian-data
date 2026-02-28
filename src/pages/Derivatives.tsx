@@ -1,4 +1,14 @@
+/**
+ * Derivatives.tsx — ZERØ MERIDIAN 2026 push110
+ * push110: Responsive polish — mobile 320px + desktop 1440px
+ * - useBreakpoint ✓  mobile: summary 1col, table overflowX scroll ✓
+ * - React.memo + displayName ✓
+ * - rgba() only ✓  Zero className ✓  Zero hex color ✓
+ * - JetBrains Mono only ✓
+ */
+
 import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from "react";
+import { useBreakpoint } from "@/hooks/useBreakpoint";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -65,6 +75,7 @@ const FundingRow = memo(({ rate }: FundingRowProps) => {
     borderBottom: `1px solid ${C.glassBorder}`,
     background: hovered ? "rgba(255,255,255,0.03)" : "transparent",
     transition: "background 0.15s ease",
+    minWidth: "660px",
   }), [hovered]);
 
   const fmtUsd = useCallback((n: number) => {
@@ -113,6 +124,7 @@ EmptyState.displayName = "EmptyState";
 // ─── Derivatives (Main) ───────────────────────────────────────────────────────
 
 const Derivatives = memo(() => {
+  const { isMobile, isTablet } = useBreakpoint();
   const [data, setData] = useState<DerivativesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -191,34 +203,40 @@ const Derivatives = memo(() => {
   }, [data]);
 
   const pageStyle = useMemo(() => ({
-    background: C.bgBase, minHeight: "100vh", color: C.textPrimary, fontFamily: FONT, padding: "20px 16px",
-  }), []);
+    background: C.bgBase, minHeight: "100vh", color: C.textPrimary, fontFamily: FONT,
+    padding: isMobile ? "16px 12px" : "20px 16px",
+  }), [isMobile]);
 
   const cardStyle = useMemo(() => ({
     background: C.glassBg, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: "hidden" as const,
   }), []);
 
+  // Summary: mobile=1col, tablet=2col, desktop=3col
+  const summaryGridCols = isMobile ? "1fr" : isTablet ? "repeat(2,1fr)" : "repeat(3,1fr)";
+
+  const handleRefresh = useCallback(() => fetchData(), [fetchData]);
+
   return (
     <div style={pageStyle}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20, gap: 12 }}>
         <div>
-          <h1 style={{ fontFamily: FONT, fontSize: 20, fontWeight: 700, letterSpacing: "0.06em", color: C.textPrimary, margin: 0 }}>Derivatives</h1>
+          <h1 style={{ fontFamily: FONT, fontSize: isMobile ? 16 : 20, fontWeight: 700, letterSpacing: "0.06em", color: C.textPrimary, margin: 0 }}>Derivatives</h1>
           <p style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: C.textFaint, margin: "6px 0 0" }}>
             Funding rates · Open interest · Updated {lastUpdatedStr}
           </p>
         </div>
         <button
-          style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.accent, background: "rgba(0,238,255,0.08)", border: "1px solid rgba(0,238,255,0.2)", borderRadius: 6, padding: "6px 12px", cursor: "pointer" }}
-          onClick={useCallback(() => fetchData(), [fetchData])}
+          style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.accent, background: "rgba(0,238,255,0.08)", border: "1px solid rgba(0,238,255,0.2)", borderRadius: 6, padding: "6px 12px", cursor: "pointer", flexShrink: 0 }}
+          onClick={handleRefresh}
         >
           ↻ Refresh
         </button>
       </div>
 
-      {/* Summary cards */}
+      {/* Summary cards — responsive grid */}
       {data && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: summaryGridCols, gap: 12, marginBottom: 20 }}>
           <div style={{ background: C.cardBg, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
             <span style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: C.textFaint }}>Avg Funding Rate</span>
             <span style={{ fontFamily: FONT, fontSize: 14, fontWeight: 700, color: C.textPrimary }}>{avgFunding ?? "—"}%</span>
@@ -237,7 +255,7 @@ const Derivatives = memo(() => {
         </div>
       )}
 
-      {/* Table */}
+      {/* Table — horizontal scroll on mobile */}
       <div style={cardStyle}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: `1px solid ${C.glassBorder}` }}>
           <span style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: C.textFaint }}>Perpetual Contracts</span>
@@ -263,8 +281,9 @@ const Derivatives = memo(() => {
         )}
 
         {!loading && !error && (
-          <>
-            <div style={{ display: "grid", gridTemplateColumns: "100px 110px 110px 100px 120px 100px", gap: 12, padding: "8px 16px", borderBottom: `1px solid rgba(255,255,255,0.1)` }}>
+          /* overflowX scroll wrapper for mobile */
+          <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
+            <div style={{ display: "grid", gridTemplateColumns: "100px 110px 110px 100px 120px 100px", gap: 12, padding: "8px 16px", borderBottom: `1px solid rgba(255,255,255,0.1)`, minWidth: "660px" }}>
               {["Symbol","Mark Price","Funding","Next In","Open Interest","Basis"].map(h => (
                 <span key={h} style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: C.textFaint, textAlign: h !== "Symbol" ? "right" as const : "left" as const }}>{h}</span>
               ))}
@@ -273,7 +292,7 @@ const Derivatives = memo(() => {
               ? <EmptyState onRetry={fetchData} />
               : (data!.rates).map(r => <FundingRow key={r.symbol} rate={r} />)
             }
-          </>
+          </div>
         )}
       </div>
     </div>
