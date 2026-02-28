@@ -25,12 +25,12 @@ import { formatPrice, formatChange, formatCompact, deterministicJitter } from '@
 import type { CryptoAsset } from '@/lib/formatters';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import {
-
-const FONT_MONO = "'JetBrains Mono', monospace";
   Bell, BellOff, Plus, Trash2, Volume2, VolumeX, CheckCircle2,
   TrendingUp, TrendingDown, Activity, AlertTriangle, Zap, X,
   Settings, History, ChevronDown, ChevronUp,
 } from 'lucide-react';
+
+const FONT_MONO = "'JetBrains Mono', monospace";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
