@@ -1,5 +1,6 @@
 /**
- * Dashboard.tsx — ZERØ MERIDIAN push98
+ * Dashboard.tsx — ZERØ MERIDIAN push108
+ * push108: willChange:transform on animated container
  * MEGA VISUAL UPGRADE:
  * - Circular Fear & Greed gauge (SVG arc)
  * - Gradient metric cards dengan glow
@@ -351,7 +352,7 @@ const Dashboard = memo(() => {
   );
 
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible" role="main" aria-label="ZERØ MERIDIAN Dashboard">
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" role="main" aria-label="ZERØ MERIDIAN Dashboard" style={{ willChange:'transform' }}>
 
       {/* ── Header ── */}
       <motion.div variants={tileVariants} style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between',
