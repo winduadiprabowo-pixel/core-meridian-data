@@ -1,6 +1,7 @@
 /**
- * Topbar.tsx — ZERØ MERIDIAN 2026 push85
- * push85: Tambah Ctrl+K button + WS status eksplisit
+ * Topbar.tsx — ZERØ MERIDIAN 2026 push103
+ * push103: useDevicePerf → reduce backdropFilter on mid/low device
+ *          Fix: Space Mono → JetBrains Mono (standards compliance)
  * - React.memo + displayName ✓  rgba() only ✓  Zero className ✓
  * - useCallback + useMemo + mountedRef ✓
  */
@@ -10,6 +11,9 @@ import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { usePWAInstall } from '@/contexts/PWAInstallContext';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { useDevicePerf } from '@/hooks/useDevicePerf';
+
+const FONT_MONO = "'JetBrains Mono', monospace";
 
 interface TopbarProps {
   onMenuToggle:     () => void;
@@ -65,6 +69,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded, onOpenCm
   const [time, setTime] = useState(() => new Date().toLocaleTimeString('en-US', { hour12: false }));
   const { theme, setTheme } = useTheme();
   const { isMobile, isTablet } = useBreakpoint();
+  const { blur } = useDevicePerf();
 
   const isDark    = theme !== 'light';
   const isCompact = isMobile || isTablet;
@@ -81,12 +86,16 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded, onOpenCm
 
   const topbarStyle = useMemo(() => ({
     position: 'fixed' as const, top: 28, right: 0, left: 0, zIndex: 50,
-    height: '52px', background: 'rgba(7,9,17,0.93)',
-    backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+    height: '52px',
+    background: blur ? 'rgba(7,9,17,0.93)' : 'rgba(7,9,17,0.99)',
+    ...(blur
+      ? { backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }
+      : {}
+    ),
     borderBottom: '1px solid rgba(255,255,255,0.05)',
     display: 'flex', alignItems: 'center',
     padding: isMobile ? '0 12px' : '0 20px', gap: '10px', overflow: 'hidden' as const,
-  }), [isMobile]);
+  }), [isMobile, blur]);
 
   const iconBtnStyle = useMemo(() => ({
     width:'32px', height:'32px', borderRadius:'8px',
@@ -113,7 +122,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded, onOpenCm
 
       {!isCompact && (
         <div style={{ display:'flex', alignItems:'center', gap:'8px', flexShrink:0 }}>
-          <span style={{ fontFamily:"'Space Mono', monospace", fontSize:'12px', fontWeight:700, letterSpacing:'0.14em', color:'rgba(220,225,245,0.9)' }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize:'12px', fontWeight:700, letterSpacing:'0.14em', color:'rgba(220,225,245,0.9)' }}>
             ZERØ MERIDIAN
           </span>
         </div>
@@ -129,15 +138,15 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded, onOpenCm
           <circle cx="6" cy="6" r="4.5" stroke="rgba(80,85,115,1)" strokeWidth="1.4"/>
           <line x1="9.5" y1="9.5" x2="13" y2="13" stroke="rgba(80,85,115,1)" strokeWidth="1.4" strokeLinecap="round"/>
         </svg>
-        <span style={{ fontFamily:"'Space Mono', monospace", fontSize:'11px', color:'rgba(70,75,105,1)', flex:1 }}>
+        <span style={{ fontFamily: FONT_MONO, fontSize:'11px', color:'rgba(70,75,105,1)', flex:1 }}>
           {isCompact ? 'Search...' : 'Search pages...'}
         </span>
         {!isMobile && (
           <div style={{ display:'flex', gap:'3px', flexShrink:0 }}>
-            <span style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'4px', padding:'1px 5px', fontFamily:"'Space Mono', monospace", fontSize:'9px', color:'rgba(90,95,125,1)' }}>
+            <span style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'4px', padding:'1px 5px', fontFamily: FONT_MONO, fontSize:'9px', color:'rgba(90,95,125,1)' }}>
               {navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'}
             </span>
-            <span style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'4px', padding:'1px 5px', fontFamily:"'Space Mono', monospace", fontSize:'9px', color:'rgba(90,95,125,1)' }}>
+            <span style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'4px', padding:'1px 5px', fontFamily: FONT_MONO, fontSize:'9px', color:'rgba(90,95,125,1)' }}>
               K
             </span>
           </div>
@@ -149,7 +158,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded, onOpenCm
       {/* Right cluster */}
       <div style={{ display:'flex', alignItems:'center', gap: isMobile ? '6px' : '8px', flexShrink:0 }}>
         {!isMobile && (
-          <span style={{ fontFamily:"'Space Mono', monospace", fontSize:'11px', color:'rgba(80,85,110,1)', letterSpacing:'0.08em', whiteSpace:'nowrap', minWidth:'68px', textAlign:'right' }} aria-live="polite" aria-atomic="true">
+          <span style={{ fontFamily: FONT_MONO, fontSize:'11px', color:'rgba(80,85,110,1)', letterSpacing:'0.08em', whiteSpace:'nowrap', minWidth:'68px', textAlign:'right' }} aria-live="polite" aria-atomic="true">
             {time}
           </span>
         )}
@@ -164,13 +173,13 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, sidebarExpanded, onOpenCm
         </motion.button>
 
         {!isMobile && (
-          <div style={{ display:'flex', alignItems:'center', gap:'5px', background:'rgba(52,211,153,0.06)', border:'1px solid rgba(52,211,153,0.14)', borderRadius:'16px', padding:'4px 10px', fontSize:'10px', fontFamily:"'Space Mono', monospace", color:'rgba(52,211,153,0.7)', letterSpacing:'0.08em', flexShrink:0 }} role="status" aria-label="Network status: live">
+          <div style={{ display:'flex', alignItems:'center', gap:'5px', background:'rgba(52,211,153,0.06)', border:'1px solid rgba(52,211,153,0.14)', borderRadius:'16px', padding:'4px 10px', fontSize:'10px', fontFamily: FONT_MONO, color:'rgba(52,211,153,0.7)', letterSpacing:'0.08em', flexShrink:0 }} role="status" aria-label="Network status: live">
             <motion.div style={{ width:5, height:5, borderRadius:'50%', background:'rgba(52,211,153,0.9)', flexShrink:0 }} animate={prefersRM ? {} : { opacity:[1,0.35,1] }} transition={{ duration:1.8, repeat:Infinity }} aria-hidden="true" />
             LIVE
           </div>
         )}
 
-        <motion.button style={{ width:'32px', height:'32px', borderRadius:'50%', background:'rgba(52,211,153,0.1)', border:'1px solid rgba(52,211,153,0.18)', cursor:'pointer', fontSize:'12px', fontWeight:700, color:'rgba(52,211,153,0.9)', fontFamily:"'Space Mono', monospace", flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}
+        <motion.button style={{ width:'32px', height:'32px', borderRadius:'50%', background:'rgba(52,211,153,0.1)', border:'1px solid rgba(52,211,153,0.18)', cursor:'pointer', fontSize:'12px', fontWeight:700, color:'rgba(52,211,153,0.9)', fontFamily: FONT_MONO, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}
           whileHover={prefersRM ? {} : { scale: 1.06 }} whileTap={prefersRM ? {} : { scale: 0.94 }}
           aria-label="User profile"
         >
