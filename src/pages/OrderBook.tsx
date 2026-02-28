@@ -518,7 +518,7 @@ const OrderBook = memo(() => {
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };\
+    return () => { mountedRef.current = false; };
   }, []);
 
   // update timestamp when WS is connected and book updates
