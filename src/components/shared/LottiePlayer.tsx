@@ -11,7 +11,6 @@ interface LottiePlayerProps {
   style?: React.CSSProperties;
   onComplete?: () => void;
   onLoopComplete?: () => void;
-  className?: string;
   reducedMotionFallback?: React.ReactNode;
   'aria-label'?: string;
 }
@@ -28,7 +27,6 @@ const LottiePlayer: React.FC<LottiePlayerProps> = ({
   style,
   onComplete,
   onLoopComplete,
-  className,
   reducedMotionFallback,
   'aria-label': ariaLabel,
 }) => {
@@ -158,7 +156,6 @@ const LottiePlayer: React.FC<LottiePlayerProps> = ({
         onComplete={handleComplete}
         onLoopComplete={handleLoopComplete}
         style={{ width: '100%', height: '100%' }}
-        className={className}
         rendererSettings={RENDERER_SETTINGS}
       />
     </div>
