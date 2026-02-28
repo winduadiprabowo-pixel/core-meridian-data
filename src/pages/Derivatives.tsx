@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 
+const FONT_MONO = "'JetBrains Mono', monospace";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface FundingRate {
@@ -239,14 +241,14 @@ const FundingRow = memo(({ item }: { item: FundingRate }) => {
       onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--zm-surface-hover)'; }}
       onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
     >
-      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', fontWeight: 700, width: '56px', color: 'var(--zm-text-primary)', flexShrink: 0 }}>
+      <span style={{ fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 700, width: '56px', color: 'var(--zm-text-primary)', flexShrink: 0 }}>
         {item.symbol}
       </span>
 
       {/* Rate bar */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
         <div
-          style={{ background: bgColor, color, padding: '2px 8px', borderRadius: '4px', fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', fontWeight: 700, minWidth: '72px', textAlign: 'right' }}
+          style={{ background: bgColor, color, padding: '2px 8px', borderRadius: '4px', fontFamily: FONT_MONO, fontSize: '11px', fontWeight: 700, minWidth: '72px', textAlign: 'right' }}
         >
           {(pct >= 0 ? '+' : '') + pct.toFixed(4) + '%'}
         </div>
@@ -255,10 +257,10 @@ const FundingRow = memo(({ item }: { item: FundingRate }) => {
         )}
       </div>
 
-      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', width: '64px', textAlign: 'right', color: 'var(--zm-text-secondary)', flexShrink: 0 }}>
+      <span style={{ fontFamily: FONT_MONO, fontSize: '10px', width: '64px', textAlign: 'right', color: 'var(--zm-text-secondary)', flexShrink: 0 }}>
         {nextLabel}
       </span>
-      <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', width: '56px', textAlign: 'right', color: 'var(--zm-text-faint)', flexShrink: 0 }}>
+      <span style={{ fontFamily: FONT_MONO, fontSize: '10px', width: '56px', textAlign: 'right', color: 'var(--zm-text-faint)', flexShrink: 0 }}>
         {item.exchange}
       </span>
     </div>
@@ -291,10 +293,10 @@ const OIRow = memo(({ item, maxOI }: { item: OpenInterest; maxOI: number }) => {
           transition: 'width 0.5s ease',
         }}
       />
-      <span style={{ position: 'relative', fontFamily: "'Space Mono', monospace", fontSize: '12px', fontWeight: 700, width: '56px', color: 'var(--zm-text-primary)', flexShrink: 0 }}>
+      <span style={{ position: 'relative', fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 700, width: '56px', color: 'var(--zm-text-primary)', flexShrink: 0 }}>
         {item.symbol}
       </span>
-      <span style={{ position: 'relative', fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', fontWeight: 600, flex: 1, textAlign: 'right', color: 'var(--zm-accent)' }}>
+      <span style={{ position: 'relative', fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 600, flex: 1, textAlign: 'right', color: 'var(--zm-accent)' }}>
         {'$' + formatCompactNum(item.openInterest)}
       </span>
     </div>
@@ -311,14 +313,14 @@ const LSBar = memo(({ item }: { item: LongShortRatio }) => {
   return (
     <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--zm-divider)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '12px', fontWeight: 700, color: 'var(--zm-text-primary)' }}>
+        <span style={{ fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 700, color: 'var(--zm-text-primary)' }}>
           {item.symbol}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', fontWeight: 600, color: 'rgba(52,211,153,0.9)' }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: '10px', fontWeight: 600, color: 'rgba(52,211,153,0.9)' }}>
             {'L ' + longPct.toFixed(1) + '%'}
           </span>
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', fontWeight: 600, color: 'rgba(251,113,133,0.9)' }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: '10px', fontWeight: 600, color: 'rgba(251,113,133,0.9)' }}>
             {'S ' + shortPct.toFixed(1) + '%'}
           </span>
         </div>
@@ -372,7 +374,7 @@ const FundingDistChart = memo(({ data }: { data: FundingRate[] }) => {
               y={H - 3}
               textAnchor="middle"
               fontSize="7"
-              fontFamily="'IBM Plex Mono', monospace"
+              fontFamily={FONT_MONO}
               fill="var(--zm-text-secondary)"
             >
               {sym}
@@ -396,16 +398,16 @@ const LiqSummary = memo(({ longUsd, shortUsd }: { longUsd: number; shortUsd: num
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <TrendingDown size={12} style={{ color: 'rgba(251,113,133,0.8)' }} />
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-secondary)' }}>LONG LIQ</span>
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', fontWeight: 700, color: 'rgba(251,113,133,1)' }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'var(--zm-text-secondary)' }}>LONG LIQ</span>
+          <span style={{ fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 700, color: 'rgba(251,113,133,1)' }}>
             {'$' + formatCompactNum(longUsd)}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', fontWeight: 700, color: 'rgba(52,211,153,1)' }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 700, color: 'rgba(52,211,153,1)' }}>
             {'$' + formatCompactNum(shortUsd)}
           </span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-secondary)' }}>SHORT LIQ</span>
+          <span style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'var(--zm-text-secondary)' }}>SHORT LIQ</span>
           <TrendingUp size={12} style={{ color: 'rgba(52,211,153,0.8)' }} />
         </div>
       </div>
@@ -482,17 +484,17 @@ const Derivatives = memo(() => {
 
       {/* Header */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px' }}>
-        <h1 style={{ margin: 0, fontFamily: "'Space Mono', monospace", fontSize: '18px', fontWeight: 700, color: 'var(--zm-text-primary)', letterSpacing: '0.04em' }}>
+        <h1 style={{ margin: 0, fontFamily: FONT_MONO, fontSize: '18px', fontWeight: 700, color: 'var(--zm-text-primary)', letterSpacing: '0.04em' }}>
           DERIVATIVES &amp; PERPS
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 8px', borderRadius: '6px', background: 'var(--zm-positive-bg)', border: '1px solid var(--zm-positive-border)' }}>
           <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: wsColor, boxShadow: liq.wsStatus === 'connected' ? '0 0 5px ' + wsColor : 'none', willChange: 'transform', flexShrink: 0 }} />
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'rgba(52,211,153,0.9)' }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'rgba(52,211,153,0.9)' }}>
             LIQ LIVE · Binance Futures
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 8px', borderRadius: '6px', background: 'var(--zm-glass-bg)', border: '1px solid var(--zm-glass-border)' }}>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-secondary)' }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'var(--zm-text-secondary)' }}>
             {'REST · ' + lastFetchLabel}
           </span>
         </div>
@@ -500,7 +502,7 @@ const Derivatives = memo(() => {
           type="button"
           onClick={refetch}
           aria-label="Refresh derivatives data"
-          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 10px', borderRadius: '6px', border: '1px solid var(--zm-accent-border)', color: 'var(--zm-text-secondary)', background: 'transparent', cursor: 'pointer', marginLeft: 'auto', fontFamily: "'Space Mono', monospace", fontSize: '10px', willChange: 'transform' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 10px', borderRadius: '6px', border: '1px solid var(--zm-accent-border)', color: 'var(--zm-text-secondary)', background: 'transparent', cursor: 'pointer', marginLeft: 'auto', fontFamily: FONT_MONO, fontSize: '10px', willChange: 'transform' }}
           onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--zm-accent-dim)'; e.currentTarget.style.color = 'rgba(96,165,250,1)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--zm-text-secondary)'; }}
         >
@@ -548,16 +550,16 @@ const Derivatives = memo(() => {
             <div key={stat.label} style={{ ...CARD_STYLE, padding: '14px 16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
                 <Icon size={11} style={{ color: 'var(--zm-text-secondary)' }} />
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', letterSpacing: '0.06em', color: 'var(--zm-text-secondary)', textTransform: 'uppercase' }}>
+                <span style={{ fontFamily: FONT_MONO, fontSize: '9px', letterSpacing: '0.06em', color: 'var(--zm-text-secondary)', textTransform: 'uppercase' }}>
                   {stat.label}
                 </span>
               </div>
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '16px', fontWeight: 700, color: stat.color, minHeight: '24px' }}>
+              <div style={{ fontFamily: FONT_MONO, fontSize: '16px', fontWeight: 700, color: stat.color, minHeight: '24px' }}>
                 {state.loading && stat.value === '—' ? (
                   <Loader2 size={14} style={{ color: stat.color, animation: 'spin 1s linear infinite' }} />
                 ) : stat.value}
               </div>
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', marginTop: '4px', color: 'var(--zm-text-faint)' }}>
+              <div style={{ fontFamily: FONT_MONO, fontSize: '9px', marginTop: '4px', color: 'var(--zm-text-faint)' }}>
                 {stat.sub}
               </div>
             </div>
@@ -573,11 +575,11 @@ const Derivatives = memo(() => {
           <div style={PANEL_HDR}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Activity size={13} style={{ color: 'var(--zm-accent)' }} />
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', fontWeight: 700, color: 'var(--zm-text-primary)' }}>
+              <span style={{ fontFamily: FONT_MONO, fontSize: '11px', fontWeight: 700, color: 'var(--zm-text-primary)' }}>
                 FUNDING RATES
               </span>
             </div>
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: 'var(--zm-text-faint)' }}>
+            <span style={{ fontFamily: FONT_MONO, fontSize: '9px', color: 'var(--zm-text-faint)' }}>
               8h · Binance Perps
             </span>
           </div>
@@ -590,7 +592,7 @@ const Derivatives = memo(() => {
           {/* Column headers */}
           <div style={{ display: 'grid', gridTemplateColumns: '56px 1fr 64px 56px', padding: '6px 16px', borderBottom: '1px solid var(--zm-divider-strong)', background: 'var(--zm-surface-1)' }}>
             {['PAIR', 'RATE', 'NEXT', 'EX'].map(h => (
-              <span key={h} style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', letterSpacing: '0.06em', color: 'var(--zm-text-faint)' }}>
+              <span key={h} style={{ fontFamily: FONT_MONO, fontSize: '9px', letterSpacing: '0.06em', color: 'var(--zm-text-faint)' }}>
                 {h}
               </span>
             ))}
@@ -603,7 +605,7 @@ const Derivatives = memo(() => {
               </div>
             ) : state.funding.length === 0 ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', color: 'var(--zm-text-faint)' }}>No data</span>
+                <span style={{ fontFamily: FONT_MONO, fontSize: '11px', color: 'var(--zm-text-faint)' }}>No data</span>
               </div>
             ) : (
               state.funding.map(item => <FundingRow key={item.symbol} item={item} />)
@@ -619,11 +621,11 @@ const Derivatives = memo(() => {
             <div style={PANEL_HDR}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <BarChart3 size={13} style={{ color: 'rgba(167,139,250,0.8)' }} />
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', fontWeight: 700, color: 'var(--zm-text-primary)' }}>
+                <span style={{ fontFamily: FONT_MONO, fontSize: '11px', fontWeight: 700, color: 'var(--zm-text-primary)' }}>
                   OPEN INTEREST
                 </span>
               </div>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: 'var(--zm-text-faint)' }}>
+              <span style={{ fontFamily: FONT_MONO, fontSize: '9px', color: 'var(--zm-text-faint)' }}>
                 Binance Futures
               </span>
             </div>
@@ -643,11 +645,11 @@ const Derivatives = memo(() => {
             <div style={PANEL_HDR}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <TrendingUp size={13} style={{ color: 'rgba(52,211,153,0.8)' }} />
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', fontWeight: 700, color: 'var(--zm-text-primary)' }}>
+                <span style={{ fontFamily: FONT_MONO, fontSize: '11px', fontWeight: 700, color: 'var(--zm-text-primary)' }}>
                   LONG / SHORT RATIO
                 </span>
               </div>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: 'var(--zm-text-faint)' }}>
+              <span style={{ fontFamily: FONT_MONO, fontSize: '9px', color: 'var(--zm-text-faint)' }}>
                 5m · Global Accounts
               </span>
             </div>
@@ -668,13 +670,13 @@ const Derivatives = memo(() => {
           <div style={{ ...PANEL_HDR, flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Zap size={13} style={{ color: 'rgba(251,191,36,0.8)' }} />
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', fontWeight: 700, color: 'var(--zm-text-primary)' }}>
+              <span style={{ fontFamily: FONT_MONO, fontSize: '11px', fontWeight: 700, color: 'var(--zm-text-primary)' }}>
                 LIVE LIQUIDATIONS
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '2px 6px', borderRadius: '4px', background: 'var(--zm-glass-bg)', border: '1px solid var(--zm-glass-border)' }}>
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: wsColor, willChange: 'transform', flexShrink: 0 }} />
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: 'var(--zm-text-secondary)' }}>
+              <span style={{ fontFamily: FONT_MONO, fontSize: '9px', color: 'var(--zm-text-secondary)' }}>
                 {liq.wsStatus.toUpperCase()}
               </span>
             </div>
@@ -691,15 +693,15 @@ const Derivatives = memo(() => {
           {/* Stats row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '6px 16px', borderBottom: '1px solid var(--zm-divider)', background: 'var(--zm-surface-1)', flexShrink: 0 }}>
             <div>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: 'var(--zm-text-secondary)' }}>Events/min </span>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', fontWeight: 700, color: 'rgba(251,191,36,0.9)' }}>
+              <span style={{ fontFamily: FONT_MONO, fontSize: '9px', color: 'var(--zm-text-secondary)' }}>Events/min </span>
+              <span style={{ fontFamily: FONT_MONO, fontSize: '10px', fontWeight: 700, color: 'rgba(251,191,36,0.9)' }}>
                 {liq.stats.eventsPerMinute}
               </span>
             </div>
             {liq.stats.largestEvent && (
               <div>
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: 'var(--zm-text-secondary)' }}>Largest </span>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', fontWeight: 700, color: 'rgba(251,191,36,0.9)' }}>
+                <span style={{ fontFamily: FONT_MONO, fontSize: '9px', color: 'var(--zm-text-secondary)' }}>Largest </span>
+                <span style={{ fontFamily: FONT_MONO, fontSize: '10px', fontWeight: 700, color: 'rgba(251,191,36,0.9)' }}>
                   {'$' + formatCompactNum(liq.stats.largestEvent.usdValue)}
                 </span>
               </div>
@@ -712,7 +714,7 @@ const Derivatives = memo(() => {
             {recentLiqs.length === 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 0', gap: '8px' }}>
                 <Zap size={22} style={{ color: 'var(--zm-text-faint)' }} />
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', color: 'var(--zm-text-faint)' }}>
+                <span style={{ fontFamily: FONT_MONO, fontSize: '11px', color: 'var(--zm-text-faint)' }}>
                   Waiting for liquidations…
                 </span>
               </div>
@@ -739,21 +741,21 @@ const Derivatives = memo(() => {
                     }}
                   >
                     {ev.isWhale && <span style={{ fontSize: '10px' }}>🐋</span>}
-                    <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', fontWeight: 700, width: '40px', color, flexShrink: 0 }}>
+                    <span style={{ fontFamily: FONT_MONO, fontSize: '10px', fontWeight: 700, width: '40px', color, flexShrink: 0 }}>
                       {label}
                     </span>
-                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', fontWeight: 700, width: '40px', color: 'var(--zm-text-primary)', flexShrink: 0 }}>
+                    <span style={{ fontFamily: FONT_MONO, fontSize: '10px', fontWeight: 700, width: '40px', color: 'var(--zm-text-primary)', flexShrink: 0 }}>
                       {sym}
                     </span>
-                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: 'var(--zm-text-secondary)' }}>
+                    <span style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'var(--zm-text-secondary)' }}>
                       {formatPrice(ev.lastFilledPrice)}
                     </span>
                     <span
-                      style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', fontWeight: 600, marginLeft: 'auto', color: ev.isMajor ? 'rgba(251,191,36,1)' : 'var(--zm-text-secondary)' }}
+                      style={{ fontFamily: FONT_MONO, fontSize: '10px', fontWeight: 600, marginLeft: 'auto', color: ev.isMajor ? 'rgba(251,191,36,1)' : 'var(--zm-text-secondary)' }}
                     >
                       {'$' + formatCompactNum(ev.usdValue)}
                     </span>
-                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', width: '20px', textAlign: 'right', color: 'var(--zm-text-faint)', flexShrink: 0 }}>
+                    <span style={{ fontFamily: FONT_MONO, fontSize: '9px', width: '20px', textAlign: 'right', color: 'var(--zm-text-faint)', flexShrink: 0 }}>
                       {ago}
                     </span>
                   </div>
