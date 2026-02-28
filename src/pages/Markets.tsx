@@ -11,6 +11,7 @@
  */
 
 import { memo, useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useCrypto } from '@/contexts/CryptoContext';
 import { useMarketWorker } from '@/hooks/useMarketWorker';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
@@ -293,10 +294,26 @@ const Markets = memo(() => {
           </div>
         )}
         {/* Rows */}
-        {sorted.length === 0 ? (
+        {sorted.length === 0 && assets.length === 0 ? (
+          <div style={{ display:'flex', flexDirection:'column' as const }}>
+            {Array.from({ length: 8 }, (_, i) => (
+              <div key={i} style={{ height: isMobile ? 64 : 54, borderBottom:'1px solid rgba(255,255,255,0.04)',
+                display:'flex', alignItems:'center', padding:'0 12px', gap:'12px', overflow:'hidden', position:'relative' as const }}>
+                <div style={{ width:28, height:28, borderRadius:'50%', background:'rgba(255,255,255,0.05)', flexShrink:0 }} />
+                <div style={{ flex:1, display:'flex', flexDirection:'column' as const, gap:6 }}>
+                  <div style={{ width:'40%', height:10, borderRadius:3, background:'rgba(255,255,255,0.05)' }} />
+                  <div style={{ width:'25%', height:8, borderRadius:3, background:'rgba(255,255,255,0.04)' }} />
+                </div>
+                <div style={{ width:80, height:14, borderRadius:3, background:'rgba(255,255,255,0.05)', flexShrink:0 }} />
+                <motion.div animate={{ x:['-100%','200%'] }} transition={{ duration:1.4+i*0.07, repeat:Infinity, ease:'linear' }}
+                  style={{ position:'absolute' as const, inset:0, background:'linear-gradient(90deg,transparent,rgba(0,238,255,0.04),transparent)', willChange:'transform' }} />
+              </div>
+            ))}
+          </div>
+        ) : sorted.length === 0 ? (
           <div style={{ padding:'40px', textAlign:'center' as const,
             fontFamily:"'JetBrains Mono',monospace", fontSize:'11px', color:'rgba(80,80,100,0.6)' }}>
-            {assets.length === 0 ? 'Loading market data…' : 'No results for "' + search + '"'}
+            {'No results for "' + search + '"'}
           </div>
         ) : (
           <VirtualList
