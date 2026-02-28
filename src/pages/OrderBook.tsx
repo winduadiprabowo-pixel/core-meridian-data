@@ -29,6 +29,8 @@ import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { formatPrice, formatCompactNum } from '@/lib/formatters';
 import { Activity, Zap, TrendingDown, TrendingUp, AlertTriangle } from 'lucide-react';
 
+const FONT_MONO = "'JetBrains Mono', monospace";
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SYMBOL_LABELS = Object.freeze({
@@ -273,17 +275,17 @@ const DepthChart = memo(({
           <text
             x={midX} y={H - 4}
             textAnchor="middle" fontSize="9"
-            fontFamily="'IBM Plex Mono', monospace"
+            fontFamily={FONT_MONO}
             fill="rgba(251,191,36,0.8)"
           >
             {formatPrice(midPrice)}
           </text>
         )}
 
-        <text x={PADDING.left + 6} y={PADDING.top + 12} fontSize="9" fontFamily="'IBM Plex Mono', monospace" fill="rgba(52,211,153,0.6)">
+        <text x={PADDING.left + 6} y={PADDING.top + 12} fontSize="9" fontFamily={FONT_MONO} fill="rgba(52,211,153,0.6)">
           BID
         </text>
-        <text x={W - PADDING.right - 6} y={PADDING.top + 12} textAnchor="end" fontSize="9" fontFamily="'IBM Plex Mono', monospace" fill="rgba(251,113,133,0.6)">
+        <text x={W - PADDING.right - 6} y={PADDING.top + 12} textAnchor="end" fontSize="9" fontFamily={FONT_MONO} fill="rgba(251,113,133,0.6)">
           ASK
         </text>
       </svg>
@@ -354,13 +356,13 @@ const BookRow = memo(({
 
       {side === 'bid' ? (
         <>
-          <span style={{ position: 'relative', fontFamily: 'monospace', fontSize: 11, width: 80, textAlign: 'right', color: 'var(--zm-text-secondary)' }}>
+          <span style={{ position: 'relative', fontFamily: FONT_MONO, fontSize: 11, width: 80, textAlign: 'right', color: 'var(--zm-text-secondary)' }}>
             {formatCompactNum(level.cumSize)}
           </span>
-          <span style={{ position: 'relative', fontFamily: 'monospace', fontSize: 11, width: 80, textAlign: 'right', color: 'var(--zm-text-secondary)' }}>
+          <span style={{ position: 'relative', fontFamily: FONT_MONO, fontSize: 11, width: 80, textAlign: 'right', color: 'var(--zm-text-secondary)' }}>
             {level.size.toFixed(4)}
           </span>
-          <span style={{ position: 'relative', fontFamily: 'monospace', fontSize: 12, fontWeight: 600, flex: 1, textAlign: 'right', color: 'rgba(52,211,153,1)' }}>
+          <span style={{ position: 'relative', fontFamily: FONT_MONO, fontSize: 12, fontWeight: 600, flex: 1, textAlign: 'right', color: 'rgba(52,211,153,1)' }}>
             {formatPrice(level.price)}
             {isGiant && <span style={{ marginLeft: 4, fontSize: 9, color: 'rgba(251,191,36,0.9)' }}>🐋</span>}
             {!isGiant && isLarge && <span style={{ marginLeft: 4, fontSize: 9, color: 'rgba(251,191,36,0.6)' }}>●</span>}
@@ -368,15 +370,15 @@ const BookRow = memo(({
         </>
       ) : (
         <>
-          <span style={{ position: 'relative', fontFamily: 'monospace', fontSize: 12, fontWeight: 600, flex: 1, textAlign: 'left', color: 'rgba(251,113,133,1)' }}>
+          <span style={{ position: 'relative', fontFamily: FONT_MONO, fontSize: 12, fontWeight: 600, flex: 1, textAlign: 'left', color: 'rgba(251,113,133,1)' }}>
             {formatPrice(level.price)}
             {isGiant && <span style={{ marginLeft: 4, fontSize: 9, color: 'rgba(251,191,36,0.9)' }}>🐋</span>}
             {!isGiant && isLarge && <span style={{ marginLeft: 4, fontSize: 9, color: 'rgba(251,191,36,0.6)' }}>●</span>}
           </span>
-          <span style={{ position: 'relative', fontFamily: 'monospace', fontSize: 11, width: 80, textAlign: 'left', color: 'var(--zm-text-secondary)' }}>
+          <span style={{ position: 'relative', fontFamily: FONT_MONO, fontSize: 11, width: 80, textAlign: 'left', color: 'var(--zm-text-secondary)' }}>
             {level.size.toFixed(4)}
           </span>
-          <span style={{ position: 'relative', fontFamily: 'monospace', fontSize: 11, width: 80, textAlign: 'left', color: 'var(--zm-text-secondary)' }}>
+          <span style={{ position: 'relative', fontFamily: FONT_MONO, fontSize: 11, width: 80, textAlign: 'left', color: 'var(--zm-text-secondary)' }}>
             {formatCompactNum(level.cumSize)}
           </span>
         </>
@@ -415,10 +417,10 @@ const SpreadBar = memo(({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-        <span style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 700, color: 'rgba(251,191,36,1)' }}>
+        <span style={{ fontFamily: FONT_MONO, fontSize: 14, fontWeight: 700, color: 'rgba(251,191,36,1)' }}>
           {formatPrice(midPrice)}
         </span>
-        <span style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--zm-text-secondary)' }}>
+        <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: 'var(--zm-text-secondary)' }}>
           Spread: {formatPrice(spread)} ({spreadPct.toFixed(4)}%)
         </span>
       </div>
@@ -487,16 +489,16 @@ const LiqRow = memo(({ event }: { event: LiquidationEvent }) => {
       <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: 10, fontWeight: 600, width: 80, color }}>
         {label}
       </span>
-      <span style={{ fontFamily: 'monospace', fontSize: 10, width: 48, fontWeight: 700, color: 'var(--zm-text-primary)' }}>
+      <span style={{ fontFamily: FONT_MONO, fontSize: 10, width: 48, fontWeight: 700, color: 'var(--zm-text-primary)' }}>
         {sym}
       </span>
-      <span style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--zm-text-secondary)' }}>
+      <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: 'var(--zm-text-secondary)' }}>
         {formatPrice(event.lastFilledPrice)}
       </span>
-      <span style={{ fontFamily: 'monospace', fontSize: 10, fontWeight: 600, marginLeft: 'auto', color: event.isMajor ? 'rgba(251,191,36,1)' : 'var(--zm-text-secondary)' }}>
+      <span style={{ fontFamily: FONT_MONO, fontSize: 10, fontWeight: 600, marginLeft: 'auto', color: event.isMajor ? 'rgba(251,191,36,1)' : 'var(--zm-text-secondary)' }}>
         ${formatCompactNum(event.usdValue)}
       </span>
-      <span style={{ fontFamily: 'monospace', fontSize: 10, width: 24, textAlign: 'right', color: 'var(--zm-text-faint)' }}>
+      <span style={{ fontFamily: FONT_MONO, fontSize: 10, width: 24, textAlign: 'right', color: 'var(--zm-text-faint)' }}>
         {ago}
       </span>
     </div>
@@ -690,7 +692,7 @@ const OrderBook = memo(() => {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <TrendingDown size={11} style={{ color: 'rgba(251,113,133,0.8)' }} />
-                <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: 'rgba(251,113,133,1)' }}>
+                <span style={{ fontFamily: FONT_MONO, fontSize: 12, fontWeight: 700, color: 'rgba(251,113,133,1)' }}>
                   ${liqLongTotal}
                 </span>
               </div>
@@ -701,7 +703,7 @@ const OrderBook = memo(() => {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <TrendingUp size={11} style={{ color: 'rgba(52,211,153,0.8)' }} />
-                <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: 'rgba(52,211,153,1)' }}>
+                <span style={{ fontFamily: FONT_MONO, fontSize: 12, fontWeight: 700, color: 'rgba(52,211,153,1)' }}>
                   ${liqShortTotal}
                 </span>
               </div>
@@ -720,7 +722,7 @@ const OrderBook = memo(() => {
               {liq.stats.eventsPerMinute} events/min
             </span>
             {liq.stats.largestEvent && (
-              <span style={{ fontFamily: 'monospace', fontSize: 10, marginLeft: 'auto', color: 'rgba(251,191,36,0.8)' }}>
+              <span style={{ fontFamily: FONT_MONO, fontSize: 10, marginLeft: 'auto', color: 'rgba(251,191,36,0.8)' }}>
                 Largest: ${formatCompactNum(liq.stats.largestEvent.usdValue)}
               </span>
             )}
@@ -766,7 +768,7 @@ const OrderBook = memo(() => {
             <div style={{ fontFamily: 'var(--font-mono-ui)', fontSize: 10, textTransform: 'uppercase', marginBottom: 4, color: 'var(--zm-text-secondary)' }}>
               {stat.label}
             </div>
-            <div style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 700, color: stat.color }}>
+            <div style={{ fontFamily: FONT_MONO, fontSize: 14, fontWeight: 700, color: stat.color }}>
               {stat.value}
             </div>
           </div>
