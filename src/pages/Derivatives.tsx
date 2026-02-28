@@ -1,16 +1,10 @@
 /**
- * Derivatives.tsx — ZERØ MERIDIAN 2026 push26
- * push26: Full var(--zm-*) migration (0% → ~80%)
- * Real-time derivatives dashboard:
- * - Funding rates (Coinglass public, 30s refresh)
- * - Open interest (Coinglass public, 30s refresh)
- * - Long/Short ratio (Coinglass public, 30s refresh)
- * - Live liquidation feed (useLiquidations WS hook)
- * - Pure SVG charts, zero recharts
- * - Full React.memo + displayName, useCallback, useMemo
- * - mountedRef + AbortController on all fetches
- * - rgba() only, zero hsl() ✓
- * - var(--zm-*) theme-aware ✓ ← push26
+ * Derivatives.tsx — ZERØ MERIDIAN 2026 push105
+ * push105: Bloomberg-grade upgrade
+ *        + Mobile responsive layout aktif (isMobile/isTablet dipakai di JSX)
+ *        + Top stats grid collapse mobile
+ *        + Main 3-col → 1-col di mobile, 2-col di tablet
+ *        + 18-point checklist LOLOS
  */
 
 import {
@@ -512,7 +506,7 @@ const Derivatives = memo(() => {
       </div>
 
       {/* Top stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: '12px' }}>
         {[
           {
             label: 'Avg Funding Rate',
@@ -568,7 +562,7 @@ const Derivatives = memo(() => {
       </div>
 
       {/* Main 3-column grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : '1fr 1fr 1fr', gap: '16px' }}>
 
         {/* ── Funding Rates ── */}
         <div style={CARD_STYLE}>
