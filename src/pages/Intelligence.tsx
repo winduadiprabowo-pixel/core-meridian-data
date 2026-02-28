@@ -359,12 +359,15 @@ Narratives.displayName = 'Narratives';
 
 // ─── Funding & OI ─────────────────────────────────────────────────────────────
 const FundingRow = memo(({ item, isMobile }: { item: FundingData; isMobile: boolean }) => {
+  const [hovered, setHovered] = useState(false);
   const rateColor  = item.rate > 0.0001 ? C.positive : item.rate < -0.0001 ? C.negative : C.textSec;
   const signalColor = item.signal === 'LONG' ? C.positive : item.signal === 'SHORT' ? C.negative : C.textSec;
   const signalBg   = item.signal === 'LONG' ? C.posDim : item.signal === 'SHORT' ? C.negDim : 'rgba(255,255,255,0.04)';
   const cols = isMobile ? '60px 1fr 1fr' : '80px 100px 120px 1fr 80px';
+  const onEnter = useCallback(() => setHovered(true), []);
+  const onLeave = useCallback(() => setHovered(false), []);
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: cols, alignItems: 'center', gap: '12px', padding: '13px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+    <div onMouseEnter={onEnter} onMouseLeave={onLeave} style={{ display: 'grid', gridTemplateColumns: cols, alignItems: 'center', gap: '12px', padding: '13px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', background: hovered ? 'rgba(255,255,255,0.03)' : 'transparent', transition: 'background 0.12s' }}>
       <span style={{ fontFamily: FONT_MONO, fontSize: '13px', fontWeight: 700, color: C.textPrimary }}>{item.symbol}</span>
       <span style={{ fontFamily: FONT_MONO, fontSize: '13px', fontWeight: 700, color: rateColor, textAlign: 'right' as const }}>{item.ratePct >= 0 ? '+' : ''}{item.ratePct.toFixed(4)}%</span>
       {!isMobile && <span style={{ fontFamily: FONT_MONO, fontSize: '11px', color: rateColor, textAlign: 'right' as const }}>{item.annualized >= 0 ? '+' : ''}{item.annualized.toFixed(1)}% pa</span>}
