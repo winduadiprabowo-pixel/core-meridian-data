@@ -1,5 +1,6 @@
 /**
- * App.tsx — ZERØ MERIDIAN 2026 push78
+ * App.tsx — ZERØ MERIDIAN 2026 push107
+ * push107: OfflineIndicator added — in-app offline/reconnected banner.
  * push78: PWAInstallProvider added — wraps entire app so Topbar + PWAInstallPrompt
  *         share one install prompt context (no duplicate event listeners).
  * push23: ThemeProvider (next-themes)
@@ -19,6 +20,7 @@ import { CryptoProvider } from '@/contexts/CryptoContext';
 import { PWAInstallProvider } from '@/contexts/PWAInstallContext';
 import { useCryptoData } from '@/hooks/useCryptoData';
 import Skeleton from '@/components/shared/Skeleton';
+import OfflineIndicator from '@/components/shared/OfflineIndicator';
 import {
   Landmark, ShieldCheck,
   Coins, Gem, DollarSign, Brain, Bot,
@@ -133,6 +135,8 @@ const App = memo(() => (
           <PWAInstallProvider>
             <Toaster />
             <Sonner />
+            {/* push107: Global offline/reconnected indicator */}
+            <OfflineIndicator />
             <BrowserRouter>
               <Suspense fallback={null}>
                 <Routes>
