@@ -1,4 +1,14 @@
+/**
+ * Dashboard.tsx — ZERØ MERIDIAN 2026 push110
+ * push110: Responsive polish — mobile 320px + desktop 1440px
+ * - useBreakpoint ✓  isMobile grid adapt ✓
+ * - React.memo + displayName ✓
+ * - rgba() only ✓  Zero className ✓  Zero hex color ✓
+ * - JetBrains Mono only ✓
+ */
+
 import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from "react";
+import { useBreakpoint } from "@/hooks/useBreakpoint";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -116,6 +126,7 @@ EmptyState.displayName = "EmptyState";
 // ─── Dashboard (Main) ─────────────────────────────────────────────────────────
 
 const Dashboard = memo(() => {
+  const { isMobile, isTablet } = useBreakpoint();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -186,24 +197,32 @@ const Dashboard = memo(() => {
   }, []);
 
   const pageStyle = useMemo(() => ({
-    background: C.bgBase, minHeight: "100vh", color: C.textPrimary, fontFamily: FONT, padding: "20px 16px",
-  }), []);
+    background: C.bgBase, minHeight: "100vh", color: C.textPrimary, fontFamily: FONT,
+    padding: isMobile ? "16px 12px" : "20px 16px",
+  }), [isMobile]);
+
+  // Responsive: mobile=2col, tablet=3col, desktop=5col
+  const metricsGridCols = isMobile ? "repeat(2,1fr)" : isTablet ? "repeat(3,1fr)" : "repeat(5,1fr)";
+  // Movers: mobile=1col stacked, desktop=2col side by side
+  const moversGridCols = isMobile ? "1fr" : "1fr 1fr";
 
   const sectionCardStyle = useMemo(() => ({
     background: C.glassBg, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: "hidden" as const,
   }), []);
 
+  const handleRefresh = useCallback(() => fetchData(), [fetchData]);
+
   return (
     <div style={pageStyle}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20, gap: 12 }}>
         <div>
-          <h1 style={{ fontFamily: FONT, fontSize: 20, fontWeight: 700, letterSpacing: "0.06em", color: C.textPrimary, margin: 0 }}>Dashboard</h1>
+          <h1 style={{ fontFamily: FONT, fontSize: isMobile ? 16 : 20, fontWeight: 700, letterSpacing: "0.06em", color: C.textPrimary, margin: 0 }}>Dashboard</h1>
           <p style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: C.textFaint, margin: "6px 0 0" }}>Market overview · Updated {lastUpdatedStr}</p>
         </div>
         <button
-          style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.accent, background: "rgba(0,238,255,0.08)", border: "1px solid rgba(0,238,255,0.2)", borderRadius: 6, padding: "6px 12px", cursor: "pointer" }}
-          onClick={useCallback(() => fetchData(), [fetchData])}
+          style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.accent, background: "rgba(0,238,255,0.08)", border: "1px solid rgba(0,238,255,0.2)", borderRadius: 6, padding: "6px 12px", cursor: "pointer", flexShrink: 0 }}
+          onClick={handleRefresh}
         >
           ↻ Refresh
         </button>
@@ -221,8 +240,8 @@ const Dashboard = memo(() => {
 
       {!loading && !error && data && (
         <>
-          {/* Global metrics */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 12, marginBottom: 20 }}>
+          {/* Global metrics — responsive grid */}
+          <div style={{ display: "grid", gridTemplateColumns: metricsGridCols, gap: 12, marginBottom: 20 }}>
             <MetricCard label="Total Market Cap" value={fmtBig(data.global.totalMarketCap)} />
             <MetricCard label="24H Volume" value={fmtBig(data.global.totalVolume24h)} />
             <MetricCard label="BTC Dominance" value={`${data.global.btcDominance.toFixed(1)}%`} />
@@ -230,8 +249,8 @@ const Dashboard = memo(() => {
             <MetricCard label="Fear & Greed" value={`${data.global.fngValue} · ${data.global.fngLabel}`} accent />
           </div>
 
-          {/* Movers */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          {/* Movers — responsive: 1col mobile, 2col desktop */}
+          <div style={{ display: "grid", gridTemplateColumns: moversGridCols, gap: 12 }}>
             <div style={sectionCardStyle}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", borderBottom: `1px solid ${C.glassBorder}` }}>
                 <span style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: C.positive }}>Top Gainers</span>
