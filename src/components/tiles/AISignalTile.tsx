@@ -1,5 +1,5 @@
 /**
- * AISignalTile.tsx — ZERØ MERIDIAN 2026 Phase 10
+ * AISignalTile.tsx — ZERØ MERIDIAN 2026 push111
  * AI Signal Layer visualization powered by TensorFlow.js (browser-native).
  * Shows: anomaly level, volatility, trend strength, prediction, RSI, MACD, Bollinger.
  * - React.memo + displayName ✓
@@ -60,10 +60,10 @@ interface MetricBarProps {
 const MetricBar = memo(({ label, value, color, unit = '' }: MetricBarProps) => (
   <div>
     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-      <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', letterSpacing: '0.1em', color: 'rgba(148,163,184,0.5)' }}>
+      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', letterSpacing: '0.1em', color: 'rgba(148,163,184,0.5)' }}>
         {label}
       </span>
-      <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color }}>
+      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color }}>
         {(value * 100).toFixed(1) + (unit || '%')}
       </span>
     </div>
@@ -88,8 +88,8 @@ const SignalGauge = memo(({ value }: SignalGaugeProps) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: 'rgba(148,163,184,0.5)', letterSpacing: '0.1em' }}>TREND STRENGTH</span>
-        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color }}>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', color: 'rgba(148,163,184,0.5)', letterSpacing: '0.1em' }}>TREND STRENGTH</span>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color }}>
           {value > 0 ? '+' : ''}{(value * 100).toFixed(0)}
         </span>
       </div>
@@ -102,8 +102,8 @@ const SignalGauge = memo(({ value }: SignalGaugeProps) => {
         />
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: 'rgba(251,113,133,0.4)' }}>BEAR</span>
-        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: 'rgba(52,211,153,0.4)' }}>BULL</span>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '8px', color: 'rgba(251,113,133,0.4)' }}>BEAR</span>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '8px', color: 'rgba(52,211,153,0.4)' }}>BULL</span>
       </div>
     </div>
   );
@@ -151,7 +151,7 @@ const AISignalTile = memo(({ symbol = 'BTC' }: AISignalTileProps) => {
   }), []);
 
   const titleStyle = useMemo(() => ({
-    fontFamily: "'Space Mono', monospace",
+    fontFamily: "'JetBrains Mono', monospace",
     fontSize: '11px',
     letterSpacing: '0.14em',
     color: 'rgba(255,255,255,0.7)',
@@ -161,7 +161,7 @@ const AISignalTile = memo(({ symbol = 'BTC' }: AISignalTileProps) => {
   }), []);
 
   const anomalyBadgeStyle = useMemo(() => ({
-    fontFamily: "'Space Mono', monospace",
+    fontFamily: "'JetBrains Mono', monospace",
     fontSize: '9px',
     letterSpacing: '0.1em',
     color: anomalyCfg.color,
@@ -197,7 +197,7 @@ const AISignalTile = memo(({ symbol = 'BTC' }: AISignalTileProps) => {
   }), []);
 
   const backendBadgeStyle = useMemo(() => ({
-    fontFamily: "'Space Mono', monospace",
+    fontFamily: "'JetBrains Mono', monospace",
     fontSize: '8px',
     color: result.tfReady ? 'rgba(52,211,153,0.6)' : 'rgba(148,163,184,0.3)',
     letterSpacing: '0.08em',
@@ -240,18 +240,18 @@ const AISignalTile = memo(({ symbol = 'BTC' }: AISignalTileProps) => {
         aria-label={'Market prediction: ' + result.prediction}
       >
         <div>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: 'rgba(148,163,184,0.4)', letterSpacing: '0.1em', marginBottom: '2px' }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', color: 'rgba(148,163,184,0.4)', letterSpacing: '0.1em', marginBottom: '2px' }}>
             PREDICTION
           </div>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '14px', fontWeight: 700, color: predictionCfg.color }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', fontWeight: 700, color: predictionCfg.color }}>
             {predictionCfg.icon} {predictionCfg.label}
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: 'rgba(148,163,184,0.4)', letterSpacing: '0.1em', marginBottom: '2px' }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', color: 'rgba(148,163,184,0.4)', letterSpacing: '0.1em', marginBottom: '2px' }}>
             CONFIDENCE
           </div>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '14px', fontWeight: 700, color: predictionCfg.color }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', fontWeight: 700, color: predictionCfg.color }}>
             {(result.signalConfidence * 100).toFixed(0)}%
           </div>
         </div>
@@ -277,36 +277,36 @@ const AISignalTile = memo(({ symbol = 'BTC' }: AISignalTileProps) => {
       {/* Feature Grid */}
       <div style={featureGridStyle}>
         <div style={featureBoxStyle}>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.4)', letterSpacing: '0.08em', marginBottom: '3px' }}>RSI</div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.4)', letterSpacing: '0.08em', marginBottom: '3px' }}>RSI</div>
           <div style={{
-            fontFamily: "'Space Mono', monospace", fontSize: '13px', fontWeight: 700,
+            fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', fontWeight: 700,
             color: result.features.rsi > 70 ? 'rgba(251,113,133,1)' : result.features.rsi < 30 ? 'rgba(52,211,153,1)' : 'rgba(96,165,250,0.9)',
           }}>
             {result.features.rsi.toFixed(1)}
           </div>
         </div>
         <div style={featureBoxStyle}>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.4)', letterSpacing: '0.08em', marginBottom: '3px' }}>MACD</div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.4)', letterSpacing: '0.08em', marginBottom: '3px' }}>MACD</div>
           <div style={{
-            fontFamily: "'Space Mono', monospace", fontSize: '13px', fontWeight: 700,
+            fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', fontWeight: 700,
             color: result.features.macdSignal > 0 ? 'rgba(52,211,153,1)' : 'rgba(251,113,133,1)',
           }}>
             {result.features.macdSignal > 0 ? '+' : ''}{(result.features.macdSignal * 1000).toFixed(2)}
           </div>
         </div>
         <div style={featureBoxStyle}>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.4)', letterSpacing: '0.08em', marginBottom: '3px' }}>BB POS</div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.4)', letterSpacing: '0.08em', marginBottom: '3px' }}>BB POS</div>
           <div style={{
-            fontFamily: "'Space Mono', monospace", fontSize: '13px', fontWeight: 700,
+            fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', fontWeight: 700,
             color: result.features.bollingerPos > 0.8 ? 'rgba(251,113,133,1)' : result.features.bollingerPos < 0.2 ? 'rgba(52,211,153,1)' : 'rgba(96,165,250,0.9)',
           }}>
             {(result.features.bollingerPos * 100).toFixed(0)}%
           </div>
         </div>
         <div style={featureBoxStyle}>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.4)', letterSpacing: '0.08em', marginBottom: '3px' }}>VOL ANOM</div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.4)', letterSpacing: '0.08em', marginBottom: '3px' }}>VOL ANOM</div>
           <div style={{
-            fontFamily: "'Space Mono', monospace", fontSize: '13px', fontWeight: 700,
+            fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', fontWeight: 700,
             color: result.features.volumeAnomaly > 0.5 ? 'rgba(251,191,36,1)' : 'rgba(148,163,184,0.7)',
           }}>
             {(result.features.volumeAnomaly * 100).toFixed(0)}%
