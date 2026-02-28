@@ -1,221 +1,321 @@
-/**
- * Tokens.tsx — ZERØ MERIDIAN 2026 push82
- * push82: REAL DATA — CoinGecko free public API. No API key required.
- * Trending (top 15 searched 24h), Top Gainers, Top Losers from top 100 mcap.
- * - React.memo + displayName ✓
- * - rgba() only ✓  Zero className ✓  Zero template literals in JSX ✓
- * - useCallback + useMemo ✓
- * - Object.freeze() all static data ✓
- */
+import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from "react";
 
-import React, { memo, useCallback, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useTrendingTokens, type TrendingToken } from '@/hooks/useTrendingTokens';
-import { formatCompact } from '@/lib/formatters';
-import { useBreakpoint } from '@/hooks/useBreakpoint';
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-const TABS = Object.freeze(['Trending', 'Gainers', 'Losers'] as const);
-type Tab = typeof TABS[number];
+const FONT = "'JetBrains Mono', monospace";
 
-const PctCell = React.memo(({ value }: { value: number }) => {
-  const isPos = value >= 0;
-  const style = useMemo(() => Object.freeze({
-    fontSize: '13px',
-    fontFamily: "'JetBrains Mono', monospace",
-    color: isPos ? 'rgba(52,211,153,1)' : 'rgba(251,113,133,1)',
-    fontWeight: 600,
-    textAlign: 'right' as const,
-  }), [isPos]);
-  return <span style={style}>{isPos ? '+' : ''}{value.toFixed(2)}%</span>;
+const C = Object.freeze({
+  accent:      "rgba(0,238,255,1)",
+  positive:    "rgba(34,255,170,1)",
+  negative:    "rgba(255,68,136,1)",
+  warning:     "rgba(255,187,0,1)",
+  textPrimary: "rgba(240,240,248,1)",
+  textFaint:   "rgba(80,80,100,1)",
+  bgBase:      "rgba(5,7,13,1)",
+  cardBg:      "rgba(14,17,28,1)",
+  glassBg:     "rgba(255,255,255,0.04)",
+  glassBorder: "rgba(255,255,255,0.06)",
 });
-PctCell.displayName = 'PctCell';
 
-const RankBadge = React.memo(({ rank }: { rank: number }) => {
-  const style = useMemo(() => Object.freeze({
-    width: '26px', height: '26px', borderRadius: '50%',
-    background: rank <= 3 ? 'rgba(0,200,255,0.12)' : 'rgba(255,255,255,0.05)',
-    border: rank <= 3 ? '1px solid rgba(0,200,255,0.3)' : '1px solid rgba(255,255,255,0.08)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontFamily: "'JetBrains Mono', monospace", fontSize: '11px',
-    color: rank <= 3 ? 'rgba(0,200,255,0.9)' : 'rgba(255,255,255,0.4)',
-    fontWeight: 700, flexShrink: 0,
-  }), [rank]);
-  return <div style={style}>{rank}</div>;
-});
-RankBadge.displayName = 'RankBadge';
+const SORT_KEYS = Object.freeze(["rank","price","change24h","volume","mcap"] as const);
+type SortKey = typeof SORT_KEYS[number];
+type SortDir = "asc"|"desc";
 
-const TokenRow = React.memo(({ token, rank, isMobile }: {
-  token: TrendingToken; rank: number; isMobile: boolean;
-}) => {
-  const rowStyle = useMemo(() => Object.freeze({
-    display: 'grid',
-    gridTemplateColumns: isMobile ? '26px 36px 1fr 70px 70px' : '26px 36px 1fr 100px 80px 80px 90px',
-    alignItems: 'center',
-    gap: isMobile ? '8px' : '12px',
-    padding: '11px 16px',
-    borderBottom: '1px solid rgba(255,255,255,0.04)',
-  }), [isMobile]);
+interface Token {
+  id: string;
+  rank: number;
+  symbol: string;
+  name: string;
+  price: number;
+  change24h: number;
+  change7d: number;
+  volume: number;
+  mcap: number;
+  category: string;
+}
 
-  const thumbStyle = useMemo(() => Object.freeze({
-    width: '28px', height: '28px', borderRadius: '50%',
-    objectFit: 'cover' as const, background: 'rgba(255,255,255,0.05)',
-  }), []);
+interface TokensData {
+  tokens: Token[];
+  lastUpdated: number;
+}
 
-  const priceStr = useMemo(() => {
-    if (token.price < 0.001) return '$' + token.price.toFixed(8);
-    if (token.price < 0.01)  return '$' + token.price.toFixed(6);
-    if (token.price < 1)     return '$' + token.price.toFixed(4);
-    return '$' + token.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }, [token.price]);
+// ─── TokenRow ─────────────────────────────────────────────────────────────────
+
+interface TokenRowProps { token: Token; }
+const TokenRow = memo(({ token }: TokenRowProps) => {
+  const [hovered, setHovered] = useState(false);
+  const onEnter = useCallback(() => setHovered(true), []);
+  const onLeave = useCallback(() => setHovered(false), []);
+
+  const rowStyle = useMemo(() => ({
+    display: "grid" as const,
+    gridTemplateColumns: "36px 140px 110px 80px 80px 110px 110px",
+    gap: 12,
+    padding: "0 16px",
+    height: 52,
+    alignItems: "center" as const,
+    borderBottom: `1px solid ${C.glassBorder}`,
+    background: hovered ? "rgba(255,255,255,0.03)" : "transparent",
+    transition: "background 0.15s ease",
+    cursor: "pointer",
+  }), [hovered]);
+
+  const changeColor = useCallback((v: number) => v >= 0 ? C.positive : C.negative, []);
+  const fmt = useCallback((n: number) => {
+    if (n >= 1e12) return `$${(n/1e12).toFixed(2)}T`;
+    if (n >= 1e9) return `$${(n/1e9).toFixed(2)}B`;
+    if (n >= 1e6) return `$${(n/1e6).toFixed(2)}M`;
+    return `$${n.toLocaleString()}`;
+  }, []);
+
+  const fmtPrice = useCallback((n: number) => {
+    if (n < 0.001) return `$${n.toExponential(2)}`;
+    if (n < 1) return `$${n.toFixed(4)}`;
+    if (n < 1000) return `$${n.toFixed(2)}`;
+    return `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  }, []);
 
   return (
-    <motion.div style={rowStyle} whileHover={{ background: 'rgba(255,255,255,0.025)' }}>
-      <RankBadge rank={rank} />
-      {token.thumb
-        ? <img src={token.thumb} alt={token.symbol} style={thumbStyle} loading="lazy" />
-        : <div style={{ ...thumbStyle, borderRadius: '50%' }} />
-      }
-      <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '2px', minWidth: 0 }}>
-        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.9)', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{token.symbol}</span>
-        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '11px', color: 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{token.name}</span>
+    <div style={rowStyle} onMouseEnter={onEnter} onMouseLeave={onLeave}>
+      <span style={{ fontFamily: FONT, fontSize: 10, color: C.textFaint }}>{token.rank}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: C.textPrimary }}>{token.symbol}</span>
+        <span style={{ fontFamily: FONT, fontSize: 10, color: C.textFaint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{token.name}</span>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '12px', color: 'rgba(255,255,255,0.8)', textAlign: 'right' as const }}>{priceStr}</span>
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <PctCell value={token.priceChange24h} />
-      </div>
-      {!isMobile && (
-        <>
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <PctCell value={token.priceChange7d} />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: 'rgba(255,255,255,0.35)', textAlign: 'right' as const }}>{formatCompact(token.volume24h)}</span>
-          </div>
-        </>
-      )}
-    </motion.div>
+      <span style={{ fontFamily: FONT, fontSize: 12, fontWeight: 600, color: C.textPrimary, textAlign: "right" as const }}>{fmtPrice(token.price)}</span>
+      <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: changeColor(token.change24h), textAlign: "right" as const }}>
+        {token.change24h >= 0 ? "+" : ""}{token.change24h.toFixed(2)}%
+      </span>
+      <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: changeColor(token.change7d), textAlign: "right" as const }}>
+        {token.change7d >= 0 ? "+" : ""}{token.change7d.toFixed(2)}%
+      </span>
+      <span style={{ fontFamily: FONT, fontSize: 11, color: C.textFaint, textAlign: "right" as const }}>{fmt(token.volume)}</span>
+      <span style={{ fontFamily: FONT, fontSize: 11, color: C.textFaint, textAlign: "right" as const }}>{fmt(token.mcap)}</span>
+    </div>
   );
 });
-TokenRow.displayName = 'TokenRow';
+TokenRow.displayName = "TokenRow";
 
-const TableHeader = React.memo(({ isMobile }: { isMobile: boolean }) => (
-  <div style={{
-    display: 'grid',
-    gridTemplateColumns: isMobile ? '26px 36px 1fr 70px 70px' : '26px 36px 1fr 100px 80px 80px 90px',
-    gap: isMobile ? '8px' : '12px',
-    padding: '8px 16px',
-    borderBottom: '1px solid rgba(255,255,255,0.07)',
-    fontFamily: "'JetBrains Mono', monospace",
-    fontSize: '10px', color: 'rgba(255,255,255,0.25)',
-    letterSpacing: '0.08em', textTransform: 'uppercase' as const,
-  }}>
-    <span>#</span><span />
-    <span>Token</span>
-    <span style={{ textAlign: 'right' }}>Price</span>
-    <span style={{ textAlign: 'right' }}>24h</span>
-    {!isMobile && <span style={{ textAlign: 'right' }}>7d</span>}
-    {!isMobile && <span style={{ textAlign: 'right' }}>Volume</span>}
+// ─── EmptyState ───────────────────────────────────────────────────────────────
+
+const EmptyState = memo(() => (
+  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 24px", gap: 12 }}>
+    <span style={{ fontSize: 32, opacity: 0.25 }}>🪙</span>
+    <span style={{ fontFamily: FONT, fontSize: 12, color: C.textFaint }}>No tokens match your current filter.</span>
+    <span style={{ fontFamily: FONT, fontSize: 10, color: C.textFaint, opacity: 0.6 }}>Try adjusting search or category filter.</span>
   </div>
 ));
-TableHeader.displayName = 'TableHeader';
+EmptyState.displayName = "EmptyState";
 
-const SkeletonRow = React.memo(({ i }: { i: number }) => (
-  <motion.div
-    style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-    animate={{ opacity: [0.3, 0.6, 0.3] }}
-    transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.06 }}
-  >
-    <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'rgba(255,255,255,0.07)' }} />
-    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.07)' }} />
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: '4px' }}>
-      <div style={{ width: '55px', height: '13px', borderRadius: '3px', background: 'rgba(255,255,255,0.07)' }} />
-      <div style={{ width: '95px', height: '10px', borderRadius: '3px', background: 'rgba(255,255,255,0.04)' }} />
-    </div>
-    <div style={{ width: '75px', height: '13px', borderRadius: '3px', background: 'rgba(255,255,255,0.07)' }} />
-    <div style={{ width: '55px', height: '13px', borderRadius: '3px', background: 'rgba(255,255,255,0.07)' }} />
-  </motion.div>
-));
-SkeletonRow.displayName = 'SkeletonRow';
+// ─── SortHeader ───────────────────────────────────────────────────────────────
 
-const TabBtn = React.memo(({ label, active, onClick }: { label: Tab; active: boolean; onClick: (t: Tab) => void }) => {
-  const style = useMemo(() => Object.freeze({
-    padding: '6px 14px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-    fontFamily: "'Space Grotesk', sans-serif", fontSize: '12px',
-    fontWeight: active ? 600 : 400,
-    background: active ? 'rgba(255,255,255,0.1)' : 'transparent',
-    color: active ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)',
-    transition: 'all 0.15s', letterSpacing: '0.04em',
-  }), [active]);
-  const handleClick = useCallback(() => onClick(label), [label, onClick]);
-  return <button style={style} onClick={handleClick}>{label}</button>;
+interface SortHeaderProps {
+  col: { key: SortKey; label: string; align: "left"|"right" };
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onSort: (k: SortKey) => void;
+}
+const SortHeader = memo(({ col, sortKey, sortDir, onSort }: SortHeaderProps) => {
+  const onClick = useCallback(() => onSort(col.key), [col.key, onSort]);
+  const active = sortKey === col.key;
+  return (
+    <span
+      onClick={onClick}
+      style={{
+        fontFamily: FONT,
+        fontSize: 9,
+        letterSpacing: "0.12em",
+        textTransform: "uppercase" as const,
+        color: active ? C.accent : C.textFaint,
+        cursor: "pointer",
+        textAlign: col.align,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: col.align === "right" ? "flex-end" : "flex-start",
+        gap: 4,
+        userSelect: "none" as const,
+      }}
+    >
+      {col.label}{active ? (sortDir === "desc" ? " ▼" : " ▲") : ""}
+    </span>
+  );
 });
-TabBtn.displayName = 'TabBtn';
+SortHeader.displayName = "SortHeader";
 
-const Tokens: React.FC = () => {
-  const { trending, gainers, losers, loading, error, lastUpdated, refetch } = useTrendingTokens();
-  const { isMobile } = useBreakpoint();
-  const [activeTab, setActiveTab] = useState<Tab>('Trending');
+// ─── Tokens (Main) ────────────────────────────────────────────────────────────
 
-  const handleTab = useCallback((tab: Tab) => setActiveTab(tab), []);
+const COLS: Array<{ key: SortKey; label: string; align: "left"|"right" }> = Object.freeze([
+  { key: "rank",     label: "#",       align: "left" },
+  { key: "rank",     label: "Asset",   align: "left" },
+  { key: "price",    label: "Price",   align: "right" },
+  { key: "change24h",label: "24H %",   align: "right" },
+  { key: "change24h",label: "7D %",    align: "right" },
+  { key: "volume",   label: "Volume",  align: "right" },
+  { key: "mcap",     label: "Mkt Cap", align: "right" },
+]) as any;
 
-  const activeList = useMemo(() => {
-    if (activeTab === 'Trending') return trending;
-    if (activeTab === 'Gainers')  return gainers;
-    return losers;
-  }, [activeTab, trending, gainers, losers]);
+const Tokens = memo(() => {
+  const [data, setData] = useState<TokensData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("rank");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [search, setSearch] = useState("");
+  const mountedRef = useRef(true);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h,7d"
+      );
+      if (!mountedRef.current) return;
+      if (!res.ok) throw new Error(`CoinGecko HTTP ${res.status}`);
+      const json = await res.json();
+      if (!mountedRef.current) return;
+      const tokens: Token[] = json.map((t: any, i: number) => ({
+        id: t.id,
+        rank: i + 1,
+        symbol: t.symbol.toUpperCase(),
+        name: t.name,
+        price: t.current_price,
+        change24h: t.price_change_percentage_24h ?? 0,
+        change7d: t.price_change_percentage_7d_in_currency ?? 0,
+        volume: t.total_volume,
+        mcap: t.market_cap,
+        category: "crypto",
+      }));
+      setData({ tokens, lastUpdated: Date.now() });
+    } catch (e) {
+      if (!mountedRef.current) return;
+      setError(`Failed to load token data: ${e instanceof Error ? e.message : "Unknown error"}`);
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    fetchData();
+    return () => { mountedRef.current = false; };
+  }, [fetchData]);
+
+  const handleSort = useCallback((k: SortKey) => {
+    setSortKey(prev => {
+      if (prev === k) setSortDir(d => d === "desc" ? "asc" : "desc");
+      else setSortDir("desc");
+      return k;
+    });
+  }, []);
+
+  const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
 
   const lastUpdatedStr = useMemo(() => {
-    if (!lastUpdated) return '';
-    return new Date(lastUpdated).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  }, [lastUpdated]);
+    if (!data?.lastUpdated) return "—";
+    const diff = Math.floor((Date.now() - data.lastUpdated) / 1000);
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+    return `${Math.floor(diff/3600)}h ago`;
+  }, [data]);
+
+  const filteredTokens = useMemo(() => {
+    let list = data?.tokens ?? [];
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter(t => t.symbol.toLowerCase().includes(q) || t.name.toLowerCase().includes(q));
+    }
+    return [...list].sort((a, b) => {
+      const mul = sortDir === "desc" ? -1 : 1;
+      return (a[sortKey] as number - (b[sortKey] as number)) * mul;
+    });
+  }, [data, search, sortKey, sortDir]);
+
+  const pageStyle = useMemo(() => ({
+    background: C.bgBase, minHeight: "100vh", color: C.textPrimary, fontFamily: FONT, padding: "20px 16px",
+  }), []);
+
+  const cardStyle = useMemo(() => ({
+    background: C.glassBg, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: "hidden" as const,
+  }), []);
 
   return (
-    <div style={{ padding: isMobile ? '16px 0' : '24px', maxWidth: '900px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '0 16px 16px' : '0 0 20px', flexWrap: 'wrap' as const, gap: '12px' }}>
-        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '20px', fontWeight: 700, color: 'rgba(255,255,255,0.9)', margin: 0 }}>
-          Token Discovery
-        </h1>
-        <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', padding: '3px' }}>
-          {TABS.map(tab => <TabBtn key={tab} label={tab} active={activeTab === tab} onClick={handleTab} />)}
+    <div style={pageStyle}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+        <div>
+          <h1 style={{ fontFamily: FONT, fontSize: 20, fontWeight: 700, letterSpacing: "0.06em", color: C.textPrimary, margin: 0 }}>Tokens</h1>
+          <p style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: C.textFaint, margin: "6px 0 0" }}>Top 100 · CoinGecko live data</p>
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input
+            value={search}
+            onChange={handleSearch}
+            placeholder="Search token..."
+            style={{
+              fontFamily: FONT,
+              fontSize: 11,
+              color: C.textPrimary,
+              background: "rgba(255,255,255,0.04)",
+              border: `1px solid ${C.glassBorder}`,
+              borderRadius: 6,
+              padding: "6px 12px",
+              outline: "none",
+            }}
+          />
+          <button
+            style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.accent, background: "rgba(0,238,255,0.08)", border: "1px solid rgba(0,238,255,0.2)", borderRadius: 6, padding: "6px 12px", cursor: "pointer" }}
+            onClick={useCallback(() => fetchData(), [fetchData])}
+          >
+            ↻ Refresh
+          </button>
         </div>
       </div>
 
-      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
-        {!loading && !error && <TableHeader isMobile={isMobile} />}
-        <AnimatePresence mode="wait">
-          {loading ? (
-            <motion.div key="skel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              {Array.from({ length: 12 }, (_, i) => <SkeletonRow key={i} i={i} />)}
-            </motion.div>
-          ) : error ? (
-            <motion.div key="err" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              style={{ padding: '32px 16px', textAlign: 'center' as const, fontFamily: "'Space Grotesk', sans-serif", fontSize: '14px', color: 'rgba(251,113,133,0.8)' }}>
-              <div>⚠ {error}</div>
-              <button onClick={refetch} style={{ marginTop: '12px', padding: '8px 20px', borderRadius: '8px', background: 'rgba(251,113,133,0.1)', border: '1px solid rgba(251,113,133,0.3)', color: 'rgba(251,113,133,0.9)', fontFamily: "'Space Grotesk', sans-serif", fontSize: '13px', cursor: 'pointer' }}>
-                Retry
-              </button>
-            </motion.div>
-          ) : (
-            <motion.div key={activeTab} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.22 }}>
-              {activeList.map((token, i) => <TokenRow key={token.id} token={token} rank={i + 1} isMobile={isMobile} />)}
-            </motion.div>
-          )}
-        </AnimatePresence>
-        {!loading && !error && (
-          <div style={{ padding: '10px 16px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(255,255,255,0.22)' }}>
-            <span>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(52,211,153,0.8)', boxShadow: '0 0 6px rgba(52,211,153,0.5)', display: 'inline-block', marginRight: '6px' }} />
-              Live · CoinGecko API · refresh 60s
-            </span>
-            {lastUpdatedStr && <span>Updated {lastUpdatedStr}</span>}
+      {/* Table Card */}
+      <div style={cardStyle}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: `1px solid ${C.glassBorder}` }}>
+          <span style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: C.textFaint }}>
+            {filteredTokens.length} Tokens
+          </span>
+          <span style={{ fontFamily: FONT, fontSize: 9, color: C.textFaint }}>Updated {lastUpdatedStr}</span>
+        </div>
+
+        {loading && (
+          <div style={{ padding: "40px 24px", textAlign: "center", fontFamily: FONT, fontSize: 11, color: C.textFaint }}>
+            Loading token data...
           </div>
+        )}
+
+        {!loading && error && (
+          <div style={{ padding: "40px 24px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+            <span style={{ fontFamily: FONT, fontSize: 12, color: C.negative, textAlign: "center" }}>{error}</span>
+            <button
+              style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.textPrimary, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.glassBorder}`, borderRadius: 6, padding: "6px 14px", cursor: "pointer" }}
+              onClick={fetchData}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "36px 140px 110px 80px 80px 110px 110px", gap: 12, padding: "8px 16px", borderBottom: `1px solid rgba(255,255,255,0.1)` }}>
+              {(COLS as any[]).map((col: any, i: number) => (
+                <SortHeader key={i} col={col} sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+              ))}
+            </div>
+            {filteredTokens.length === 0
+              ? <EmptyState />
+              : filteredTokens.map(t => <TokenRow key={t.id} token={t} />)
+            }
+          </>
         )}
       </div>
     </div>
   );
-};
+});
+Tokens.displayName = "Tokens";
 
-Tokens.displayName = 'Tokens';
-export default memo(Tokens);
+export default Tokens;
