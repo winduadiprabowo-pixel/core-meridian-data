@@ -1,550 +1,591 @@
 /**
- * Defi.tsx — ZERØ MERIDIAN 2026 push24
- * push24 fixes:
- *   - Math.sin/cos → curated CHAIN_PALETTE (deterministic, no trig)
- *   - Dead 'hue' variable removed
- *   - willChange: transform on animated elements
- *   - Duplicate style props fixed
- * - Full DeFi Intelligence powered by DefiLlama (100% FREE)
- * - React.memo + displayName ✓
- * - rgba() only ✓
- * - Zero template literals in JSX ✓
- * - useCallback + useMemo ✓
+ * Defi.tsx — ZERØ MERIDIAN push101
+ * FULL REAL DATA — DefiLlama API (100% FREE, no API key)
+ * Endpoints: protocols, chains TVL, yield pools
+ *
+ * ✅ Zero className  ✅ rgba() only  ✅ JetBrains Mono
+ * ✅ React.memo + displayName  ✅ useCallback + useMemo  ✅ mountedRef
+ * ✅ Zero dummy data — all live from DefiLlama
  */
 
 import {
   memo, useState, useCallback, useMemo, useRef, useEffect,
 } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useDefiLlama, type DLProtocol, type DLYield } from '@/hooks/useDefiLlama';
 import { formatCompact } from '@/lib/formatters';
-import {
-  TrendingUp, TrendingDown, Search, RefreshCw, Loader2,
-  Layers, BarChart3, Percent, ChevronDown, ChevronUp,
-  DollarSign, AlertTriangle, Zap,
-} from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+const FONT = "'JetBrains Mono', monospace";
 
-const CATEGORIES = Object.freeze([
-  'All', 'Dexes', 'Lending', 'Liquid Staking', 'Bridge',
-  'CDP', 'Yield', 'Derivatives', 'RWA', 'Other',
-]);
+const TABS = Object.freeze(['Protocols', 'Chains', 'Yield Pools'] as const);
+type Tab = typeof TABS[number];
 
-const CATEGORY_COLORS: Record<string, string> = Object.freeze({
-  'Dexes':           'rgba(96,165,250,1)',
-  'Lending':         'rgba(167,139,250,1)',
-  'Liquid Staking':  'rgba(52,211,153,1)',
-  'Bridge':          'rgba(251,191,36,1)',
-  'CDP':             'rgba(251,113,133,1)',
-  'Yield':           'rgba(110,231,183,1)',
-  'Derivatives':     'rgba(253,164,175,1)',
-  'RWA':             'rgba(196,181,253,1)',
-  'Other':           'rgba(148,163,184,1)',
+// ─── Category colors ──────────────────────────────────────────────────────────
+const CAT_COLORS: Record<string, string> = Object.freeze({
+  'Dexes':          'rgba(96,165,250,1)',
+  'Lending':        'rgba(167,139,250,1)',
+  'Liquid Staking': 'rgba(52,211,153,1)',
+  'Bridge':         'rgba(251,191,36,1)',
+  'CDP':            'rgba(251,113,133,1)',
+  'Yield':          'rgba(110,231,183,1)',
+  'Derivatives':    'rgba(253,164,175,1)',
+  'RWA':            'rgba(196,181,253,1)',
+  'Other':          'rgba(148,163,184,1)',
 });
+function catColor(cat: string): string {
+  return CAT_COLORS[cat] ?? 'rgba(148,163,184,0.8)';
+}
 
-// push24: Curated palette — replaces Math.sin/cos color generation
-const CHAIN_PALETTE: readonly string[] = Object.freeze([
-  'rgba(96,165,250,1)',   // 0 — blue
-  'rgba(52,211,153,1)',   // 1 — emerald
-  'rgba(167,139,250,1)',  // 2 — violet
-  'rgba(251,191,36,1)',   // 3 — amber
-  'rgba(251,113,133,1)',  // 4 — rose
-  'rgba(45,212,191,1)',   // 5 — teal
-  'rgba(249,115,22,1)',   // 6 — orange
-  'rgba(99,179,237,1)',   // 7 — sky
-  'rgba(196,181,253,1)',  // 8 — purple-light
-  'rgba(110,231,183,1)',  // 9 — green-light
-  'rgba(253,164,175,1)',  // 10 — pink-light
-  'rgba(147,197,253,1)',  // 11 — blue-light
-  'rgba(134,239,172,1)',  // 12 — green
-  'rgba(253,224,71,1)',   // 13 — yellow
-  'rgba(216,180,254,1)',  // 14 — purple-pale
+const CHAIN_PAL: readonly string[] = Object.freeze([
+  'rgba(96,165,250,1)', 'rgba(52,211,153,1)', 'rgba(167,139,250,1)',
+  'rgba(251,191,36,1)', 'rgba(251,113,133,1)', 'rgba(45,212,191,1)',
+  'rgba(249,115,22,1)', 'rgba(99,179,237,1)',  'rgba(196,181,253,1)',
+  'rgba(110,231,183,1)','rgba(253,164,175,1)', 'rgba(147,197,253,1)',
+  'rgba(134,239,172,1)','rgba(253,224,71,1)',  'rgba(216,180,254,1)',
 ]);
 
-function getCatColor(cat: string): string {
-  return CATEGORY_COLORS[cat] ?? 'rgba(148,163,184,1)';
-}
+// ─── Loading Skeleton ─────────────────────────────────────────────────────────
+const Shimmer = memo(({ w = '100%', h = 14 }: { w?: string | number; h?: number }) => (
+  <div style={{ width: w, height: h, borderRadius: 4, background: 'rgba(255,255,255,0.05)', overflow: 'hidden', position: 'relative' }}>
+    <motion.div
+      animate={{ x: ['-100%', '200%'] }}
+      transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+      style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, transparent, rgba(0,238,255,0.07), transparent)' }}
+    />
+  </div>
+));
+Shimmer.displayName = 'Shimmer';
 
-// ─── Metric Card ──────────────────────────────────────────────────────────────
-
-interface MiniMetricProps {
-  label:   string;
-  value:   string;
-  change?: number;
-  icon:    React.ReactNode;
-  accent:  string;
-}
-
-const MiniMetric = memo(({ label, value, change, icon, accent }: MiniMetricProps) => {
-  const changeColor = change != null
-    ? change >= 0 ? 'rgba(52,211,153,1)' : 'rgba(251,113,133,1)'
-    : undefined;
-
+// ─── Metric Card ─────────────────────────────────────────────────────────────
+const MetricCard = memo(({ label, value, change, color }:
+  { label: string; value: string; change?: number; color: string }) => {
+  const changeColor = change == null ? undefined : change >= 0 ? 'rgba(34,255,170,1)' : 'rgba(255,68,136,1)';
   return (
     <div style={{
-      flex:            1,
-      borderRadius:    '8px',
-      padding:         '12px',
-      display:         'flex',
-      flexDirection:   'column',
-      gap:             '4px',
-      background:      'var(--zm-glass-bg)',
-      border:          '1px solid var(--zm-glass-border)',
-      willChange:      'transform',
+      flex: 1, borderRadius: 12, padding: '14px 16px',
+      background: 'rgba(14,17,28,1)',
+      border: '1px solid ' + color.replace(/[\d.]+\)$/, '0.16)'),
+      position: 'relative', overflow: 'hidden',
+      willChange: 'transform',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <span style={{ color: accent }}>{icon}</span>
-        <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--zm-text-faint)' }}>
-          {label}
-        </span>
-      </div>
-      <span style={{ fontFamily: 'monospace', fontSize: '18px', fontWeight: 700, color: 'var(--zm-text-primary)' }}>
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+        background: 'linear-gradient(90deg, transparent, ' + color + ', transparent)', opacity: 0.5,
+      }} />
+      <p style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(80,80,100,1)',
+        letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 6px' }}>
+        {label}
+      </p>
+      <p style={{ fontFamily: FONT, fontSize: 20, fontWeight: 700, color,
+        margin: '0 0 4px', textShadow: '0 0 16px ' + color.replace(/[\d.]+\)$/, '0.35)') }}>
         {value}
-      </span>
+      </p>
       {change != null && (
-        <span style={{ fontFamily: 'monospace', fontSize: '11px', color: changeColor }}>
+        <p style={{ fontFamily: FONT, fontSize: 10, color: changeColor, margin: 0 }}>
           {change >= 0 ? '+' : ''}{change.toFixed(2)}% (24h)
-        </span>
+        </p>
       )}
     </div>
   );
 });
-MiniMetric.displayName = 'MiniMetric';
-
-// ─── Chain TVL Chart (SVG) ────────────────────────────────────────────────────
-
-interface ChainChartProps {
-  chains: Array<{ name: string; tvl: number }>;
-}
-
-const ChainChart = memo(({ chains }: ChainChartProps) => {
-  const top = useMemo(() => chains.slice(0, 15), [chains]);
-  const max = useMemo(() => Math.max(...top.map(c => c.tvl), 1), [top]);
-
-  const W = 580; const H = 180; const BAR_H = 22; const GAP = 4; const LABEL_W = 90;
-
-  return (
-    <svg
-      width="100%"
-      viewBox={'0 0 ' + W + ' ' + (top.length * (BAR_H + GAP) + 20)}
-      style={{ overflow: 'visible', willChange: 'transform' }}
-    >
-      {top.map((chain, i) => {
-        const y     = i * (BAR_H + GAP);
-        const barW  = ((chain.tvl / max) * (W - LABEL_W - 80));
-        const color = CHAIN_PALETTE[i % CHAIN_PALETTE.length];
-
-        return (
-          <g key={chain.name}>
-            <text
-              x={LABEL_W - 6}
-              y={y + BAR_H / 2 + 4}
-              textAnchor="end"
-              fontSize="10"
-              fontFamily="'Space Mono', monospace"
-              fill="rgba(148,163,184,0.8)"
-            >
-              {chain.name.length > 10 ? chain.name.slice(0, 9) + '…' : chain.name}
-            </text>
-            <rect
-              x={LABEL_W}
-              y={y}
-              width={barW}
-              height={BAR_H}
-              rx={4}
-              fill={color}
-              opacity={0.75}
-            />
-            <text
-              x={LABEL_W + barW + 6}
-              y={y + BAR_H / 2 + 4}
-              fontSize="10"
-              fontFamily="'Space Mono', monospace"
-              fill="rgba(148,163,184,0.7)"
-            >
-              {formatCompact(chain.tvl)}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
-  );
-});
-ChainChart.displayName = 'ChainChart';
+MetricCard.displayName = 'MetricCard';
 
 // ─── Protocol Row ─────────────────────────────────────────────────────────────
-
-interface ProtocolRowProps {
-  p:    DLProtocol;
-  rank: number;
-}
-
-const ProtocolRow = memo(({ p, rank }: ProtocolRowProps) => {
-  const c1d = p.change1d >= 0 ? 'rgba(52,211,153,1)' : 'rgba(251,113,133,1)';
-  const c7d = p.change7d >= 0 ? 'rgba(52,211,153,1)' : 'rgba(251,113,133,1)';
-  const cat = getCatColor(p.category);
-
+const ProtocolRow = memo(({ p, rank, index }: { p: DLProtocol; rank: number; index: number }) => {
+  const c1d = p.change1d >= 0 ? 'rgba(34,255,170,1)' : 'rgba(255,68,136,1)';
+  const c7d = p.change7d >= 0 ? 'rgba(34,255,170,1)' : 'rgba(255,68,136,1)';
+  const cat = catColor(p.category);
+  const bg  = index % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent';
   return (
-    <div
-      style={{
-        display:       'flex',
-        alignItems:    'center',
-        padding:       '0 16px',
-        gap:           '12px',
-        height:        '48px',
-        borderBottom:  '1px solid rgba(96,165,250,0.05)',
-        transition:    'background 120ms',
-        willChange:    'transform',
-      }}
-      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(96,165,250,0.04)'; }}
-      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+    <div style={{
+      display: 'flex', alignItems: 'center', padding: '0 16px',
+      gap: 0, height: 50, background: bg,
+      borderBottom: '1px solid rgba(255,255,255,0.035)',
+      transition: 'background 0.12s', willChange: 'transform',
+    }}
+      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(96,165,250,0.03)'; }}
+      onMouseLeave={e => { e.currentTarget.style.background = bg; }}
     >
-      <span style={{ fontFamily: 'monospace', fontSize: '11px', width: '28px', flexShrink: 0, textAlign: 'right', color: 'var(--zm-text-faint)' }}>
-        {rank}
-      </span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '176px', flexShrink: 0, minWidth: 0 }}>
+      {/* Rank */}
+      <span style={{ fontFamily: FONT, fontSize: 10, color: 'rgba(80,80,100,0.6)',
+        width: 32, flexShrink: 0 }}>{rank}</span>
+      {/* Logo + Name */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: 200, flexShrink: 0 }}>
         {p.logo
-          ? <img src={p.logo} alt="" style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />
-          : (
-            <div style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: cat + '33', fontSize: 9, color: cat, fontFamily: 'monospace' }}>
-              {p.name.slice(0, 2).toUpperCase()}
-            </div>
-          )
+          ? <img src={p.logo} alt="" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0 }} />
+          : <div style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+              background: cat.replace(/[\d.]+\)$/, '0.15)') }} />
         }
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '11px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--zm-text-primary)' }}>
+        <div>
+          <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: 'rgba(230,230,242,1)' }}>
             {p.name}
-          </span>
-          <span style={{ fontFamily: 'monospace', fontSize: '9px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--zm-text-faint)' }}>
-            {p.chains.slice(0, 2).join(', ')}
-          </span>
+          </div>
+          <div style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(80,80,100,0.7)' }}>
+            {p.symbol !== '—' ? p.symbol : p.chains.slice(0, 2).join(' · ')}
+          </div>
         </div>
       </div>
-
-      <span style={{ padding: '2px 6px', borderRadius: '4px', fontFamily: 'var(--font-mono-ui)', fontSize: '10px', flexShrink: 0, background: cat + '22', color: cat }}>
+      {/* Category */}
+      <span style={{
+        fontFamily: FONT, fontSize: 9, padding: '2px 7px', borderRadius: 4,
+        background: cat.replace(/[\d.]+\)$/, '0.1)'),
+        border: '1px solid ' + cat.replace(/[\d.]+\)$/, '0.25)'),
+        color: cat, letterSpacing: '0.06em',
+        minWidth: 100, textAlign: 'center', flexShrink: 0,
+      }}>
         {p.category}
       </span>
-
-      <span style={{ fontFamily: 'monospace', fontSize: '11px', width: '96px', flexShrink: 0, textAlign: 'right', marginLeft: 'auto', color: 'var(--zm-text-primary)' }}>
+      {/* TVL */}
+      <span style={{ fontFamily: FONT, fontSize: 12, fontWeight: 600,
+        color: 'rgba(230,230,242,1)', minWidth: 110, textAlign: 'right', paddingRight: 12 }}>
         {formatCompact(p.tvl)}
       </span>
-      <span style={{ fontFamily: 'monospace', fontSize: '11px', width: '72px', flexShrink: 0, textAlign: 'right', color: c1d }}>
-        {p.change1d >= 0 ? '+' : ''}{p.change1d.toFixed(2)}%
+      {/* 1d */}
+      <span style={{ fontFamily: FONT, fontSize: 11, color: c1d,
+        minWidth: 72, textAlign: 'right', paddingRight: 12 }}>
+        {(p.change1d >= 0 ? '+' : '') + p.change1d.toFixed(2) + '%'}
       </span>
-      <span style={{ fontFamily: 'monospace', fontSize: '11px', width: '72px', flexShrink: 0, textAlign: 'right', color: c7d }}>
-        {p.change7d >= 0 ? '+' : ''}{p.change7d.toFixed(2)}%
+      {/* 7d */}
+      <span style={{ fontFamily: FONT, fontSize: 11, color: c7d,
+        minWidth: 72, textAlign: 'right' }}>
+        {(p.change7d >= 0 ? '+' : '') + p.change7d.toFixed(2) + '%'}
       </span>
     </div>
   );
 });
 ProtocolRow.displayName = 'ProtocolRow';
 
-// ─── Yield Row ────────────────────────────────────────────────────────────────
-
-const YieldRow = memo(({ y, rank }: { y: DLYield; rank: number }) => {
-  const apyColor = y.apy > 20 ? 'rgba(251,191,36,1)' : y.apy > 5 ? 'rgba(52,211,153,1)' : 'rgba(148,163,184,1)';
-  const ilColor  = y.ilRisk === 'YES' ? 'rgba(251,113,133,1)' : 'rgba(52,211,153,1)';
-
+// ─── Chain Bar Chart ──────────────────────────────────────────────────────────
+const ChainChart = memo(({ chains }: { chains: { name: string; tvl: number }[] }) => {
+  const top = useMemo(() => chains.slice(0, 15), [chains]);
+  const max = useMemo(() => Math.max(...top.map(c => c.tvl), 1), [top]);
   return (
-    <div
-      style={{
-        display:      'flex',
-        alignItems:   'center',
-        padding:      '0 16px',
-        gap:          '12px',
-        height:       '44px',
-        borderBottom: '1px solid rgba(96,165,250,0.05)',
-        transition:   'background 120ms',
-        willChange:   'transform',
-      }}
-      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(96,165,250,0.04)'; }}
-      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {top.map((chain, i) => {
+        const color = CHAIN_PAL[i % CHAIN_PAL.length];
+        const pct   = (chain.tvl / max) * 100;
+        return (
+          <div key={chain.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontFamily: FONT, fontSize: 10, color: 'rgba(138,138,158,0.8)',
+              width: 90, flexShrink: 0, textAlign: 'right',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {chain.name}
+            </span>
+            <div style={{ flex: 1, height: 22, background: 'rgba(255,255,255,0.04)', borderRadius: 4, overflow: 'hidden' }}>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: pct + '%' }}
+                transition={{ duration: 0.8, delay: i * 0.04, ease: [0.22, 1, 0.36, 1] }}
+                style={{ height: '100%', background: color.replace(/[\d.]+\)$/, '0.65)'), borderRadius: 4 }}
+              />
+            </div>
+            <span style={{ fontFamily: FONT, fontSize: 10, color: 'rgba(138,138,158,0.7)',
+              width: 70, flexShrink: 0, textAlign: 'right' }}>
+              {formatCompact(chain.tvl)}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+});
+ChainChart.displayName = 'ChainChart';
+
+// ─── Yield Row ────────────────────────────────────────────────────────────────
+const YieldRow = memo(({ y, index }: { y: DLYield; index: number }) => {
+  const apyColor = y.apy >= 20 ? 'rgba(0,238,255,1)' : y.apy >= 10 ? 'rgba(34,255,170,1)' : 'rgba(138,138,158,0.8)';
+  const ilColor  = y.ilRisk === 'YES' ? 'rgba(255,68,136,0.9)' : y.ilRisk === 'NO' ? 'rgba(34,255,170,0.7)' : 'rgba(255,187,0,0.8)';
+  const bg = index % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent';
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', padding: '0 16px', height: 50,
+      background: bg, borderBottom: '1px solid rgba(255,255,255,0.035)',
+      transition: 'background 0.12s',
+    }}
+      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,238,255,0.025)'; }}
+      onMouseLeave={e => { e.currentTarget.style.background = bg; }}
     >
-      <span style={{ fontFamily: 'monospace', fontSize: '11px', width: '28px', flexShrink: 0, textAlign: 'right', color: 'var(--zm-text-faint)' }}>
-        {rank}
-      </span>
-      <div style={{ display: 'flex', flexDirection: 'column', width: '144px', flexShrink: 0, minWidth: 0 }}>
-        <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '11px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--zm-text-primary)' }}>
+      {/* Symbol */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700,
+          color: 'rgba(230,230,242,1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {y.symbol}
-        </span>
-        <span style={{ fontFamily: 'monospace', fontSize: '10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--zm-text-faint)' }}>
-          {y.project + ' · ' + y.chain}
-        </span>
+        </div>
+        <div style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(80,80,100,0.7)' }}>
+          {y.project} · {y.chain}
+        </div>
       </div>
-      <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, width: '80px', textAlign: 'right', flexShrink: 0, marginLeft: 'auto', color: apyColor }}>
-        {y.apy.toFixed(2)}%
-      </span>
-      <span style={{ fontFamily: 'monospace', fontSize: '11px', width: '96px', textAlign: 'right', flexShrink: 0, color: 'var(--zm-text-secondary)' }}>
+      {/* TVL */}
+      <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(138,138,158,0.7)',
+        minWidth: 90, textAlign: 'right', paddingRight: 12 }}>
         {formatCompact(y.tvlUsd)}
       </span>
-      <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '10px', width: '40px', textAlign: 'center', flexShrink: 0, color: ilColor }}>
-        {y.ilRisk === 'YES' ? '⚠ IL' : '✓'}
+      {/* APY */}
+      <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700,
+        color: apyColor, minWidth: 80, textAlign: 'right', paddingRight: 12,
+        textShadow: '0 0 10px ' + apyColor.replace(/[\d.]+\)$/, '0.4)') }}>
+        {y.apy.toFixed(2)}%
+      </span>
+      {/* Base APY */}
+      <span style={{ fontFamily: FONT, fontSize: 10, color: 'rgba(96,165,250,0.7)',
+        minWidth: 72, textAlign: 'right', paddingRight: 12 }}>
+        {y.apyBase.toFixed(2)}% base
+      </span>
+      {/* IL Risk */}
+      <span style={{ fontFamily: FONT, fontSize: 9, fontWeight: 700,
+        color: ilColor, minWidth: 50, textAlign: 'right' }}>
+        {y.ilRisk === 'YES' ? '⚠ IL' : y.ilRisk === 'NO' ? '✓ No IL' : '~ IL'}
       </span>
     </div>
   );
 });
 YieldRow.displayName = 'YieldRow';
 
-// ─── Tab Button ───────────────────────────────────────────────────────────────
+// ─── Protocols Tab ────────────────────────────────────────────────────────────
+const ProtocolsTab = memo(({ protocols, loading }: { protocols: DLProtocol[]; loading: boolean }) => {
+  const [search, setSearch] = useState('');
+  const [catFilter, setCatFilter] = useState('All');
 
-interface TabBtnProps {
-  label:   string;
-  active:  boolean;
-  onClick: () => void;
-  count?:  number;
-}
-
-const TabBtn = memo(({ label, active, onClick, count }: TabBtnProps) => (
-  <button
-    onClick={onClick}
-    style={{
-      padding:      '6px 12px',
-      borderRadius: '4px',
-      fontFamily:   'var(--font-mono-ui)',
-      fontSize:     '12px',
-      transition:   'all 0.15s',
-      cursor:       'pointer',
-      background:   active ? 'rgba(96,165,250,0.15)' : 'transparent',
-      color:        active ? 'rgba(96,165,250,1)' : 'var(--zm-text-faint)',
-      border:       active ? '1px solid rgba(96,165,250,0.3)' : '1px solid transparent',
-      willChange:   'transform',
-    }}
-  >
-    {label}{count != null ? ' (' + count + ')' : ''}
-  </button>
-));
-TabBtn.displayName = 'TabBtn';
-
-// ─── Defi Page ────────────────────────────────────────────────────────────────
-
-type SortKey = 'tvl' | 'change1d' | 'change7d' | 'name';
-type TabType  = 'protocols' | 'chains' | 'yields';
-
-const Defi = memo(() => {
-  const data       = useDefiLlama();
-  const { isMobile, isTablet } = useBreakpoint();
-  const [query,    setQuery]    = useState('');
-  const [category, setCategory] = useState('All');
-  const [sortKey,  setSortKey]  = useState<SortKey>('tvl');
-  const [sortAsc,  setSortAsc]  = useState(false);
-  const [tab,      setTab]      = useState<TabType>('protocols');
-  const mountedRef = useRef(true);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
-  }, []);
-
-  const handleSearch   = useCallback((e: React.ChangeEvent<HTMLInputElement>) => { setQuery(e.target.value); }, []);
-  const handleCategory = useCallback((cat: string) => setCategory(cat), []);
-  const handleTab      = useCallback((t: TabType) => setTab(t), []);
-
-  const handleSort = useCallback((k: SortKey) => {
-    setSortKey(prev => {
-      if (prev === k) setSortAsc(a => !a);
-      else setSortAsc(false);
-      return k;
-    });
-  }, []);
+  const categories = useMemo(() => {
+    const cats = ['All', ...new Set(protocols.map(p => p.category))].slice(0, 10);
+    return cats;
+  }, [protocols]);
 
   const filtered = useMemo(() => {
-    const q = query.toLowerCase();
-    return data.protocols
-      .filter(p => {
-        const matchQ   = !q || p.name.toLowerCase().includes(q) || p.symbol.toLowerCase().includes(q);
-        const matchCat = category === 'All' || p.category === category;
-        return matchQ && matchCat;
-      })
-      .sort((a, b) => {
-        const mul = sortAsc ? 1 : -1;
-        if (sortKey === 'name') return mul * a.name.localeCompare(b.name);
-        return mul * (a[sortKey] - b[sortKey]);
-      });
-  }, [data.protocols, query, category, sortKey, sortAsc]);
-
-  const totalTvlStr = useMemo(() => formatCompact(data.global?.totalTvl ?? 0), [data.global]);
-
-  const sortIcon = useCallback((k: SortKey) => {
-    if (sortKey !== k) return null;
-    return sortAsc ? <ChevronUp size={10} /> : <ChevronDown size={10} />;
-  }, [sortKey, sortAsc]);
-
-  const catCounts = useMemo(() => {
-    const map: Record<string, number> = {};
-    data.protocols.forEach(p => { map[p.category] = (map[p.category] ?? 0) + 1; });
-    return map;
-  }, [data.protocols]);
-
-  const TBLHDR = Object.freeze({
-    display:         'flex',
-    alignItems:      'center',
-    padding:         '0 16px',
-    gap:             '12px',
-    height:          '36px',
-    background:      'var(--zm-topbar-bg)',
-    borderBottom:    '1px solid var(--zm-glass-border)',
-  });
+    let list = protocols;
+    if (catFilter !== 'All') list = list.filter(p => p.category === catFilter);
+    if (search.trim()) {
+      const lq = search.toLowerCase();
+      list = list.filter(p => p.name.toLowerCase().includes(lq) || p.symbol.toLowerCase().includes(lq));
+    }
+    return list;
+  }, [protocols, catFilter, search]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <h1 style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'var(--font-mono-ui)', margin: 0, background: 'linear-gradient(90deg, var(--zm-accent) 0%, var(--zm-violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-            DeFi Intelligence
-          </h1>
-          <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '10px', padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.1em', background: 'rgba(52,211,153,0.1)', color: 'rgba(52,211,153,1)' }}>
-            DEFI LLAMA
-          </span>
-          <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: 'rgba(96,165,250,0.08)', color: 'rgba(96,165,250,0.6)' }}>
-            100% FREE
-          </span>
+    <div>
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative' }}>
+          <input type="text" placeholder="Search protocol…" value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{
+              fontFamily: FONT, fontSize: 11,
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 8, padding: '7px 12px 7px 30px',
+              color: 'rgba(230,230,242,0.9)', outline: 'none', width: 180,
+            }}
+          />
+          <span style={{ position: 'absolute', left: 10, top: '50%',
+            transform: 'translateY(-50%)', fontSize: 12, color: 'rgba(80,80,100,0.6)' }}>⌕</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {data.lastUpdate > 0 && (
-            <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '10px', color: 'var(--zm-text-faint)' }}>
-              {'Updated ' + new Date(data.lastUpdate).toLocaleTimeString()}
-            </span>
-          )}
-          <button
-            onClick={data.refetch}
-            aria-label="Refresh DeFi data"
-            style={{ padding: '6px', borderRadius: '4px', cursor: 'pointer', background: 'var(--zm-glass-bg)', border: '1px solid var(--zm-glass-border)' }}
-          >
-            {data.loading
-              ? <Loader2 size={13} style={{ color: 'rgba(96,165,250,0.7)', animation: 'spin 1s linear infinite' }} />
-              : <RefreshCw size={13} style={{ color: 'rgba(96,165,250,0.7)' }} />
-            }
-          </button>
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+          {categories.map(c => {
+            const active = catFilter === c;
+            const col    = c === 'All' ? 'rgba(0,238,255,1)' : catColor(c);
+            return (
+              <button key={c} type="button" onClick={() => setCatFilter(c)} style={{
+                fontFamily: FONT, fontSize: 9, letterSpacing: '0.08em',
+                padding: '4px 10px', borderRadius: 6, cursor: 'pointer',
+                background: active ? col.replace(/[\d.]+\)$/, '0.12)') : 'rgba(255,255,255,0.04)',
+                border: '1px solid ' + (active ? col.replace(/[\d.]+\)$/, '0.35)') : 'rgba(255,255,255,0.07)'),
+                color: active ? col : 'rgba(138,138,158,0.6)',
+                transition: 'all 0.15s',
+              }}>
+                {c}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Global Stats */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-        <MiniMetric label="Total DeFi TVL" value={totalTvlStr} change={data.global?.change1d} icon={<Layers size={13} />} accent="rgba(96,165,250,1)" />
-        <MiniMetric label="Protocols"      value={data.protocols.length.toString()}             icon={<BarChart3 size={13} />} accent="rgba(167,139,250,1)" />
-        <MiniMetric label="Chains"         value={data.chains.length.toString()}               icon={<Zap size={13} />}      accent="rgba(52,211,153,1)" />
-        <MiniMetric label="Yield Pools"    value={data.yields.length.toString()}               icon={<Percent size={13} />}  accent="rgba(251,191,36,1)" />
+      <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(8,10,18,1)' }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', padding: '9px 16px',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          background: 'rgba(255,255,255,0.015)',
+        }}>
+          <span style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(80,80,100,0.7)',
+            letterSpacing: '0.1em', width: 32, flexShrink: 0 }}>#</span>
+          <span style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(80,80,100,0.7)',
+            letterSpacing: '0.1em', width: 200, flexShrink: 0 }}>PROTOCOL</span>
+          <span style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(80,80,100,0.7)',
+            letterSpacing: '0.1em', minWidth: 100, textAlign: 'center' }}>CATEGORY</span>
+          <span style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(80,80,100,0.7)',
+            letterSpacing: '0.1em', minWidth: 110, textAlign: 'right', paddingRight: 12 }}>TVL</span>
+          <span style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(80,80,100,0.7)',
+            letterSpacing: '0.1em', minWidth: 72, textAlign: 'right', paddingRight: 12 }}>24H</span>
+          <span style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(80,80,100,0.7)',
+            letterSpacing: '0.1em', minWidth: 72, textAlign: 'right' }}>7D</span>
+        </div>
+        {loading ? (
+          <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[1,2,3,4,5,6,7,8,9,10].map(i => <Shimmer key={i} h={22} />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ padding: 40, textAlign: 'center', fontFamily: FONT, fontSize: 11, color: 'rgba(80,80,100,0.6)' }}>
+            No protocols found
+          </div>
+        ) : (
+          filtered.map((p, i) => (
+            <ProtocolRow key={p.id} p={p} rank={i + 1} index={i} />
+          ))
+        )}
+      </div>
+    </div>
+  );
+});
+ProtocolsTab.displayName = 'ProtocolsTab';
+
+// ─── Chains Tab ───────────────────────────────────────────────────────────────
+const ChainsTab = memo(({ chains, loading }: { chains: { name: string; tvl: number }[]; loading: boolean }) => {
+  const totalTvl = useMemo(() => chains.reduce((s, c) => s + c.tvl, 0), [chains]);
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+        <div style={{ flex: 1, padding: '14px 18px', borderRadius: 12, background: 'rgba(14,17,28,1)',
+          border: '1px solid rgba(96,165,250,0.18)' }}>
+          <p style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(80,80,100,1)',
+            letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 6px' }}>TOTAL TVL (ALL CHAINS)</p>
+          {loading
+            ? <Shimmer w={120} h={24} />
+            : <p style={{ fontFamily: FONT, fontSize: 22, fontWeight: 700,
+                color: 'rgba(96,165,250,1)', margin: 0 }}>{formatCompact(totalTvl)}</p>
+          }
+        </div>
+        <div style={{ flex: 1, padding: '14px 18px', borderRadius: 12, background: 'rgba(14,17,28,1)',
+          border: '1px solid rgba(52,211,153,0.18)' }}>
+          <p style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(80,80,100,1)',
+            letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 6px' }}>CHAINS TRACKED</p>
+          {loading
+            ? <Shimmer w={60} h={24} />
+            : <p style={{ fontFamily: FONT, fontSize: 22, fontWeight: 700,
+                color: 'rgba(52,211,153,1)', margin: 0 }}>{chains.length}</p>
+          }
+        </div>
+      </div>
+      <div style={{ padding: '20px', borderRadius: 12, background: 'rgba(14,17,28,1)',
+        border: '1px solid rgba(255,255,255,0.06)' }}>
+        <p style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(80,80,100,0.8)',
+          letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 16 }}>
+          TVL BY CHAIN — DEFI LLAMA
+        </p>
+        {loading
+          ? <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[1,2,3,4,5,6,7,8,9,10].map(i => <Shimmer key={i} h={22} />)}
+            </div>
+          : <ChainChart chains={chains} />
+        }
+      </div>
+    </div>
+  );
+});
+ChainsTab.displayName = 'ChainsTab';
+
+// ─── Yield Pools Tab ──────────────────────────────────────────────────────────
+const YieldTab = memo(({ yields, loading }: { yields: DLYield[]; loading: boolean }) => {
+  const [minApy, setMinApy] = useState(0);
+  const [chainFilter, setChainFilter] = useState('All');
+
+  const chains = useMemo(() => {
+    const c = ['All', ...new Set(yields.map(y => y.chain))].slice(0, 8);
+    return c;
+  }, [yields]);
+
+  const filtered = useMemo(() => {
+    let list = yields;
+    if (chainFilter !== 'All') list = list.filter(y => y.chain === chainFilter);
+    if (minApy > 0) list = list.filter(y => y.apy >= minApy);
+    return list.slice(0, 50);
+  }, [yields, chainFilter, minApy]);
+
+  return (
+    <div>
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+          {chains.map(c => {
+            const active = chainFilter === c;
+            return (
+              <button key={c} type="button" onClick={() => setChainFilter(c)} style={{
+                fontFamily: FONT, fontSize: 9, letterSpacing: '0.08em',
+                padding: '4px 10px', borderRadius: 6, cursor: 'pointer',
+                background: active ? 'rgba(0,238,255,0.12)' : 'rgba(255,255,255,0.04)',
+                border: '1px solid ' + (active ? 'rgba(0,238,255,0.35)' : 'rgba(255,255,255,0.07)'),
+                color: active ? 'rgba(0,238,255,1)' : 'rgba(138,138,158,0.6)',
+                transition: 'all 0.15s',
+              }}>{c}</button>
+            );
+          })}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(80,80,100,0.7)' }}>Min APY:</span>
+          {[0, 5, 10, 20, 50].map(v => (
+            <button key={v} type="button" onClick={() => setMinApy(v)} style={{
+              fontFamily: FONT, fontSize: 9, padding: '3px 8px', borderRadius: 5, cursor: 'pointer',
+              background: minApy === v ? 'rgba(34,255,170,0.12)' : 'rgba(255,255,255,0.04)',
+              border: '1px solid ' + (minApy === v ? 'rgba(34,255,170,0.3)' : 'rgba(255,255,255,0.07)'),
+              color: minApy === v ? 'rgba(34,255,170,1)' : 'rgba(138,138,158,0.6)',
+            }}>{v === 0 ? 'All' : v + '%+'}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(8,10,18,1)' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', padding: '9px 16px',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          background: 'rgba(255,255,255,0.015)',
+        }}>
+          <span style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(80,80,100,0.7)',
+            letterSpacing: '0.1em', flex: 1 }}>POOL</span>
+          {['TVL', 'APY', 'BASE', 'IL RISK'].map(h => (
+            <span key={h} style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(80,80,100,0.7)',
+              letterSpacing: '0.1em', minWidth: h === 'TVL' ? 90 : h === 'APY' ? 80 : h === 'BASE' ? 72 : 50,
+              textAlign: 'right', paddingRight: h !== 'IL RISK' ? 12 : 0 }}>
+              {h}
+            </span>
+          ))}
+        </div>
+        {loading ? (
+          <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[1,2,3,4,5,6,7,8,9,10].map(i => <Shimmer key={i} h={22} />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ padding: 40, textAlign: 'center', fontFamily: FONT, fontSize: 11, color: 'rgba(80,80,100,0.6)' }}>
+            No yield pools match filters
+          </div>
+        ) : (
+          filtered.map((y, i) => <YieldRow key={y.pool + i} y={y} index={i} />)
+        )}
+      </div>
+    </div>
+  );
+});
+YieldTab.displayName = 'YieldTab';
+
+// ─── Main DeFi Page ───────────────────────────────────────────────────────────
+const Defi = memo(() => {
+  const { isMobile } = useBreakpoint();
+  const mountedRef = useRef(true);
+  const [activeTab, setActiveTab] = useState<Tab>('Protocols');
+  const { global: g, protocols, chains, yields, loading, error, lastUpdate, refetch } = useDefiLlama();
+
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
+  const handleTab  = useCallback((t: Tab) => { if (mountedRef.current) setActiveTab(t); }, []);
+
+  const lastUpdStr = useMemo(() => {
+    if (!lastUpdate) return '';
+    const diff = Date.now() - lastUpdate;
+    if (diff < 60_000) return Math.floor(diff / 1000) + 's ago';
+    return Math.floor(diff / 60_000) + 'm ago';
+  }, [lastUpdate]);
+
+  const g4 = useMemo(() => ({
+    display: 'grid',
+    gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(3,1fr)',
+    gap: 12, marginBottom: 20,
+  }), [isMobile]);
+
+  return (
+    <div style={{ padding: isMobile ? '12px' : '16px 20px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <h1 style={{ fontFamily: FONT, fontSize: 20, fontWeight: 700,
+            color: 'rgba(230,230,242,1)', margin: 0, letterSpacing: '0.06em',
+            textShadow: '0 0 20px rgba(96,165,250,0.3)' }}>
+            DeFi INTELLIGENCE
+          </h1>
+          <p style={{ fontFamily: FONT, fontSize: 10, color: 'rgba(80,80,100,0.8)',
+            margin: '2px 0 0', letterSpacing: '0.06em' }}>
+            Live data · DefiLlama · {protocols.length} protocols tracked
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {lastUpdStr && (
+            <span style={{ fontFamily: FONT, fontSize: 9, color: 'rgba(80,80,100,0.6)' }}>
+              {lastUpdStr}
+            </span>
+          )}
+          <button type="button" onClick={refetch} style={{
+            fontFamily: FONT, fontSize: 9, letterSpacing: '0.1em',
+            padding: '6px 12px', borderRadius: 7, cursor: 'pointer',
+            background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)',
+            color: 'rgba(96,165,250,0.85)', transition: 'all 0.15s',
+          }}>↺ REFRESH</button>
+        </div>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div style={{ padding: '12px 16px', marginBottom: 16, borderRadius: 10,
+          background: 'rgba(255,68,136,0.06)', border: '1px solid rgba(255,68,136,0.2)' }}>
+          <p style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,68,136,0.8)', margin: 0 }}>
+            ⚠ {error}
+          </p>
+        </div>
+      )}
+
+      {/* Global Metrics */}
+      <div style={g4}>
+        <MetricCard
+          label="Total DeFi TVL"
+          value={g ? formatCompact(g.totalTvl) : loading ? '…' : '—'}
+          change={g?.change1d}
+          color="rgba(96,165,250,1)"
+        />
+        <MetricCard
+          label="TVL Change 7D"
+          value={g ? (g.change7d >= 0 ? '+' : '') + g.change7d.toFixed(2) + '%' : loading ? '…' : '—'}
+          color={!g ? 'rgba(138,138,158,0.6)' : g.change7d >= 0 ? 'rgba(34,255,170,1)' : 'rgba(255,68,136,1)'}
+        />
+        <MetricCard
+          label="Protocols"
+          value={protocols.length > 0 ? protocols.length.toString() : loading ? '…' : '—'}
+          color="rgba(167,139,250,1)"
+        />
       </div>
 
       {/* Tab Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <TabBtn label="Protocols" active={tab === 'protocols'} onClick={() => handleTab('protocols')} count={filtered.length} />
-        <TabBtn label="Chains"    active={tab === 'chains'}    onClick={() => handleTab('chains')}    count={data.chains.length} />
-        <TabBtn label="Yields"    active={tab === 'yields'}    onClick={() => handleTab('yields')}    count={data.yields.length} />
+      <div style={{ display: 'flex', gap: 2, marginBottom: 20,
+        background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: 4,
+        border: '1px solid rgba(255,255,255,0.05)', width: 'fit-content' }}>
+        {TABS.map(t => {
+          const active = activeTab === t;
+          return (
+            <button key={t} type="button" onClick={() => handleTab(t)} style={{
+              fontFamily: FONT, fontSize: 10, letterSpacing: '0.1em',
+              padding: '7px 16px', borderRadius: 8, cursor: 'pointer',
+              background: active ? 'rgba(96,165,250,0.1)' : 'transparent',
+              border: active ? '1px solid rgba(96,165,250,0.3)' : '1px solid transparent',
+              color: active ? 'rgba(96,165,250,1)' : 'rgba(138,138,158,0.6)',
+              transition: 'all 0.18s', textTransform: 'uppercase',
+            }}>{t}</button>
+          );
+        })}
       </div>
 
-      {/* Protocols */}
-      {tab === 'protocols' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '8px', background: 'var(--zm-glass-bg)', border: '1px solid var(--zm-glass-border)', minWidth: '200px' }}>
-              <Search size={12} style={{ color: 'var(--zm-text-faint)' }} />
-              <input
-                type="text"
-                placeholder="Search protocols..."
-                value={query}
-                onChange={handleSearch}
-                aria-label="Search protocols"
-                style={{ background: 'transparent', outline: 'none', fontFamily: 'var(--font-mono-ui)', fontSize: '12px', flex: 1, border: 'none', color: 'var(--zm-text-primary)' }}
-              />
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px' }}>
-              {CATEGORIES.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => handleCategory(cat)}
-                  style={{
-                    padding:      '2px 8px',
-                    borderRadius: '4px',
-                    fontFamily:   'var(--font-mono-ui)',
-                    fontSize:     '10px',
-                    transition:   'all 0.15s',
-                    cursor:       'pointer',
-                    background:   category === cat ? getCatColor(cat) + '22' : 'transparent',
-                    color:        category === cat ? getCatColor(cat) : 'var(--zm-text-faint)',
-                    border:       category === cat ? '1px solid ' + getCatColor(cat) + '55' : '1px solid rgba(96,165,250,0.08)',
-                    willChange:   'transform',
-                  }}
-                >
-                  {cat}{cat !== 'All' && catCounts[cat] ? ' ' + catCounts[cat] : ''}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ background: 'var(--zm-glass-bg)', border: '1px solid var(--zm-glass-border)', borderRadius: '8px', overflow: 'hidden' }}>
-            <div style={TBLHDR}>
-              <span style={{ width: '28px', flexShrink: 0 }} />
-              <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '10px', width: '176px', flexShrink: 0, color: 'var(--zm-text-faint)' }}>Protocol</span>
-              <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '10px', flexShrink: 0, color: 'var(--zm-text-faint)' }}>Category</span>
-              <button onClick={() => handleSort('tvl')} style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '10px', width: '96px', textAlign: 'right', marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', background: 'none', border: 'none', cursor: 'pointer', color: sortKey === 'tvl' ? 'rgba(96,165,250,1)' : 'var(--zm-text-faint)' }}>TVL {sortIcon('tvl')}</button>
-              <button onClick={() => handleSort('change1d')} style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '10px', width: '72px', textAlign: 'right', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', background: 'none', border: 'none', cursor: 'pointer', color: sortKey === 'change1d' ? 'rgba(96,165,250,1)' : 'var(--zm-text-faint)' }}>24h {sortIcon('change1d')}</button>
-              <button onClick={() => handleSort('change7d')} style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '10px', width: '72px', textAlign: 'right', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', background: 'none', border: 'none', cursor: 'pointer', color: sortKey === 'change7d' ? 'rgba(96,165,250,1)' : 'var(--zm-text-faint)' }}>7d {sortIcon('change7d')}</button>
-            </div>
-            {data.loading && filtered.length === 0 ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px' }}>
-                <Loader2 size={24} style={{ color: 'rgba(96,165,250,0.5)', animation: 'spin 1s linear infinite' }} />
-              </div>
-            ) : filtered.length === 0 ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '120px' }}>
-                <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '12px', color: 'var(--zm-text-faint)' }}>No protocols found</span>
-              </div>
-            ) : (
-              <div style={{ maxHeight: '480px', overflowY: 'auto' }}>
-                {filtered.slice(0, 60).map((p, i) => <ProtocolRow key={p.id} p={p} rank={i + 1} />)}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Chains */}
-      {tab === 'chains' && (
-        <div style={{ padding: '20px', background: 'var(--zm-glass-bg)', border: '1px solid var(--zm-glass-border)', borderRadius: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <BarChart3 size={14} style={{ color: 'rgba(52,211,153,1)' }} />
-            <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '12px', fontWeight: 600, color: 'var(--zm-text-primary)' }}>
-              TVL by Chain (Top 15)
-            </span>
-          </div>
-          {data.loading ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px' }}>
-              <Loader2 size={24} style={{ color: 'rgba(96,165,250,0.5)', animation: 'spin 1s linear infinite' }} />
-            </div>
-          ) : (
-            <ChainChart chains={data.chains} />
-          )}
-        </div>
-      )}
-
-      {/* Yields */}
-      {tab === 'yields' && (
-        <div style={{ background: 'var(--zm-glass-bg)', border: '1px solid var(--zm-glass-border)', borderRadius: '8px', overflow: 'hidden' }}>
-          <div style={TBLHDR}>
-            <span style={{ width: '28px', flexShrink: 0 }} />
-            <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '10px', width: '144px', flexShrink: 0, color: 'var(--zm-text-faint)' }}>Pool</span>
-            <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '10px', marginLeft: 'auto', width: '80px', textAlign: 'right', flexShrink: 0, color: 'var(--zm-text-faint)' }}>APY</span>
-            <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '10px', width: '96px', textAlign: 'right', flexShrink: 0, color: 'var(--zm-text-faint)' }}>TVL</span>
-            <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: '10px', width: '40px', textAlign: 'center', flexShrink: 0, color: 'var(--zm-text-faint)' }}>IL</span>
-          </div>
-          {data.loading ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px' }}>
-              <Loader2 size={24} style={{ color: 'rgba(96,165,250,0.5)', animation: 'spin 1s linear infinite' }} />
-            </div>
-          ) : (
-            <div style={{ maxHeight: '480px', overflowY: 'auto' }}>
-              {data.yields.slice(0, 50).map((y, i) => <YieldRow key={y.pool + i} y={y} rank={i + 1} />)}
-            </div>
-          )}
-        </div>
-      )}
-
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {activeTab === 'Protocols'   && <ProtocolsTab protocols={protocols} loading={loading} />}
+          {activeTab === 'Chains'      && <ChainsTab chains={chains} loading={loading} />}
+          {activeTab === 'Yield Pools' && <YieldTab yields={yields} loading={loading} />}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 });
 Defi.displayName = 'Defi';
-
 export default Defi;
