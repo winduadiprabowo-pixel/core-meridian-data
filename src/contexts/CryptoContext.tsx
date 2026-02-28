@@ -165,22 +165,11 @@ export function useSharedPriceBuffer(): SharedBufferAPI {
 const CryptoContext         = createContext<CryptoState>(initialState);
 const CryptoDispatchContext = createContext<React.Dispatch<CryptoAction>>(() => {});
 
-// push75: displayName for React DevTools
-CryptoContext.displayName         = 'CryptoContext';
-CryptoDispatchContext.displayName = 'CryptoDispatchContext';
-
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function CryptoProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cryptoReducer, initialState);
   const stateValue = useMemo(() => state, [state]);
-
-  // push75: mountedRef — prevents state updates after unmount
-  const mountedRef = useRef(true);
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
-  }, []);
 
   // ── SharedArrayBuffer ring buffer (Phase 7) ──────────────────────────────
   const { write: sbWrite, readLast: sbReadLast, supported: sbSupported } = useSharedBuffer();
