@@ -593,9 +593,13 @@ AlertCard.displayName = 'AlertCard';
 
 const LogEntry = memo(({ entry }: { entry: TriggeredLog }) => {
   const cfg = ALERT_TYPE_CONFIG[entry.type];
+  const [hovered, setHovered] = useState(false);
+  const onEnter = useCallback(() => setHovered(true), []);
+  const onLeave = useCallback(() => setHovered(false), []);
   return (
     <div
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 8, borderColor: 'var(--zm-glass-border)' }}
+      onMouseEnter={onEnter} onMouseLeave={onLeave}
+      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 8, borderColor: 'var(--zm-glass-border)', background: hovered ? 'rgba(255,255,255,0.02)' : 'transparent', borderRadius: '8px', transition: 'background 0.12s', paddingLeft: 6, paddingRight: 6 }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {entry.image && <img src={entry.image} alt="" style={{ width: 16, height: 16, borderRadius: '50%' }} />}
@@ -672,6 +676,11 @@ const Alerts = memo(() => {
   const { assets, wsStatus } = useCrypto();
   const { isMobile, isTablet } = useBreakpoint();
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (assets.length > 0) setLastUpdated(Date.now());
+  }, [assets]);
   const [showForm, setShowForm] = useState(false);
   const [tab, setTab] = useState<'alerts' | 'history'>('alerts');
   const [filterStatus, setFilterStatus] = useState<'all' | AlertStatus>('all');
@@ -804,8 +813,30 @@ const Alerts = memo(() => {
 
   const logToShow = showLogAll ? state.log : state.log.slice(0, 20);
 
+  const pageStyle = useMemo(() => ({
+    display: 'flex', flexDirection: 'column' as const, gap: 20,
+    padding: isMobile ? '12px' : '16px', minHeight: '100vh',
+  }), [isMobile]);
+
+  const lastUpdStr = lastUpdated
+    ? new Date(lastUpdated).toLocaleTimeString()
+    : '—';
+
+  if (assets.length === 0) {
+    return (
+      <div style={pageStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: '16px' }}>
+          {wsStatus === 'disconnected'
+            ? <div style={{ fontFamily: FONT_MONO, fontSize: '13px', color: 'rgba(255,68,136,1)' }}>⚠ Koneksi terputus. Periksa jaringan.</div>
+            : <div style={{ fontFamily: FONT_MONO, fontSize: '12px', color: 'rgba(138,138,158,1)' }}>Memuat harga aset...</div>
+          }
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={pageStyle}>
       {/* Toast Container */}
       <div
                 style={{ position: 'fixed', top: 16, right: 16, zIndex: 300, display: 'flex', flexDirection: 'column', gap: 8, willChange: 'transform' }}
@@ -827,6 +858,7 @@ const Alerts = memo(() => {
               {wsStatus === 'connected' ? 'LIVE · Prices realtime' : wsStatus.toUpperCase()}
             </span>
           </div>
+          <span style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'rgba(80,80,100,1)' }}>Updated: {lastUpdStr}</span>
         </div>
 
         {/* Global Controls */}
