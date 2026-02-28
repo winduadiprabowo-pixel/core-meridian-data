@@ -27,6 +27,8 @@ import {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+const FONT_MONO = "'JetBrains Mono', monospace";
+
 const ASSETS_15 = Object.freeze([
   'BTC', 'ETH', 'BNB', 'SOL', 'XRP',
   'ADA', 'AVAX', 'DOT', 'LINK', 'MATIC',
@@ -90,8 +92,8 @@ const ScoreBar = memo(({ value, color, label }: { value: number; color: string; 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--zm-text-faint)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
-        <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color }}>{(value * 100).toFixed(0)}%</span>
+        <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: 'var(--zm-text-faint)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+        <span style={{ fontFamily: FONT_MONO, fontSize: 11, fontWeight: 700, color }}>{(value * 100).toFixed(0)}%</span>
       </div>
       <div style={{ height: 5, borderRadius: 50, background: 'rgba(148,163,184,0.1)', overflow: 'hidden' }}>
         <div style={{ height: '100%', borderRadius: 50, background: color, width: pct + '%', transition: 'width 0.5s ease', willChange: 'width' }} />
@@ -143,37 +145,37 @@ const AssetRow = memo(({ symbol, price, change, rsi, macd, bollinger, anomaly, p
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: anomCfg.color, flexShrink: 0 }} />
-        <span style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: 'var(--zm-text-primary)' }}>{symbol}</span>
+        <span style={{ fontFamily: FONT_MONO, fontSize: 13, fontWeight: 700, color: 'var(--zm-text-primary)' }}>{symbol}</span>
       </div>
       <div>
-        <div style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--zm-text-primary)' }}>{formatPrice(price)}</div>
-        <div style={{ fontFamily: 'monospace', fontSize: 10, color: isPos ? 'rgba(52,211,153,1)' : 'rgba(251,113,133,1)', fontWeight: 600 }}>{formatChange(change)}</div>
+        <div style={{ fontFamily: FONT_MONO, fontSize: 12, color: 'var(--zm-text-primary)' }}>{formatPrice(price)}</div>
+        <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: isPos ? 'rgba(52,211,153,1)' : 'rgba(251,113,133,1)', fontWeight: 600 }}>{formatChange(change)}</div>
       </div>
       <div style={{ textAlign: 'center' }}>
-        <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: rsiColor }}>{rsi.toFixed(0)}</span>
-        <div style={{ fontFamily: 'monospace', fontSize: 9, color: 'var(--zm-text-faint)' }}>RSI</div>
+        <span style={{ fontFamily: FONT_MONO, fontSize: 12, fontWeight: 700, color: rsiColor }}>{rsi.toFixed(0)}</span>
+        <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: 'var(--zm-text-faint)' }}>RSI</div>
       </div>
       {!isMobile && (
         <>
           <div style={{ textAlign: 'center' }}>
-            <span style={{ fontFamily: 'monospace', fontSize: 11, color: macd > 0 ? 'rgba(52,211,153,1)' : 'rgba(251,113,133,1)', fontWeight: 600 }}>{macd > 0 ? '+' : ''}{macd.toFixed(2)}</span>
-            <div style={{ fontFamily: 'monospace', fontSize: 9, color: 'var(--zm-text-faint)' }}>MACD</div>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: macd > 0 ? 'rgba(52,211,153,1)' : 'rgba(251,113,133,1)', fontWeight: 600 }}>{macd > 0 ? '+' : ''}{macd.toFixed(2)}</span>
+            <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: 'var(--zm-text-faint)' }}>MACD</div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <span style={{ fontFamily: 'monospace', fontSize: 11, color: bollinger > 0.8 ? 'rgba(251,113,133,1)' : bollinger < 0.2 ? 'rgba(52,211,153,1)' : 'rgba(148,163,184,0.8)', fontWeight: 600 }}>{(bollinger * 100).toFixed(0)}%</span>
-            <div style={{ fontFamily: 'monospace', fontSize: 9, color: 'var(--zm-text-faint)' }}>BB%</div>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: bollinger > 0.8 ? 'rgba(251,113,133,1)' : bollinger < 0.2 ? 'rgba(52,211,153,1)' : 'rgba(148,163,184,0.8)', fontWeight: 600 }}>{(bollinger * 100).toFixed(0)}%</span>
+            <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: 'var(--zm-text-faint)' }}>BB%</div>
           </div>
         </>
       )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 6px', borderRadius: 4, background: anomCfg.bg }}>
         <AnomalyIcon size={9} style={{ color: anomCfg.color, flexShrink: 0 }} />
-        <span style={{ fontFamily: 'monospace', fontSize: 9, color: anomCfg.color, fontWeight: 700 }}>{anomCfg.label}</span>
+        <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: anomCfg.color, fontWeight: 700 }}>{anomCfg.label}</span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
         <PredIcon size={11} style={{ color: predCfg.color, flexShrink: 0 }} />
         <div>
-          <div style={{ fontFamily: 'monospace', fontSize: 10, fontWeight: 700, color: predCfg.color }}>{prediction}</div>
-          <div style={{ fontFamily: 'monospace', fontSize: 9, color: 'var(--zm-text-faint)' }}>{(confidence * 100).toFixed(0)}% conf</div>
+          <div style={{ fontFamily: FONT_MONO, fontSize: 10, fontWeight: 700, color: predCfg.color }}>{prediction}</div>
+          <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: 'var(--zm-text-faint)' }}>{(confidence * 100).toFixed(0)}% conf</div>
         </div>
       </div>
     </motion.div>
@@ -196,9 +198,9 @@ const RSIMatrix = memo(({ assets, isMobile }: { assets: AssetSignal[]; isMobile:
           const rc = a.rsi >= 70 ? 'rgba(251,113,133,1)' : a.rsi <= 30 ? 'rgba(52,211,153,1)' : 'rgba(96,165,250,1)';
           return (
             <div key={a.symbol} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: 10, borderRadius: 8, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--zm-glass-border)', willChange: 'transform' }} role="figure" aria-label={a.symbol + ' RSI'}>
-              <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: 'var(--zm-text-primary)' }}>{a.symbol}</span>
+              <span style={{ fontFamily: FONT_MONO, fontSize: 11, fontWeight: 700, color: 'var(--zm-text-primary)' }}>{a.symbol}</span>
               <RSIGauge rsi={a.rsi} size={isMobile ? 58 : 70} />
-              <span style={{ fontFamily: 'monospace', fontSize: 9, color: rc, fontWeight: 600 }}>{a.rsi >= 70 ? 'OVERBOUGHT' : a.rsi <= 30 ? 'OVERSOLD' : 'NEUTRAL'}</span>
+              <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: rc, fontWeight: 600 }}>{a.rsi >= 70 ? 'OVERBOUGHT' : a.rsi <= 30 ? 'OVERSOLD' : 'NEUTRAL'}</span>
             </div>
           );
         })}
@@ -210,11 +212,11 @@ const RSIMatrix = memo(({ assets, isMobile }: { assets: AssetSignal[]; isMobile:
           { label: 'Oversold ≤30',   items: oversold,    color: 'rgba(52,211,153,1)'  },
         ].map(band => (
           <div key={band.label} style={{ padding: 12, borderRadius: 8, background: band.color + '08', border: '1px solid ' + band.color + '22' }}>
-            <div style={{ fontFamily: 'monospace', fontSize: 10, color: band.color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{band.label} — {band.items.length}</div>
+            <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: band.color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{band.label} — {band.items.length}</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
               {band.items.length === 0
-                ? <span style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--zm-text-faint)' }}>None</span>
-                : band.items.map(a => <span key={a.symbol} style={{ fontFamily: 'monospace', fontSize: 10, padding: '2px 6px', borderRadius: 4, background: band.color + '15', color: band.color }}>{a.symbol} {a.rsi.toFixed(0)}</span>)
+                ? <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: 'var(--zm-text-faint)' }}>None</span>
+                : band.items.map(a => <span key={a.symbol} style={{ fontFamily: FONT_MONO, fontSize: 10, padding: '2px 6px', borderRadius: 4, background: band.color + '15', color: band.color }}>{a.symbol} {a.rsi.toFixed(0)}</span>)
               }
             </div>
           </div>
@@ -233,7 +235,7 @@ const MACDTab = memo(({ assets }: { assets: AssetSignal[] }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <div style={{ padding: '10px 16px', fontFamily: 'monospace', fontSize: 10, color: 'var(--zm-text-faint)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+      <div style={{ padding: '10px 16px', fontFamily: FONT_MONO, fontSize: 10, color: 'var(--zm-text-faint)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
         MACD Signal — sorted by magnitude
       </div>
       {sorted.map(a => {
@@ -242,11 +244,11 @@ const MACDTab = memo(({ assets }: { assets: AssetSignal[] }) => {
         const color = isPos ? 'rgba(52,211,153,1)' : 'rgba(251,113,133,1)';
         return (
           <div key={a.symbol} style={{ display: 'grid', gridTemplateColumns: '60px 1fr 72px', gap: 12, alignItems: 'center', padding: '8px 16px', borderBottom: '1px solid rgba(148,163,184,0.06)' }}>
-            <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: 'var(--zm-text-primary)' }}>{a.symbol}</span>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 12, fontWeight: 700, color: 'var(--zm-text-primary)' }}>{a.symbol}</span>
             <div style={{ position: 'relative', height: 8, background: 'rgba(148,163,184,0.08)', borderRadius: 4, overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: isPos ? '50%' : (50 - barW) + '%', width: barW + '%', height: '100%', background: color, borderRadius: 4, transition: 'width 0.5s ease', willChange: 'width' }} />
             </div>
-            <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color, textAlign: 'right' }}>{isPos ? '+' : ''}{a.macd.toFixed(3)}</span>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 11, fontWeight: 700, color, textAlign: 'right' }}>{isPos ? '+' : ''}{a.macd.toFixed(3)}</span>
           </div>
         );
       })}
@@ -259,7 +261,7 @@ MACDTab.displayName = 'MACDTab';
 
 const BollingerTab = memo(({ assets, isMobile }: { assets: AssetSignal[]; isMobile: boolean }) => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-    <div style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--zm-text-faint)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+    <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: 'var(--zm-text-faint)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
       Bollinger Band Position — 0% lower band, 100% upper band
     </div>
     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 8 }}>
@@ -272,15 +274,15 @@ const BollingerTab = memo(({ assets, isMobile }: { assets: AssetSignal[]; isMobi
         return (
           <div key={a.symbol} style={{ padding: 12, borderRadius: 8, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--zm-glass-border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: 'var(--zm-text-primary)' }}>{a.symbol}</span>
-              <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color }}>{(pct * 100).toFixed(0)}%</span>
+              <span style={{ fontFamily: FONT_MONO, fontSize: 12, fontWeight: 700, color: 'var(--zm-text-primary)' }}>{a.symbol}</span>
+              <span style={{ fontFamily: FONT_MONO, fontSize: 12, fontWeight: 700, color }}>{(pct * 100).toFixed(0)}%</span>
             </div>
             <div style={{ height: 8, borderRadius: 50, background: 'rgba(148,163,184,0.08)', position: 'relative', marginBottom: 6 }}>
               <div style={{ position: 'absolute', left: 0, width: '20%', height: '100%', background: 'rgba(52,211,153,0.15)', borderRadius: '50px 0 0 50px' }} />
               <div style={{ position: 'absolute', right: 0, width: '20%', height: '100%', background: 'rgba(251,113,133,0.15)', borderRadius: '0 50px 50px 0' }} />
               <div style={{ position: 'absolute', top: '50%', left: (pct * 100) + '%', transform: 'translate(-50%, -50%)', width: 10, height: 10, borderRadius: '50%', background: color, boxShadow: '0 0 6px ' + color, transition: 'left 0.5s ease', willChange: 'left' }} />
             </div>
-            <div style={{ fontFamily: 'monospace', fontSize: 9, color: 'var(--zm-text-faint)' }}>{signal}</div>
+            <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: 'var(--zm-text-faint)' }}>{signal}</div>
           </div>
         );
       })}
@@ -306,14 +308,14 @@ const PatternsTab = memo(({ assets }: { assets: AssetSignal[] }) => (
         <div key={rule.name} style={{ padding: 16, borderRadius: 10, background: 'rgba(255,255,255,0.01)', border: '1px solid ' + rule.color + '22' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: rule.color, boxShadow: '0 0 8px ' + rule.color, flexShrink: 0 }} />
-            <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: rule.color }}>{rule.name}</span>
-            <span style={{ marginLeft: 'auto', fontFamily: 'monospace', fontSize: 10, padding: '2px 8px', borderRadius: 4, background: rule.color + '15', color: rule.color }}>{matched.length} assets</span>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 12, fontWeight: 700, color: rule.color }}>{rule.name}</span>
+            <span style={{ marginLeft: 'auto', fontFamily: FONT_MONO, fontSize: 10, padding: '2px 8px', borderRadius: 4, background: rule.color + '15', color: rule.color }}>{matched.length} assets</span>
           </div>
-          <p style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--zm-text-faint)', marginBottom: 10, letterSpacing: '0.02em' }}>{rule.desc}</p>
+          <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: 'var(--zm-text-faint)', marginBottom: 10, letterSpacing: '0.02em' }}>{rule.desc}</p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {matched.length === 0
-              ? <span style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--zm-text-faint)' }}>No assets matching this pattern</span>
-              : matched.map(a => <span key={a.symbol} style={{ fontFamily: 'monospace', fontSize: 11, padding: '3px 10px', borderRadius: 4, background: rule.color + '10', color: rule.color, border: '1px solid ' + rule.color + '30' }}>{a.symbol}</span>)
+              ? <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: 'var(--zm-text-faint)' }}>No assets matching this pattern</span>
+              : matched.map(a => <span key={a.symbol} style={{ fontFamily: FONT_MONO, fontSize: 11, padding: '3px 10px', borderRadius: 4, background: rule.color + '10', color: rule.color, border: '1px solid ' + rule.color + '30' }}>{a.symbol}</span>)
             }
           </div>
         </div>
@@ -383,17 +385,17 @@ const AISignals = memo(() => {
             <Brain size={18} style={{ color: 'rgba(167,139,250,1)' }} />
           </div>
           <div>
-            <h1 style={{ fontFamily: 'monospace', fontSize: isMobile ? 18 : 22, fontWeight: 700, margin: 0, background: 'linear-gradient(90deg,rgba(167,139,250,1) 0%,rgba(96,165,250,1) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            <h1 style={{ fontFamily: FONT_MONO, fontSize: isMobile ? 18 : 22, fontWeight: 700, margin: 0, background: 'linear-gradient(90deg,rgba(167,139,250,1) 0%,rgba(96,165,250,1) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               AI Signal Center
             </h1>
-            <p style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--zm-text-faint)', margin: 0 }}>
+            <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: 'var(--zm-text-faint)', margin: 0 }}>
               15 assets · RSI · MACD · Bollinger · Pattern Detection · TF.js
             </p>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 6, background: aiData.isReady ? 'rgba(52,211,153,0.08)' : 'rgba(251,191,36,0.08)', border: '1px solid ' + (aiData.isReady ? 'rgba(52,211,153,0.25)' : 'rgba(251,191,36,0.25)') }}>
           <Radio size={10} style={{ color: aiData.isReady ? 'rgba(52,211,153,1)' : 'rgba(251,191,36,1)' }} />
-          <span style={{ fontFamily: 'monospace', fontSize: 9, color: aiData.isReady ? 'rgba(52,211,153,1)' : 'rgba(251,191,36,1)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: aiData.isReady ? 'rgba(52,211,153,1)' : 'rgba(251,191,36,1)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
             {aiData.isReady ? 'TF.js Ready · ' + aiData.result.backend : 'Loading TF.js…'}
           </span>
         </div>
@@ -411,10 +413,10 @@ const AISignals = memo(() => {
           return (
             <div key={s.label} style={{ padding: 14, borderRadius: 10, background: 'var(--zm-glass-bg)', border: '1px solid var(--zm-glass-border)', willChange: 'transform' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontFamily: 'monospace', fontSize: 9, color: 'var(--zm-text-faint)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{s.label}</span>
+                <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: 'var(--zm-text-faint)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{s.label}</span>
                 <Icon size={12} style={{ color: s.color }} />
               </div>
-              <div style={{ fontFamily: 'monospace', fontSize: 26, fontWeight: 700, color: s.color }}>{s.value}</div>
+              <div style={{ fontFamily: FONT_MONO, fontSize: 26, fontWeight: 700, color: s.color }}>{s.value}</div>
             </div>
           );
         })}
@@ -426,11 +428,11 @@ const AISignals = memo(() => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Target size={13} style={{ color: 'rgba(96,165,250,1)' }} />
-              <span style={{ fontFamily: 'monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, color: 'var(--zm-text-primary)' }}>Deep Dive — {selectedSymbol}</span>
+              <span style={{ fontFamily: FONT_MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, color: 'var(--zm-text-primary)' }}>Deep Dive — {selectedSymbol}</span>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
               {ASSETS_15.map(sym => (
-                <button key={sym} type="button" onClick={() => handleSelectSymbol(sym)} aria-pressed={selectedSymbol === sym} aria-label={'Select ' + sym} style={{ padding: '3px 7px', borderRadius: 4, fontFamily: 'monospace', fontSize: 9, textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.15s', background: selectedSymbol === sym ? 'rgba(96,165,250,0.2)' : 'rgba(148,163,184,0.08)', color: selectedSymbol === sym ? 'rgba(96,165,250,1)' : 'var(--zm-text-faint)', border: '1px solid ' + (selectedSymbol === sym ? 'rgba(96,165,250,0.35)' : 'transparent') }}>
+                <button key={sym} type="button" onClick={() => handleSelectSymbol(sym)} aria-pressed={selectedSymbol === sym} aria-label={'Select ' + sym} style={{ padding: '3px 7px', borderRadius: 4, fontFamily: FONT_MONO, fontSize: 9, textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.15s', background: selectedSymbol === sym ? 'rgba(96,165,250,0.2)' : 'rgba(148,163,184,0.08)', color: selectedSymbol === sym ? 'rgba(96,165,250,1)' : 'var(--zm-text-faint)', border: '1px solid ' + (selectedSymbol === sym ? 'rgba(96,165,250,0.35)' : 'transparent') }}>
                   {sym}
                 </button>
               ))}
@@ -440,14 +442,14 @@ const AISignals = memo(() => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', gap: 10 }}>
                 <div style={{ flex: 1, padding: 12, borderRadius: 8, background: selPredCfg.bg, border: '1px solid ' + selPredCfg.color + '33', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontFamily: 'monospace', fontSize: 9, color: 'var(--zm-text-faint)', textTransform: 'uppercase' }}>Prediction</span>
-                  <span style={{ fontFamily: 'monospace', fontSize: 16, fontWeight: 700, color: selPredCfg.color }}>{selSignal.prediction}</span>
-                  <span style={{ fontFamily: 'monospace', fontSize: 10, color: selPredCfg.color }}>{(selSignal.confidence * 100).toFixed(0)}% confidence</span>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: 'var(--zm-text-faint)', textTransform: 'uppercase' }}>Prediction</span>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 16, fontWeight: 700, color: selPredCfg.color }}>{selSignal.prediction}</span>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: selPredCfg.color }}>{(selSignal.confidence * 100).toFixed(0)}% confidence</span>
                 </div>
                 <div style={{ flex: 1, padding: 12, borderRadius: 8, background: selAnomCfg.bg, border: '1px solid ' + selAnomCfg.color + '33', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontFamily: 'monospace', fontSize: 9, color: 'var(--zm-text-faint)', textTransform: 'uppercase' }}>Anomaly</span>
-                  <span style={{ fontFamily: 'monospace', fontSize: 16, fontWeight: 700, color: selAnomCfg.color }}>{selSignal.anomaly}</span>
-                  <span style={{ fontFamily: 'monospace', fontSize: 10, color: selAnomCfg.color }}>Score: {(aiData.result.anomalyScore * 100).toFixed(0)}%</span>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: 'var(--zm-text-faint)', textTransform: 'uppercase' }}>Anomaly</span>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 16, fontWeight: 700, color: selAnomCfg.color }}>{selSignal.anomaly}</span>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: selAnomCfg.color }}>Score: {(aiData.result.anomalyScore * 100).toFixed(0)}%</span>
                 </div>
               </div>
               <RSIGauge rsi={selSignal.rsi} size={78} />
@@ -466,7 +468,7 @@ const AISignals = memo(() => {
       {/* Tabs */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }} role="tablist" aria-label="AI Signal tabs">
         {TABS.map(t => (
-          <button key={t} type="button" role="tab" aria-selected={activeTab === t} aria-label={'Switch to ' + t + ' tab'} onClick={() => handleTab(t)} style={{ padding: '6px 14px', borderRadius: 8, fontFamily: 'monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.15s', background: activeTab === t ? 'rgba(167,139,250,0.15)' : 'transparent', color: activeTab === t ? 'rgba(167,139,250,1)' : 'var(--zm-text-faint)', border: '1px solid ' + (activeTab === t ? 'rgba(167,139,250,0.3)' : 'transparent'), willChange: 'transform' }}>
+          <button key={t} type="button" role="tab" aria-selected={activeTab === t} aria-label={'Switch to ' + t + ' tab'} onClick={() => handleTab(t)} style={{ padding: '6px 14px', borderRadius: 8, fontFamily: FONT_MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.15s', background: activeTab === t ? 'rgba(167,139,250,0.15)' : 'transparent', color: activeTab === t ? 'rgba(167,139,250,1)' : 'var(--zm-text-faint)', border: '1px solid ' + (activeTab === t ? 'rgba(167,139,250,0.3)' : 'transparent'), willChange: 'transform' }}>
             {t}
           </button>
         ))}
@@ -479,7 +481,7 @@ const AISignals = memo(() => {
             <div role="table" aria-label="Asset signal overview">
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '80px 1fr 55px 70px' : '90px 1fr 60px 65px 65px 80px 80px', gap: 8, padding: '8px 16px', borderBottom: '1px solid rgba(148,163,184,0.1)', background: 'rgba(255,255,255,0.02)' }}>
                 {(isMobile ? ['Asset', 'Price', 'RSI', 'Signal'] : ['Asset', 'Price', 'RSI', 'MACD', 'BB%', 'Anomaly', 'Prediction']).map(h => (
-                  <span key={h} style={{ fontFamily: 'monospace', fontSize: 9, color: 'var(--zm-text-faint)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</span>
+                  <span key={h} style={{ fontFamily: FONT_MONO, fontSize: 9, color: 'var(--zm-text-faint)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</span>
                 ))}
               </div>
               {assetSignals.map(a => <AssetRow key={a.symbol} {...a} onClick={handleSelectSymbol} active={selectedSymbol === a.symbol} isMobile={isMobile} />)}
