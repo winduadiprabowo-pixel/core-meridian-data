@@ -1,408 +1,237 @@
 /**
- * TradingViewChart.tsx — ZERØ MERIDIAN 2026 Phase 11
- * UPGRADE push21:
- *   - Binance klines via /api/klines proxy (COEP-safe)
- *   - Container guaranteed min-height before chart init
- *   - Explicit container dimensions on mount
- * React.memo + displayName ✓  rgba() only ✓
- * Zero template literals in JSX ✓  Object.freeze() ✓
+ * TradingViewChart.tsx — ZERØ MERIDIAN push97
+ * FIX BUG #3: Binance klines direct (no /api proxy — CF Pages = static = 404)
+ * UPGRADE: cyber-neon design, error state, loading spinner
  */
 
 import { memo, useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import GlassCard from '@/components/shared/GlassCard';
 
-type Interval    = '1m' | '5m' | '15m' | '1h' | '4h' | '1d';
-type ChartSymbol = 'BTCUSDT' | 'ETHUSDT' | 'SOLUSDT' | 'BNBUSDT';
+type Iv  = '1m'|'5m'|'15m'|'1h'|'4h'|'1d';
+type Sym = 'BTCUSDT'|'ETHUSDT'|'SOLUSDT'|'BNBUSDT';
 
-interface Candle {
-  time:  number;
-  open:  number;
-  high:  number;
-  low:   number;
-  close: number;
-  value: number;
-}
-
-interface LWChart {
-  createChart(container: HTMLElement, options: Record<string, unknown>): LWChartInstance;
-}
-interface LWChartInstance {
-  addCandlestickSeries(opts?: Record<string, unknown>): LWSeriesInstance;
-  addHistogramSeries(opts?: Record<string, unknown>): LWSeriesInstance;
-  applyOptions(opts: Record<string, unknown>): void;
+interface Candle { time: number; open: number; high: number; low: number; close: number; value: number; }
+interface LWC { createChart(el: HTMLElement, o: Record<string,unknown>): LWCI; }
+interface LWCI {
+  addCandlestickSeries(o?: Record<string,unknown>): LWS;
+  addHistogramSeries(o?: Record<string,unknown>): LWS;
   timeScale(): { fitContent(): void };
   resize(w: number, h: number): void;
   remove(): void;
 }
-interface LWSeriesInstance {
-  setData(data: unknown[]): void;
-  update(data: unknown): void;
-  applyOptions(opts: Record<string, unknown>): void;
-}
+interface LWS { setData(d: unknown[]): void; applyOptions(o: Record<string,unknown>): void; }
 
-const SYMBOLS: readonly ChartSymbol[]  = Object.freeze(['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT']);
-const INTERVALS: readonly Interval[]   = Object.freeze(['1m', '5m', '15m', '1h', '4h', '1d']);
-const LIMIT = 200;
+const SYMS: readonly Sym[] = Object.freeze(['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT']);
+const IVS:  readonly Iv[]  = Object.freeze(['1m','5m','15m','1h','4h','1d']);
 
-const SYMBOL_LABELS: Readonly<Record<ChartSymbol, string>> = Object.freeze({
-  BTCUSDT: 'BTC', ETHUSDT: 'ETH', SOLUSDT: 'SOL', BNBUSDT: 'BNB',
+const SYM_LABEL: Readonly<Record<Sym,string>> = Object.freeze({ BTCUSDT:'BTC', ETHUSDT:'ETH', SOLUSDT:'SOL', BNBUSDT:'BNB' });
+const SYM_COLOR: Readonly<Record<Sym,string>> = Object.freeze({
+  BTCUSDT:'rgba(251,191,36,1)', ETHUSDT:'rgba(96,165,250,1)',
+  SOLUSDT:'rgba(34,255,170,1)', BNBUSDT:'rgba(251,146,60,1)',
 });
 
-const SYMBOL_COLORS: Readonly<Record<ChartSymbol, string>> = Object.freeze({
-  BTCUSDT: 'rgba(251,191,36,1)',
-  ETHUSDT: 'rgba(96,165,250,1)',
-  SOLUSDT: 'rgba(52,211,153,1)',
-  BNBUSDT: 'rgba(251,146,60,1)',
-});
+const CDN = 'https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js';
 
-const LWCHARTS_CDN = 'https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js';
-
-const CARD_STYLE = Object.freeze({
-  padding: '16px',
-  display: 'flex',
-  flexDirection: 'column' as const,
-  gap: '12px',
-});
-
-// ✅ push21: via /api/klines proxy — COEP-safe
-async function fetchCandles(symbol: ChartSymbol, interval: Interval, signal: AbortSignal): Promise<Candle[]> {
+async function fetchCandles(sym: Sym, iv: Iv, signal: AbortSignal): Promise<Candle[]> {
   try {
-    const url = '/api/klines?symbol=' + symbol + '&interval=' + interval + '&limit=' + LIMIT;
+    // FIX BUG #3: Direct Binance API, no /api proxy
+    const url = 'https://api.binance.com/api/v3/klines?symbol=' + sym + '&interval=' + iv + '&limit=300';
     const res = await fetch(url, { signal });
     if (!res.ok) return [];
     const raw = await res.json() as number[][];
-    return raw.map((k): Candle => ({
-      time:  Math.floor(k[0] / 1000),
-      open:  Number(k[1]),
-      high:  Number(k[2]),
-      low:   Number(k[3]),
-      close: Number(k[4]),
-      value: Number(k[5]),
-    }));
-  } catch {
-    return [];
-  }
+    return raw.map(k => ({ time: Math.floor(k[0]/1000), open:+k[1], high:+k[2], low:+k[3], close:+k[4], value:+k[5] }));
+  } catch { return []; }
 }
 
-// ── CDN Loader ────────────────────────────────────────────────────────────────
-let lwScriptLoaded  = false;
-let lwScriptLoading = false;
-const lwCallbacks: ((lw: LWChart) => void)[] = [];
-
-function loadLWCharts(): Promise<LWChart> {
-  return new Promise((resolve) => {
+let lwReady = false, lwBusy = false;
+const lwQ: ((lw: LWC) => void)[] = [];
+function loadLW(): Promise<LWC> {
+  return new Promise(resolve => {
     const win = window as unknown as Record<string, unknown>;
-    if (lwScriptLoaded && win['LightweightCharts']) {
-      resolve(win['LightweightCharts'] as LWChart);
-      return;
-    }
-    lwCallbacks.push(resolve);
-    if (lwScriptLoading) return;
-    lwScriptLoading = true;
-    const script = document.createElement('script');
-    script.src         = LWCHARTS_CDN;
-    script.async       = true;
-    script.crossOrigin = 'anonymous';
-    script.onload = () => {
-      lwScriptLoaded  = true;
-      lwScriptLoading = false;
-      const lw = win['LightweightCharts'] as LWChart;
-      for (const cb of lwCallbacks) cb(lw);
-      lwCallbacks.length = 0;
+    if (lwReady && win['LightweightCharts']) { resolve(win['LightweightCharts'] as LWC); return; }
+    lwQ.push(resolve);
+    if (lwBusy) return;
+    lwBusy = true;
+    const s = document.createElement('script');
+    s.src = CDN; s.async = true; s.crossOrigin = 'anonymous';
+    s.onload = () => {
+      lwReady = true; lwBusy = false;
+      const lw = win['LightweightCharts'] as LWC;
+      lwQ.forEach(cb => cb(lw)); lwQ.length = 0;
     };
-    document.head.appendChild(script);
+    document.head.appendChild(s);
   });
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
-interface TradingViewChartProps {
-  defaultSymbol?:   ChartSymbol;
-  defaultInterval?: Interval;
-  height?:          number;
-}
+const TradingViewChart = memo(({ defaultSymbol = 'BTCUSDT' as Sym, defaultInterval = '1h' as Iv, height = 380 }) => {
+  const mountedRef = useRef(true);
+  const elRef      = useRef<HTMLDivElement>(null);
+  const chartRef   = useRef<LWCI|null>(null);
+  const candleRef  = useRef<LWS|null>(null);
+  const volRef     = useRef<LWS|null>(null);
+  const abortRef   = useRef<AbortController|null>(null);
+  const roRef      = useRef<ResizeObserver|null>(null);
 
-const TradingViewChart = memo(({
-  defaultSymbol   = 'BTCUSDT',
-  defaultInterval = '1h',
-  height          = 380,
-}: TradingViewChartProps) => {
-  const mountedRef   = useRef(true);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const chartRef     = useRef<LWChartInstance | null>(null);
-  const candleRef    = useRef<LWSeriesInstance | null>(null);
-  const volRef       = useRef<LWSeriesInstance | null>(null);
-  const abortRef     = useRef<AbortController | null>(null);
+  const [sym,  setSym]  = useState<Sym>(defaultSymbol);
+  const [iv,   setIv]   = useState<Iv>(defaultInterval);
+  const [load, setLoad] = useState(true);
+  const [last, setLast] = useState<number|null>(null);
+  const [prev, setPrev] = useState<number|null>(null);
+  const [err,  setErr]  = useState(false);
 
-  const [symbol,    setSymbol]    = useState<ChartSymbol>(defaultSymbol);
-  const [interval,  setInterval]  = useState<Interval>(defaultInterval);
-  const [loading,   setLoading]   = useState(true);
-  const [lastPrice, setLastPrice] = useState<number | null>(null);
-  const [lastClose, setLastClose] = useState<number | null>(null);
+  const H = height - 70;
 
-  const chartH = height - 60;
-
-  // ── Init chart ──────────────────────────────────────────────────────────────
   useEffect(() => {
     mountedRef.current = true;
-    let chart: LWChartInstance | null = null;
-
-    async function init(): Promise<void> {
-      const lw = await loadLWCharts();
-      if (!mountedRef.current || !containerRef.current) return;
-
-      // ✅ push21: guarantee container has real dimensions before createChart
-      const w = containerRef.current.offsetWidth || 600;
-      const h = chartH;
-
-      chart = lw.createChart(containerRef.current, {
-        width:  w,
-        height: h,
-        layout: {
-          background:  { color: 'rgba(0,0,0,0)' },
-          textColor:   'rgba(148,163,184,0.5)',
-          fontFamily:  "'Space Mono', monospace",
-          fontSize:    10,
-        },
-        grid: {
-          vertLines: { color: 'rgba(255,255,255,0.04)', style: 1 },
-          horzLines: { color: 'rgba(255,255,255,0.04)', style: 1 },
-        },
-        crosshair: {
-          vertLine: { color: 'rgba(255,255,255,0.15)', width: 1, style: 0 },
-          horzLine: { color: 'rgba(255,255,255,0.15)', width: 1, style: 0 },
-        },
-        timeScale: {
-          borderColor:    'rgba(255,255,255,0.06)',
-          timeVisible:    true,
-          secondsVisible: false,
-        },
-        rightPriceScale: { borderColor: 'rgba(255,255,255,0.06)' },
-        handleScroll: true,
-        handleScale:  true,
+    let chart: LWCI|null = null;
+    async function init() {
+      const lw = await loadLW();
+      if (!mountedRef.current || !elRef.current) return;
+      chart = lw.createChart(elRef.current, {
+        width: elRef.current.offsetWidth || 600, height: H,
+        layout: { background: { color: 'rgba(0,0,0,0)' }, textColor: 'rgba(138,138,158,0.55)', fontFamily: "'JetBrains Mono',monospace", fontSize: 10 },
+        grid: { vertLines: { color: 'rgba(255,255,255,0.025)', style: 1 }, horzLines: { color: 'rgba(255,255,255,0.025)', style: 1 } },
+        crosshair: { vertLine: { color: 'rgba(0,238,255,0.25)', width: 1, style: 0 }, horzLine: { color: 'rgba(0,238,255,0.25)', width: 1, style: 0 } },
+        timeScale: { borderColor: 'rgba(255,255,255,0.04)', timeVisible: true, secondsVisible: false },
+        rightPriceScale: { borderColor: 'rgba(255,255,255,0.04)' },
+        handleScroll: true, handleScale: true,
       });
-
       chartRef.current = chart;
-
       candleRef.current = chart.addCandlestickSeries({
-        upColor:         'rgba(52,211,153,1)',
-        downColor:       'rgba(251,113,133,1)',
-        borderUpColor:   'rgba(52,211,153,1)',
-        borderDownColor: 'rgba(251,113,133,1)',
-        wickUpColor:     'rgba(52,211,153,0.6)',
-        wickDownColor:   'rgba(251,113,133,0.6)',
+        upColor: 'rgba(34,255,170,1)', downColor: 'rgba(255,68,136,1)',
+        borderUpColor: 'rgba(34,255,170,1)', borderDownColor: 'rgba(255,68,136,1)',
+        wickUpColor: 'rgba(34,255,170,0.55)', wickDownColor: 'rgba(255,68,136,0.55)',
       });
-
-      volRef.current = chart.addHistogramSeries({
-        color:        'rgba(96,165,250,0.15)',
-        priceScaleId: 'volume',
-        scaleMargins: { top: 0.85, bottom: 0 },
+      volRef.current = chart.addHistogramSeries({ color: 'rgba(0,238,255,0.10)', priceScaleId: 'vol', scaleMargins: { top: 0.85, bottom: 0 } });
+      roRef.current = new ResizeObserver(() => {
+        if (!mountedRef.current || !elRef.current || !chartRef.current) return;
+        chartRef.current.resize(elRef.current.offsetWidth, H);
       });
-
-      const ro = new ResizeObserver(() => {
-        if (!mountedRef.current || !containerRef.current || !chartRef.current) return;
-        chartRef.current.resize(containerRef.current.offsetWidth, chartH);
-      });
-      if (containerRef.current) ro.observe(containerRef.current);
+      roRef.current.observe(elRef.current);
     }
-
     void init();
-
     return () => {
       mountedRef.current = false;
+      roRef.current?.disconnect();
       if (chart) chart.remove();
-      chartRef.current  = null;
-      candleRef.current = null;
-      volRef.current    = null;
+      chartRef.current = candleRef.current = volRef.current = null;
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line
 
-  // ── Load data ────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!mountedRef.current) return;
-    if (abortRef.current) abortRef.current.abort();
+    abortRef.current?.abort();
     abortRef.current = new AbortController();
-    setLoading(true);
-
-    async function load(): Promise<void> {
-      const candles = await fetchCandles(symbol, interval, abortRef.current!.signal);
+    setLoad(true); setErr(false);
+    async function load() {
+      const candles = await fetchCandles(sym, iv, abortRef.current!.signal);
       if (!mountedRef.current) return;
-
-      if (candles.length === 0) { setLoading(false); return; }
-
+      if (!candles.length) { setLoad(false); setErr(true); return; }
       if (candleRef.current && volRef.current) {
-        candleRef.current.setData(candles.map(c => ({
-          time: c.time, open: c.open, high: c.high, low: c.low, close: c.close,
-        })));
-        const color = SYMBOL_COLORS[symbol];
+        candleRef.current.setData(candles.map(c => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close })));
+        const col = SYM_COLOR[sym];
         volRef.current.setData(candles.map(c => ({
-          time:  c.time,
-          value: c.value,
-          color: c.close >= c.open
-            ? color.replace('1)', '0.18)')
-            : 'rgba(251,113,133,0.12)',
+          time: c.time, value: c.value,
+          color: c.close >= c.open ? col.replace('1)','0.13)') : 'rgba(255,68,136,0.09)',
         })));
         chartRef.current?.timeScale().fitContent();
       }
-
       const last = candles[candles.length - 1];
-      if (mountedRef.current) {
-        setLastPrice(last.close);
-        setLastClose(candles.length >= 2 ? candles[candles.length - 2].close : last.open);
-        setLoading(false);
-      }
+      setLast(last.close);
+      setPrev(candles.length >= 2 ? candles[candles.length - 2].close : last.open);
+      setLoad(false);
     }
-
     void load();
     return () => { abortRef.current?.abort(); };
-  }, [symbol, interval]);
+  }, [sym, iv]);
 
-  // ── Handlers ─────────────────────────────────────────────────────────────────
-  const handleSymbol   = useCallback((sym: ChartSymbol) => {
-    if (mountedRef.current) setSymbol(sym);
-  }, []);
+  const pct = useMemo(() => {
+    if (last == null || prev == null || prev === 0) return null;
+    return (last - prev) / prev * 100;
+  }, [last, prev]);
 
-  const handleInterval = useCallback((iv: Interval) => {
-    if (mountedRef.current) setInterval(iv);
-  }, []);
+  const onSym = useCallback((s: Sym) => { if (mountedRef.current) setSym(s); }, []);
+  const onIv  = useCallback((i: Iv)  => { if (mountedRef.current) setIv(i); }, []);
 
-  const priceChange = useMemo(() => {
-    if (lastPrice == null || lastClose == null || lastClose === 0) return null;
-    return (lastPrice - lastClose) / lastClose * 100;
-  }, [lastPrice, lastClose]);
-
-  const headerStyle = useMemo(() => ({
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    flexWrap: 'wrap' as const, gap: '8px',
+  const btnBase = useMemo(() => ({
+    fontFamily: "'JetBrains Mono',monospace", cursor: 'pointer', borderRadius: '5px',
+    willChange: 'transform' as const,
   }), []);
 
-  const priceStyle = useMemo(() => ({
-    fontFamily: "'Space Mono', monospace",
-    fontSize: '18px', fontWeight: 700,
-    color: SYMBOL_COLORS[symbol], letterSpacing: '0.04em',
-  }), [symbol]);
-
-  const changeStyle = useMemo(() => ({
-    fontFamily: "'Space Mono', monospace", fontSize: '11px', marginLeft: '8px',
-    color: priceChange == null
-      ? 'rgba(148,163,184,0.5)'
-      : priceChange >= 0 ? 'rgba(52,211,153,1)' : 'rgba(251,113,133,1)',
-  }), [priceChange]);
-
   return (
-    <GlassCard style={CARD_STYLE}>
+    <GlassCard style={{ padding: '16px', display: 'flex', flexDirection: 'column' as const, gap: '12px' }}>
       {/* Header */}
-      <div style={headerStyle}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '8px' }}>
         {/* Symbol selector */}
         <div style={{ display: 'flex', gap: '4px' }}>
-          {SYMBOLS.map(sym => (
-            <button
-              key={sym}
-              type="button"
-              onClick={() => handleSymbol(sym)}
-              aria-pressed={symbol === sym}
-              aria-label={'Switch to ' + SYMBOL_LABELS[sym]}
-              style={{
-                fontFamily: "'Space Mono', monospace",
-                fontSize: '10px', letterSpacing: '0.08em',
-                padding: '4px 10px', borderRadius: '5px', cursor: 'pointer',
-                background: symbol === sym ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.025)',
-                border: '1px solid ' + (symbol === sym
-                  ? SYMBOL_COLORS[sym].replace('1)', '0.4)')
-                  : 'rgba(255,255,255,0.06)'),
-                color: symbol === sym ? SYMBOL_COLORS[sym] : 'rgba(148,163,184,0.5)',
-                willChange: 'transform',
-              }}
-            >
-              {SYMBOL_LABELS[sym]}
+          {SYMS.map(s => (
+            <button key={s} type="button" onClick={() => onSym(s)} aria-pressed={sym===s}
+              style={{ ...btnBase, fontSize: '10px', letterSpacing: '0.06em', padding: '4px 10px',
+                background: sym===s ? 'rgba(0,238,255,0.08)' : 'rgba(255,255,255,0.02)',
+                border: '1px solid ' + (sym===s ? 'rgba(0,238,255,0.3)' : 'rgba(255,255,255,0.06)'),
+                color: sym===s ? SYM_COLOR[s] : 'rgba(138,138,158,0.55)',
+              }}>
+              {SYM_LABEL[s]}
             </button>
           ))}
         </div>
-
         {/* Price */}
-        <div style={{ display: 'flex', alignItems: 'baseline' }}>
-          <span style={priceStyle}>
-            {lastPrice != null
-              ? '$' + lastPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-              : '—'}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '17px', fontWeight: 700, color: SYM_COLOR[sym] }}>
+            {last != null ? '$'+last.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}
           </span>
-          {priceChange != null && (
-            <span style={changeStyle}>
-              {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2) + '%'}
+          {pct != null && (
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: pct>=0?'rgba(34,255,170,1)':'rgba(255,68,136,1)' }}>
+              {pct>=0?'+':''}{pct.toFixed(2)}%
             </span>
           )}
         </div>
-
         {/* Interval selector */}
-        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' as const }}>
-          {INTERVALS.map(iv => (
-            <button
-              key={iv}
-              type="button"
-              onClick={() => handleInterval(iv)}
-              aria-pressed={interval === iv}
-              aria-label={'Interval ' + iv}
-              style={{
-                fontFamily: "'Space Mono', monospace",
-                fontSize: '9px', letterSpacing: '0.06em',
-                padding: '3px 7px', borderRadius: '4px', cursor: 'pointer',
-                background: interval === iv ? 'rgba(96,165,250,0.14)' : 'rgba(255,255,255,0.025)',
-                border: '1px solid ' + (interval === iv
-                  ? 'rgba(96,165,250,0.3)'
-                  : 'rgba(255,255,255,0.06)'),
-                color: interval === iv ? 'rgba(96,165,250,1)' : 'rgba(148,163,184,0.4)',
-                willChange: 'transform',
-              }}
-            >
-              {iv}
+        <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' as const }}>
+          {IVS.map(i => (
+            <button key={i} type="button" onClick={() => onIv(i)} aria-pressed={iv===i}
+              style={{ ...btnBase, fontSize: '9px', padding: '3px 7px',
+                background: iv===i ? 'rgba(0,238,255,0.08)' : 'rgba(255,255,255,0.02)',
+                border: '1px solid ' + (iv===i ? 'rgba(0,238,255,0.25)' : 'rgba(255,255,255,0.05)'),
+                color: iv===i ? 'rgba(0,238,255,1)' : 'rgba(138,138,158,0.4)',
+              }}>
+              {i}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Chart container — ✅ push21: explicit minHeight guaranteed */}
+      {/* Chart */}
       <div style={{ position: 'relative' as const }}>
-        {loading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'absolute' as const, inset: 0, zIndex: 10,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(0,0,0,0.3)', borderRadius: '6px',
-            }}
-          >
-            <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'rgba(148,163,184,0.5)', letterSpacing: '0.1em' }}>
-              LOADING...
-            </span>
+        {load && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            style={{ position: 'absolute' as const, inset: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(5,7,13,0.7)', borderRadius: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '8px' }}>
+              <div style={{ width:'22px', height:'22px', border:'2px solid rgba(0,238,255,0.12)', borderTop:'2px solid rgba(0,238,255,0.85)', borderRadius:'50%', animation:'spin 0.75s linear infinite' }} />
+              <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', color:'rgba(0,238,255,0.5)', letterSpacing:'0.12em' }}>LOADING…</span>
+            </div>
           </motion.div>
         )}
-        <div
-          ref={containerRef}
-          style={{ width: '100%', height: chartH + 'px', minHeight: chartH + 'px' }}
-          role="img"
-          aria-label={'TradingView chart ' + SYMBOL_LABELS[symbol] + ' ' + interval}
-        />
+        {err && !load && (
+          <div style={{ position: 'absolute' as const, inset: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'11px', color:'rgba(255,68,136,0.7)' }}>⚠ Chart unavailable</span>
+          </div>
+        )}
+        <div ref={elRef} role="img" aria-label={'Chart '+SYM_LABEL[sym]+' '+iv}
+          style={{ width:'100%', height:H+'px', minHeight:H+'px', willChange:'transform' }} />
       </div>
 
       {/* Footer */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.2)', letterSpacing: '0.08em' }}>
-          TRADINGVIEW LIGHTWEIGHT CHARTS · BINANCE DATA
-        </div>
-        <div style={{
-          fontFamily: "'Space Mono', monospace", fontSize: '8px',
-          color: 'rgba(52,211,153,0.5)', background: 'rgba(52,211,153,0.06)',
-          border: '1px solid rgba(52,211,153,0.12)', borderRadius: '3px',
-          padding: '2px 6px', letterSpacing: '0.06em',
-        }}>
-          PHASE 11
-        </div>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:'rgba(138,138,158,0.18)', letterSpacing:'0.08em' }}>
+          LIGHTWEIGHT CHARTS · BINANCE DIRECT · PUSH97
+        </span>
+        <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'8px', color:'rgba(34,255,170,0.45)', background:'rgba(34,255,170,0.05)', border:'1px solid rgba(34,255,170,0.1)', borderRadius:'3px', padding:'2px 6px' }}>
+          LIVE
+        </span>
       </div>
     </GlassCard>
   );
 });
-
 TradingViewChart.displayName = 'TradingViewChart';
 export default TradingViewChart;
