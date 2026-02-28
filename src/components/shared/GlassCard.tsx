@@ -1,122 +1,77 @@
 /**
- * GlassCard.tsx — ZERØ MERIDIAN v30
- * Bloomberg-grade glass card — CSS variables, section header support
+ * GlassCard.tsx — ZERØ MERIDIAN
+ * Base glass morphism card dengan Framer Motion hover/tap.
+ * - React.memo + displayName ✓
+ * - rgba() only ✓
+ * - Zero template literals in JSX attrs ✓
  */
 
-import { memo, type ReactNode, type CSSProperties, useMemo } from 'react';
+import { memo, type ReactNode, type CSSProperties } from 'react';
 import { motion } from 'framer-motion';
 import { HOVER, TAP, TRANSITION } from '@/lib/motion';
 
 interface GlassCardProps {
   children:     ReactNode;
+  className?:   string;
   style?:       CSSProperties;
   onClick?:     () => void;
   hoverable?:   boolean;
   pressable?:   boolean;
   accentColor?: string;
   padding?:     string | number;
-  title?:       string;
-  subtitle?:    string;
-  badge?:       string;
-  action?:      ReactNode;
+  as?:          'div' | 'article' | 'section';
 }
 
 const GlassCard = memo(({
-  children, style, onClick,
-  hoverable = true, pressable = false,
-  accentColor, padding = 16,
-  title, subtitle, badge, action,
+  children,
+  className,
+  style,
+  onClick,
+  hoverable = true,
+  pressable = false,
+  accentColor,
+  padding = '1rem',
+  as: _as = 'div',
 }: GlassCardProps) => {
-
-  const cardStyle = useMemo((): CSSProperties => ({
-    background:          'var(--zm-card-bg)',
-    border:              '1px solid var(--zm-card-border)',
-    borderRadius:        'var(--zm-card-radius)',
-    overflow:            'hidden',
-    position:            'relative',
-    willChange:          'transform',
-    transition:          'border-color 120ms ease, box-shadow 120ms ease',
+  const baseStyle: CSSProperties = {
+    background: 'var(--zm-glass-bg)',
+    backdropFilter: 'blur(20px) saturate(180%)',
+    border: '1px solid ' + (accentColor ? accentColor.replace('1)', '0.25)') : 'var(--zm-glass-border)'),
+    borderRadius: 12,
+    padding,
+    position: 'relative',
+    willChange: 'transform',
     ...style,
-  }), [style]);
-
-  const headerStyle = useMemo(() => ({
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'space-between',
-    padding:        '10px 14px 8px',
-    borderBottom:   '1px solid var(--zm-divider)',
-  }), []);
-
-  const accentLineStyle = useMemo(() => ({
-    position:   'absolute' as const,
-    top: 0, left: 0, right: 0,
-    height:     1,
-    background: `linear-gradient(90deg, transparent, ${accentColor ?? 'var(--zm-blue)'}, transparent)`,
-    opacity:    0.5,
-  }), [accentColor]);
-
-  const bodyStyle = useMemo(() => ({
-    padding: typeof padding === 'number' ? `${padding}px` : padding,
-  }), [padding]);
+  };
 
   return (
     <motion.div
-      style={cardStyle}
+      className={'zm-corners ' + (className ?? '')}
+      style={baseStyle}
       onClick={onClick}
-      whileHover={hoverable ? { borderColor: 'var(--zm-border-hover)', boxShadow: '0 4px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(79,127,255,0.08)' } : undefined}
+      whileHover={hoverable ? HOVER.lift : undefined}
       whileTap={pressable ? TAP.press : undefined}
-      transition={TRANSITION.fast}
+      transition={TRANSITION.spring}
     >
-      {accentColor && <div style={accentLineStyle} />}
-
-      {title && (
-        <div style={headerStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{
-              fontFamily:    'var(--zm-font-data)',
-              fontSize:      'var(--zm-text-2xs)',
-              fontWeight:    700,
-              textTransform: 'uppercase' as const,
-              letterSpacing: '0.1em',
-              color:         'var(--zm-text-2)',
-            }}>
-              {title}
-            </span>
-            {badge && (
-              <span style={{
-                fontFamily:    'var(--zm-font-data)',
-                fontSize:      8,
-                fontWeight:    700,
-                letterSpacing: '0.08em',
-                padding:       '1px 5px',
-                borderRadius:  3,
-                background:    'var(--zm-green-bg)',
-                border:        '1px solid var(--zm-green-border)',
-                color:         'var(--zm-green)',
-              }}>
-                {badge}
-              </span>
-            )}
-            {subtitle && (
-              <span style={{
-                fontFamily: 'var(--zm-font-data)',
-                fontSize:   'var(--zm-text-2xs)',
-                color:      'var(--zm-text-3)',
-              }}>
-                {subtitle}
-              </span>
-            )}
-          </div>
-          {action}
-        </div>
+      {accentColor && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 1,
+            background: 'linear-gradient(90deg, transparent, ' + accentColor + ', transparent)',
+            borderRadius: '12px 12px 0 0',
+            opacity: 0.6,
+          }}
+        />
       )}
-
-      <div style={bodyStyle}>
-        {children}
-      </div>
+      {children}
     </motion.div>
   );
 });
-
 GlassCard.displayName = 'GlassCard';
+
 export default GlassCard;
+
