@@ -237,7 +237,7 @@ const WasmOrderBook = memo(({ symbol = 'BTCUSDT', basePrice = MOCK_SEED.btcPrice
   }), []);
 
   const titleStyle = useMemo(() => ({
-    fontFamily:    "'Space Mono', monospace",
+    fontFamily:    "'JetBrains Mono', monospace",
     fontSize:      '13px',
     fontWeight:    700,
     color:         'rgba(255,255,255,0.9)',
@@ -281,7 +281,7 @@ const WasmOrderBook = memo(({ symbol = 'BTCUSDT', basePrice = MOCK_SEED.btcPrice
   }), []);
 
   const metricLabelStyle = useMemo(() => ({
-    fontFamily: "'Space Mono', monospace",
+    fontFamily: "'JetBrains Mono', monospace",
     fontSize:   '9px',
     color:      'rgba(148,163,184,0.5)',
     marginTop:  '2px',
@@ -298,7 +298,7 @@ const WasmOrderBook = memo(({ symbol = 'BTCUSDT', basePrice = MOCK_SEED.btcPrice
     gridTemplateColumns: '1fr 1fr 1fr',
     padding:        '4px 12px',
     fontSize:       '9px',
-    fontFamily:     "'Space Mono', monospace",
+    fontFamily:     "'JetBrains Mono', monospace",
     color:          'rgba(100,116,139,0.6)',
     letterSpacing:  '0.06em',
     borderBottom:   '1px solid rgba(255,255,255,0.05)',
@@ -367,7 +367,7 @@ const WasmOrderBook = memo(({ symbol = 'BTCUSDT', basePrice = MOCK_SEED.btcPrice
                 border:       'none',
                 cursor:       'pointer',
                 fontSize:     '10px',
-                fontFamily:   "'Space Mono', monospace",
+                fontFamily:   "'JetBrains Mono', monospace",
                 background:   depth === d ? 'rgba(96,165,250,0.15)' : 'rgba(255,255,255,0.04)',
                 color:        depth === d ? 'rgba(96,165,250,0.9)' : 'rgba(148,163,184,0.5)',
                 willChange:   'transform',
@@ -413,7 +413,7 @@ const WasmOrderBook = memo(({ symbol = 'BTCUSDT', basePrice = MOCK_SEED.btcPrice
       {/* Imbalance bar */}
       <div style={{ marginBottom: '12px' }}>
         <ImbalanceBar imbalance={metrics.imbalance} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '9px', fontFamily: "'Space Mono', monospace", color: 'rgba(100,116,139,0.5)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '9px', fontFamily: "'JetBrains Mono', monospace", color: 'rgba(100,116,139,0.5)' }}>
           <span>SELL</span>
           <span>BUY</span>
         </div>
