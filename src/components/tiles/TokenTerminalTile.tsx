@@ -1,5 +1,5 @@
 /**
- * TokenTerminalTile.tsx — ZERØ MERIDIAN 2026 Phase 11
+ * TokenTerminalTile.tsx — ZERØ MERIDIAN 2026 push111
  * Protocol revenue leaderboard from Token Terminal free tier.
  * Shows top protocols by 30D revenue + P/E + P/S ratios.
  * - React.memo + displayName ✓
@@ -105,7 +105,7 @@ const TokenTerminalTile = memo(() => {
             <rect x="5" y="4" width="2" height="7" fill="rgba(52,211,153,0.85)" rx="0.5" />
             <rect x="9" y="1" width="2" height="10" fill="rgba(52,211,153,1)" rx="0.5" />
           </svg>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', letterSpacing: '0.12em', color: 'rgba(255,255,255,0.65)' }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', letterSpacing: '0.12em', color: 'rgba(255,255,255,0.65)' }}>
             TOKEN TERMINAL
           </span>
         </div>
@@ -118,7 +118,7 @@ const TokenTerminalTile = memo(() => {
               aria-pressed={activeTab === tab}
               aria-label={'Show ' + TAB_CONFIG[tab].label}
               style={{
-                fontFamily: "'Space Mono', monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 fontSize: '9px',
                 letterSpacing: '0.08em',
                 padding: '3px 8px',
@@ -138,7 +138,7 @@ const TokenTerminalTile = memo(() => {
             onClick={handleRefetch}
             aria-label="Refresh Token Terminal data"
             style={{
-              fontFamily: "'Space Mono', monospace",
+              fontFamily: "'JetBrains Mono', monospace",
               fontSize: '9px',
               padding: '3px 6px',
               borderRadius: '4px',
@@ -156,9 +156,9 @@ const TokenTerminalTile = memo(() => {
       {/* Table header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 0 4px' }}>
         <div style={{ width: 24 }} />
-        <div style={{ flex: 1, fontFamily: "'Space Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.35)', letterSpacing: '0.1em' }}>PROTOCOL</div>
-        <div style={{ width: 70, textAlign: 'right' as const, fontFamily: "'Space Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.35)', letterSpacing: '0.1em' }}>{cfg.label.split(' ')[0]}</div>
-        <div style={{ width: 40, textAlign: 'right' as const, fontFamily: "'Space Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.35)', letterSpacing: '0.1em' }}>P/E</div>
+        <div style={{ flex: 1, fontFamily: "'JetBrains Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.35)', letterSpacing: '0.1em' }}>PROTOCOL</div>
+        <div style={{ width: 70, textAlign: 'right' as const, fontFamily: "'JetBrains Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.35)', letterSpacing: '0.1em' }}>{cfg.label.split(' ')[0]}</div>
+        <div style={{ width: 40, textAlign: 'right' as const, fontFamily: "'JetBrains Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.35)', letterSpacing: '0.1em' }}>P/E</div>
       </div>
 
       {/* Rows */}
@@ -166,7 +166,7 @@ const TokenTerminalTile = memo(() => {
         {isLoading ? (
           <SkeletonRows n={8} />
         ) : isError || rows.length === 0 ? (
-          <div style={{ textAlign: 'center' as const, padding: '24px 0', fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'rgba(148,163,184,0.3)' }}>
+          <div style={{ textAlign: 'center' as const, padding: '24px 0', fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(148,163,184,0.3)' }}>
             No data — Token Terminal may require API key for this endpoint.
           </div>
         ) : rows.map((p, i) => {
@@ -181,7 +181,7 @@ const TokenTerminalTile = memo(() => {
               style={ROW_STYLE}
             >
               {/* Rank */}
-              <div style={{ width: 16, fontFamily: "'Space Mono', monospace", fontSize: '9px', color: 'rgba(148,163,184,0.3)', textAlign: 'right' as const }}>
+              <div style={{ width: 16, fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', color: 'rgba(148,163,184,0.3)', textAlign: 'right' as const }}>
                 {i + 1}
               </div>
 
@@ -196,7 +196,7 @@ const TokenTerminalTile = memo(() => {
                 {p.logoUrl ? (
                   <img src={p.logoUrl} alt="" style={{ width: 16, height: 16, borderRadius: '50%' }} />
                 ) : (
-                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '7px', color: 'rgba(255,255,255,0.4)' }}>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '7px', color: 'rgba(255,255,255,0.4)' }}>
                     {p.symbol.slice(0, 2).toUpperCase()}
                   </span>
                 )}
@@ -204,7 +204,7 @@ const TokenTerminalTile = memo(() => {
 
               {/* Name + bar */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'rgba(255,255,255,0.75)', letterSpacing: '0.04em', marginBottom: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(255,255,255,0.75)', letterSpacing: '0.04em', marginBottom: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {p.name}
                 </div>
                 <div style={{ height: '2px', background: 'rgba(255,255,255,0.04)', borderRadius: '1px', overflow: 'hidden' }}>
@@ -213,12 +213,12 @@ const TokenTerminalTile = memo(() => {
               </div>
 
               {/* Value */}
-              <div style={{ width: 70, textAlign: 'right' as const, fontFamily: "'Space Mono', monospace", fontSize: '10px', color: cfg.color, letterSpacing: '0.04em' }}>
+              <div style={{ width: 70, textAlign: 'right' as const, fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: cfg.color, letterSpacing: '0.04em' }}>
                 {formatCompact(val)}
               </div>
 
               {/* P/E */}
-              <div style={{ width: 40, textAlign: 'right' as const, fontFamily: "'Space Mono', monospace", fontSize: '9px', color: p.priceToEarningsRatio != null ? 'rgba(251,191,36,0.8)' : 'rgba(148,163,184,0.2)' }}>
+              <div style={{ width: 40, textAlign: 'right' as const, fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', color: p.priceToEarningsRatio != null ? 'rgba(251,191,36,0.8)' : 'rgba(148,163,184,0.2)' }}>
                 {p.priceToEarningsRatio != null ? p.priceToEarningsRatio.toFixed(0) + 'x' : '—'}
               </div>
             </motion.div>
@@ -227,7 +227,7 @@ const TokenTerminalTile = memo(() => {
       </div>
 
       {/* Footer */}
-      <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.25)', letterSpacing: '0.06em', marginTop: 'auto' }}>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '8px', color: 'rgba(148,163,184,0.25)', letterSpacing: '0.06em', marginTop: 'auto' }}>
         SOURCE · TOKEN TERMINAL · FREE TIER
       </div>
     </GlassCard>
