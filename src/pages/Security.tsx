@@ -1,309 +1,287 @@
-/**
- * Security.tsx — ZERØ MERIDIAN 2026 push84
- * push84: REAL DATA — GoPlus Security API (free, no API key).
- * Features: token security scan, honeypot detection, tax check, risk score.
- * - React.memo + displayName ✓
- * - rgba() only ✓  Zero className ✓  Zero template literals in JSX ✓
- * - useCallback + useMemo ✓
- */
+import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from "react";
 
-import React, { memo, useCallback, useMemo, useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useTokenSecurity, FEATURED_TOKENS, type TokenSecurityResult } from '@/hooks/useTokenSecurity';
-import { useBreakpoint } from '@/hooks/useBreakpoint';
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-const CHAIN_OPTIONS = Object.freeze([
-  { id: 1,     label: 'Ethereum'  },
-  { id: 56,    label: 'BSC'       },
-  { id: 137,   label: 'Polygon'   },
-  { id: 42161, label: 'Arbitrum'  },
-  { id: 8453,  label: 'Base'      },
-  { id: 43114, label: 'Avalanche' },
-] as const);
+const FONT = "'JetBrains Mono', monospace";
 
-// ─── Risk badge ───────────────────────────────────────────────────────────────
-const RiskBadge = React.memo(({ level, score }: { level: TokenSecurityResult['riskLevel']; score: number }) => {
-  const cfg = useMemo(() => {
-    if (level === 'LOW')      return { bg: 'rgba(52,211,153,0.12)',  border: 'rgba(52,211,153,0.3)',  color: 'rgba(52,211,153,1)' };
-    if (level === 'MEDIUM')   return { bg: 'rgba(251,191,36,0.12)', border: 'rgba(251,191,36,0.3)', color: 'rgba(251,191,36,1)' };
-    if (level === 'HIGH')     return { bg: 'rgba(251,113,133,0.12)', border: 'rgba(251,113,133,0.3)', color: 'rgba(251,113,133,1)' };
-    return { bg: 'rgba(200,0,0,0.15)', border: 'rgba(200,0,0,0.4)', color: 'rgba(255,60,60,1)' };
-  }, [level]);
+const C = Object.freeze({
+  accent:      "rgba(0,238,255,1)",
+  positive:    "rgba(34,255,170,1)",
+  negative:    "rgba(255,68,136,1)",
+  warning:     "rgba(255,187,0,1)",
+  textPrimary: "rgba(240,240,248,1)",
+  textFaint:   "rgba(80,80,100,1)",
+  bgBase:      "rgba(5,7,13,1)",
+  cardBg:      "rgba(14,17,28,1)",
+  glassBg:     "rgba(255,255,255,0.04)",
+  glassBorder: "rgba(255,255,255,0.06)",
+});
+
+const FILTERS = Object.freeze(["ALL","CRITICAL","HIGH","MEDIUM","LOW"] as const);
+type FilterType = typeof FILTERS[number];
+
+interface SecurityEvent {
+  id: string;
+  severity: "CRITICAL"|"HIGH"|"MEDIUM"|"LOW";
+  type: string;
+  message: string;
+  source: string;
+  ts: number;
+}
+
+interface SecurityMetric {
+  label: string;
+  value: string;
+  delta: string;
+  deltaPositive: boolean;
+}
+
+interface SecurityData {
+  events: SecurityEvent[];
+  metrics: SecurityMetric[];
+  lastUpdated: number;
+}
+
+// ─── MetricCard ───────────────────────────────────────────────────────────────
+
+interface MetricCardProps { metric: SecurityMetric; }
+const MetricCard = memo(({ metric }: MetricCardProps) => {
+  const s = useMemo(() => ({
+    card: {
+      background: C.cardBg,
+      border: `1px solid ${C.glassBorder}`,
+      borderRadius: 12,
+      padding: 16,
+      display: "flex" as const,
+      flexDirection: "column" as const,
+      gap: 8,
+    },
+    label: { fontFamily: FONT, fontSize: 9, fontWeight: 400, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: C.textFaint },
+    value: { fontFamily: FONT, fontSize: 14, fontWeight: 700, color: C.textPrimary },
+    delta: { fontFamily: FONT, fontSize: 10, fontWeight: 400, color: metric.deltaPositive ? C.positive : C.negative },
+  }), [metric.deltaPositive]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '4px' }}>
-      <div style={{ background: cfg.bg, border: '1px solid ' + cfg.border, borderRadius: '10px', padding: '6px 16px', fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', fontWeight: 700, color: cfg.color, letterSpacing: '0.1em' }}>
-        {level}
-      </div>
-      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
-        Risk {score}/100
-      </span>
+    <div style={s.card}>
+      <span style={s.label}>{metric.label}</span>
+      <span style={s.value}>{metric.value}</span>
+      <span style={s.delta}>{metric.delta}</span>
     </div>
   );
 });
-RiskBadge.displayName = 'RiskBadge';
+MetricCard.displayName = "MetricCard";
 
-// ─── Flag chip ────────────────────────────────────────────────────────────────
-const FlagChip = React.memo(({ flag }: { flag: string }) => (
-  <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: '5px', fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', fontWeight: 700, background: 'rgba(251,113,133,0.1)', border: '1px solid rgba(251,113,133,0.25)', color: 'rgba(251,113,133,0.9)', letterSpacing: '0.05em' }}>
-    ⚠ {flag}
-  </span>
-));
-FlagChip.displayName = 'FlagChip';
+// ─── EventRow ─────────────────────────────────────────────────────────────────
 
-// ─── Check row ────────────────────────────────────────────────────────────────
-const CheckRow = React.memo(({ label, value, danger }: { label: string; value: string | boolean; danger?: boolean }) => {
-  const isBad = danger && (value === true || value === 'Yes');
+interface EventRowProps { event: SecurityEvent; }
+const EventRow = memo(({ event }: EventRowProps) => {
+  const [hovered, setHovered] = useState(false);
+  const onEnter = useCallback(() => setHovered(true), []);
+  const onLeave = useCallback(() => setHovered(false), []);
+
+  const severityColor = useMemo(() => ({
+    CRITICAL: C.negative,
+    HIGH:     "rgba(255,140,0,1)",
+    MEDIUM:   C.warning,
+    LOW:      C.textFaint,
+  }[event.severity]), [event.severity]);
+
+  const rowStyle = useMemo(() => ({
+    display: "grid" as const,
+    gridTemplateColumns: "80px 72px 1fr 100px 80px",
+    gap: 12,
+    padding: "0 16px",
+    height: 52,
+    alignItems: "center" as const,
+    borderBottom: `1px solid ${C.glassBorder}`,
+    background: hovered ? "rgba(255,255,255,0.03)" : "transparent",
+    transition: "background 0.15s ease",
+    cursor: "default",
+  }), [hovered]);
+
+  const badgeStyle = useMemo(() => ({
+    fontFamily: FONT,
+    fontSize: 9,
+    fontWeight: 700,
+    letterSpacing: "0.1em",
+    color: severityColor,
+    background: `${severityColor}18`,
+    borderRadius: 4,
+    padding: "2px 6px",
+    textAlign: "center" as const,
+    display: "inline-block",
+  }), [severityColor]);
+
+  const ts = useMemo(() => new Date(event.ts).toLocaleTimeString("en-US", { hour12: false }), [event.ts]);
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-      <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>{label}</span>
-      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '12px', fontWeight: 600, color: isBad ? 'rgba(251,113,133,1)' : typeof value === 'boolean' ? (value ? 'rgba(52,211,153,1)' : 'rgba(255,255,255,0.4)') : 'rgba(255,255,255,0.8)' }}>
-        {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value}
-      </span>
+    <div style={rowStyle} onMouseEnter={onEnter} onMouseLeave={onLeave}>
+      <span style={{ fontFamily: FONT, fontSize: 9, color: C.textFaint }}>{ts}</span>
+      <span style={badgeStyle}>{event.severity}</span>
+      <span style={{ fontFamily: FONT, fontSize: 11, color: C.textPrimary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{event.message}</span>
+      <span style={{ fontFamily: FONT, fontSize: 10, color: C.textFaint }}>{event.type}</span>
+      <span style={{ fontFamily: FONT, fontSize: 10, color: C.accent, opacity: 0.7 }}>{event.source}</span>
     </div>
   );
 });
-CheckRow.displayName = 'CheckRow';
+EventRow.displayName = "EventRow";
 
-// ─── Result card ─────────────────────────────────────────────────────────────
-const ResultCard = React.memo(({ result }: { result: TokenSecurityResult }) => {
-  const cardStyle = useMemo(() => Object.freeze({
-    background: 'rgba(255,255,255,0.03)',
-    border: '1px solid rgba(255,255,255,0.07)',
-    borderRadius: '16px',
-    padding: '20px',
-    marginTop: '16px',
-  }), []);
+// ─── EmptyState ───────────────────────────────────────────────────────────────
 
-  return (
-    <motion.div style={cardStyle} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-      {/* Token header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap' as const, gap: '12px' }}>
-        <div>
-          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '18px', fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>
-            {result.tokenName}
-          </div>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
-            {result.tokenSymbol} · {result.contractAddress.slice(0, 10)}...
-          </div>
-        </div>
-        <RiskBadge level={result.riskLevel} score={result.riskScore} />
-      </div>
-
-      {/* Risk flags */}
-      {result.riskFlags.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px', marginBottom: '16px' }}>
-          {result.riskFlags.map(f => <FlagChip key={f} flag={f} />)}
-        </div>
-      )}
-      {result.riskFlags.length === 0 && (
-        <div style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontFamily: "'Space Grotesk', sans-serif", fontSize: '13px', color: 'rgba(52,211,153,0.9)' }}>
-          ✓ No risk flags detected
-        </div>
-      )}
-
-      {/* Two columns */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-        <div>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.08em', textTransform: 'uppercase' as const, marginBottom: '4px' }}>Contract</div>
-          <CheckRow label="Open Source"   value={result.isOpenSource} />
-          <CheckRow label="Proxy"         value={result.isProxy} danger />
-          <CheckRow label="Mintable"      value={result.isMintable} danger />
-          <CheckRow label="Self Destruct" value={result.selfDestruct} danger />
-          <CheckRow label="External Call" value={result.externalCall} danger />
-        </div>
-        <div>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.08em', textTransform: 'uppercase' as const, marginBottom: '4px' }}>Ownership & Tax</div>
-          <CheckRow label="Hidden Owner"  value={result.hiddenOwner} danger />
-          <CheckRow label="Owner Mint"    value={result.ownerChangeBalance} danger />
-          <CheckRow label="Blacklist"     value={result.isBlacklisted} danger />
-          <CheckRow label="Buy Tax"       value={(result.buyTax * 100).toFixed(1) + '%'} />
-          <CheckRow label="Sell Tax"      value={(result.sellTax * 100).toFixed(1) + '%'} />
-        </div>
-      </div>
-
-      {/* Holders */}
-      <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-        {[
-          { label: 'Holders', val: result.holderCount > 0 ? result.holderCount.toLocaleString() : '—' },
-          { label: 'LP Holders', val: result.lpHolderCount > 0 ? result.lpHolderCount.toLocaleString() : '—' },
-          { label: 'Creator %', val: result.creatorPercent > 0 ? (result.creatorPercent * 100).toFixed(1) + '%' : '—' },
-        ].map(s => (
-          <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '10px 12px' }}>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>{s.label}</div>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', fontWeight: 700, color: 'rgba(255,255,255,0.8)', marginTop: '3px' }}>{s.val}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* DEX info */}
-      {result.dexInfo.length > 0 && (
-        <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' as const }}>
-          {result.dexInfo.slice(0, 4).map((dex, i) => (
-            <div key={i} style={{ background: 'rgba(0,200,255,0.06)', border: '1px solid rgba(0,200,255,0.14)', borderRadius: '6px', padding: '4px 10px', fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(0,200,255,0.7)' }}>
-              {dex.name}
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div style={{ marginTop: '12px', fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(255,255,255,0.2)' }}>
-        Powered by GoPlus Security API
-      </div>
-    </motion.div>
-  );
-});
-ResultCard.displayName = 'ResultCard';
-
-// ─── Featured token button ────────────────────────────────────────────────────
-const FeaturedBtn = React.memo(({ label, onClick }: { label: string; onClick: () => void }) => (
-  <button onClick={onClick} style={{ padding: '5px 12px', borderRadius: '7px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.6)', fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', cursor: 'pointer', transition: 'all 0.15s' }}>
-    {label}
-  </button>
+interface EmptyStateProps { filter: FilterType; }
+const EmptyState = memo(({ filter }: EmptyStateProps) => (
+  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 24px", gap: 12 }}>
+    <span style={{ fontSize: 32, opacity: 0.25 }}>🛡</span>
+    <span style={{ fontFamily: FONT, fontSize: 12, color: C.textFaint, textAlign: "center" }}>
+      {filter === "ALL" ? "No security events detected." : `No ${filter} severity events.`}
+    </span>
+    <span style={{ fontFamily: FONT, fontSize: 10, color: C.textFaint, opacity: 0.6 }}>All systems operating within normal parameters.</span>
+  </div>
 ));
-FeaturedBtn.displayName = 'FeaturedBtn';
+EmptyState.displayName = "EmptyState";
 
-// ─── Main page ────────────────────────────────────────────────────────────────
-const Security: React.FC = () => {
-  const { result, loading, error, scan } = useTokenSecurity();
-  const { isMobile } = useBreakpoint();
-  const [address, setAddress] = useState('');
-  const [chainId, setChainId] = useState(1);
+// ─── Security (Main) ──────────────────────────────────────────────────────────
+
+const Security = memo(() => {
+  const [filter, setFilter] = useState<FilterType>("ALL");
+  const [data, setData] = useState<SecurityData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const mountedRef = useRef(true);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // TODO: replace with real endpoint, e.g. /api/security/events
+      const res = await fetch("https://api.example.com/security/events");
+      if (!mountedRef.current) return;
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json: SecurityData = await res.json();
+      if (!mountedRef.current) return;
+      setData(json);
+    } catch (e) {
+      if (!mountedRef.current) return;
+      setError(`Failed to load security data: ${e instanceof Error ? e.message : "Unknown error"}`);
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     mountedRef.current = true;
-    // Auto-scan USDT on load as demo
-    scan('0xdac17f958d2ee523a2206206994597c13d831ec7', 1);
+    fetchData();
     return () => { mountedRef.current = false; };
-  }, [scan]);
+  }, [fetchData]);
 
-  const handleScan = useCallback(() => {
-    if (address.trim()) scan(address.trim(), chainId);
-  }, [address, chainId, scan]);
+  const filteredEvents = useMemo(() =>
+    filter === "ALL" ? (data?.events ?? []) : (data?.events ?? []).filter(e => e.severity === filter),
+    [data, filter]
+  );
 
-  const handleKey = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleScan();
-  }, [handleScan]);
+  const lastUpdatedStr = useMemo(() => {
+    if (!data?.lastUpdated) return "—";
+    const diff = Math.floor((Date.now() - data.lastUpdated) / 1000);
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    return `${Math.floor(diff / 3600)}h ago`;
+  }, [data]);
 
-  const handleFeatured = useCallback((addr: string, cid: number) => {
-    setAddress(addr);
-    scan(addr, cid);
-  }, [scan]);
-
-  const inputStyle = useMemo(() => Object.freeze({
-    flex: 1,
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: '10px',
-    padding: '10px 14px',
-    fontFamily: "'JetBrains Mono', monospace",
-    fontSize: '13px',
-    color: 'rgba(255,255,255,0.9)',
-    outline: 'none',
-    minWidth: 0,
-  }), []);
-
-  const selectStyle = useMemo(() => Object.freeze({
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: '10px',
-    padding: '10px 12px',
-    fontFamily: "'JetBrains Mono', monospace",
-    fontSize: '12px',
-    color: 'rgba(255,255,255,0.8)',
-    outline: 'none',
-    cursor: 'pointer',
-    flexShrink: 0,
-  }), []);
-
-  const scanBtnStyle = useMemo(() => Object.freeze({
-    padding: '10px 20px',
-    borderRadius: '10px',
-    border: 'none',
-    background: loading ? 'rgba(0,200,255,0.1)' : 'rgba(0,200,255,0.15)',
-    border: '1px solid rgba(0,200,255,0.3)',
-    color: 'rgba(0,200,255,1)',
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontSize: '13px',
+  const makeFilterStyle = useCallback((f: FilterType) => ({
+    fontFamily: FONT,
+    fontSize: 10,
     fontWeight: 600,
-    cursor: loading ? 'not-allowed' : 'pointer',
-    flexShrink: 0,
-    transition: 'all 0.15s',
-  }), [loading]);
+    letterSpacing: "0.08em",
+    color: f === filter ? C.bgBase : C.textFaint,
+    background: f === filter ? C.accent : "transparent",
+    border: `1px solid ${f === filter ? C.accent : C.glassBorder}`,
+    borderRadius: 6,
+    padding: "4px 10px",
+    cursor: "pointer",
+  }), [filter]);
+
+  const pageStyle = useMemo(() => ({
+    background: C.bgBase, minHeight: "100vh", color: C.textPrimary, fontFamily: FONT, padding: "20px 16px",
+  }), []);
+
+  const cardStyle = useMemo(() => ({
+    background: C.glassBg, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: "hidden" as const,
+  }), []);
 
   return (
-    <div style={{ padding: isMobile ? '16px 12px' : '24px', maxWidth: '800px' }}>
-      <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '20px', fontWeight: 700, color: 'rgba(255,255,255,0.9)', margin: '0 0 20px' }}>
-        🛡️ Security Scanner
-      </h1>
+    <div style={pageStyle}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+        <div>
+          <h1 style={{ fontFamily: FONT, fontSize: 20, fontWeight: 700, letterSpacing: "0.06em", color: C.textPrimary, margin: 0 }}>Security</h1>
+          <p style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: C.textFaint, margin: "6px 0 0" }}>Threat monitoring · Incident feed</p>
+        </div>
+        <button
+          style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.accent, background: "rgba(0,238,255,0.08)", border: "1px solid rgba(0,238,255,0.2)", borderRadius: 6, padding: "6px 12px", cursor: "pointer" }}
+          onClick={useCallback(() => fetchData(), [fetchData])}
+        >
+          ↻ Refresh
+        </button>
+      </div>
 
-      {/* Search box */}
-      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', padding: '16px' }}>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: isMobile ? 'wrap' as const : 'nowrap' as const }}>
-          <input
-            style={inputStyle}
-            placeholder="0x contract address..."
-            value={address}
-            onChange={e => setAddress(e.target.value)}
-            onKeyDown={handleKey}
-            spellCheck={false}
-            autoComplete="off"
-          />
-          <select
-            style={selectStyle}
-            value={chainId}
-            onChange={e => setChainId(Number(e.target.value))}
-          >
-            {CHAIN_OPTIONS.map(c => (
-              <option key={c.id} value={c.id}>{c.label}</option>
-            ))}
-          </select>
-          <button style={scanBtnStyle} onClick={handleScan} disabled={loading}>
-            {loading ? 'Scanning...' : 'Scan'}
-          </button>
+      {/* Metrics */}
+      {data && data.metrics.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
+          {data.metrics.map(m => <MetricCard key={m.label} metric={m} />)}
+        </div>
+      )}
+
+      {/* Event Log Card */}
+      <div style={cardStyle}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: `1px solid ${C.glassBorder}` }}>
+          <span style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: C.textFaint }}>Security Events</span>
+          <span style={{ fontFamily: FONT, fontSize: 9, color: C.textFaint }}>Updated {lastUpdatedStr}</span>
         </div>
 
-        {/* Featured tokens */}
-        <div style={{ marginTop: '12px', display: 'flex', gap: '6px', flexWrap: 'wrap' as const, alignItems: 'center' }}>
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.06em' }}>QUICK:</span>
-          {FEATURED_TOKENS.map(t => (
-            <FeaturedBtn key={t.address} label={t.label} onClick={() => handleFeatured(t.address, t.chainId)} />
+        {/* Filters */}
+        <div style={{ display: "flex", gap: 6, padding: "10px 16px", borderBottom: `1px solid ${C.glassBorder}` }}>
+          {FILTERS.map(f => (
+            <button key={f} style={makeFilterStyle(f)} onClick={useCallback(() => setFilter(f), [f])}>
+              {f}
+            </button>
           ))}
         </div>
-      </div>
 
-      {/* Source badge */}
-      <div style={{ display: 'flex', gap: '8px', marginTop: '12px', alignItems: 'center' }}>
-        <div style={{ background: 'rgba(0,200,255,0.05)', border: '1px solid rgba(0,200,255,0.12)', borderRadius: '8px', padding: '5px 12px', fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(0,200,255,0.6)' }}>
-          GoPlus Security API · free · no key
-        </div>
-      </div>
-
-      {/* Result / loading / error */}
-      <AnimatePresence mode="wait">
         {loading && (
-          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ marginTop: '20px', display: 'flex', flexDirection: 'column' as const, gap: '10px' }}>
-            {Array.from({ length: 4 }, (_, i) => (
-              <motion.div key={i} style={{ height: '18px', borderRadius: '4px', background: 'rgba(255,255,255,0.06)' }}
-                animate={{ opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.1 }} />
-            ))}
-          </motion.div>
+          <div style={{ padding: "40px 24px", textAlign: "center", fontFamily: FONT, fontSize: 11, color: C.textFaint }}>
+            Loading security events...
+          </div>
         )}
-        {error && !loading && (
-          <motion.div key="err" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            style={{ marginTop: '16px', padding: '16px', borderRadius: '12px', background: 'rgba(251,113,133,0.08)', border: '1px solid rgba(251,113,133,0.2)', fontFamily: "'Space Grotesk', sans-serif", fontSize: '14px', color: 'rgba(251,113,133,0.9)' }}>
-            ⚠ {error}
-          </motion.div>
+
+        {!loading && error && (
+          <div style={{ padding: "40px 24px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+            <span style={{ fontFamily: FONT, fontSize: 12, color: C.negative, textAlign: "center" }}>{error}</span>
+            <button
+              style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.textPrimary, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.glassBorder}`, borderRadius: 6, padding: "6px 14px", cursor: "pointer" }}
+              onClick={fetchData}
+            >
+              Retry
+            </button>
+          </div>
         )}
-        {result && !loading && (
-          <ResultCard key={result.contractAddress + result.chainId} result={result} />
+
+        {!loading && !error && (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "80px 72px 1fr 100px 80px", gap: 12, padding: "8px 16px", borderBottom: `1px solid rgba(255,255,255,0.1)` }}>
+              {["Time","Severity","Message","Type","Source"].map(h => (
+                <span key={h} style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: C.textFaint }}>{h}</span>
+              ))}
+            </div>
+            {filteredEvents.length === 0
+              ? <EmptyState filter={filter} />
+              : filteredEvents.map(e => <EventRow key={e.id} event={e} />)
+            }
+          </>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
-};
+});
+Security.displayName = "Security";
 
-Security.displayName = 'Security';
-export default memo(Security);
+export default Security;
