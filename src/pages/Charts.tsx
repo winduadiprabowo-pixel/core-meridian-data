@@ -79,7 +79,7 @@ const TVWidget = memo(({ tvSymbol, theme = 'dark' }: { tvSymbol: string; theme?:
       theme:              theme,
       style:              '1',
       locale:             'en',
-      toolbar_bg:         '#0A0C14',
+      toolbar_bg:         '0A0C14', // rgba(10,12,20,1) — hex required by TradingView API param
       enable_publishing:  'false',
       hide_top_toolbar:   'false',
       hide_legend:        'false',
