@@ -1,322 +1,251 @@
 /**
- * HeatmapTile.tsx — ZERØ MERIDIAN 2026 Phase 7
- * UPGRADE Phase 7: useWebGPU backend detection + canvas hints.
- * UPGRADE push21: fetch via /api/heatmap proxy (COEP-safe).
- * Squarified treemap, pure Canvas, zero recharts.
- * React.memo + displayName ✓  rgba() only ✓
+ * HeatmapTile.tsx — ZERØ MERIDIAN push98
+ * FIX: Direct CoinGecko (no /api/heatmap — CF Pages static = 404)
+ * UPGRADE: neon glow colors, better hover tooltip, smooth render
  */
 
 import { memo, useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import GlassCard from '../shared/GlassCard';
-import { useWebGPU } from '@/hooks/useWebGPU';
 
-interface HeatmapCoin {
-  id: string; symbol: string; name: string;
-  price: number; change: number; marketCap: number; image?: string;
+interface HM { id: string; symbol: string; name: string; price: number; change: number; marketCap: number; }
+interface TN extends HM { x: number; y: number; w: number; h: number; }
+type TF = '1h'|'24h'|'7d';
+
+function pctToColor(p: number): string {
+  if (p > 10)  return 'rgba(0,180,100,0.95)';
+  if (p > 5)   return 'rgba(0,200,120,0.85)';
+  if (p > 2)   return 'rgba(34,255,170,0.70)';
+  if (p > 0.5) return 'rgba(34,255,170,0.40)';
+  if (p > -0.5)return 'rgba(30,35,55,0.80)';
+  if (p > -2)  return 'rgba(255,68,136,0.38)';
+  if (p > -5)  return 'rgba(255,68,136,0.72)';
+  if (p > -10) return 'rgba(220,30,90,0.88)';
+  return 'rgba(200,10,70,0.96)';
 }
 
-interface TreeNode extends HeatmapCoin { x: number; y: number; w: number; h: number; }
-
-type TimeFrame = '1h' | '24h' | '7d';
-
-const COINS_LIMIT = 40;
-
-// ─── COEP-safe proxy URL ───────────────────────────────────────────────────────
-const PROXY_URL = '/api/heatmap?limit=' + COINS_LIMIT;
-
-function changeToColor(pct: number): string {
-  if (pct > 10)   return 'rgba(5,150,105,0.95)';
-  if (pct > 5)    return 'rgba(16,185,129,0.85)';
-  if (pct > 2)    return 'rgba(52,211,153,0.75)';
-  if (pct > 0.5)  return 'rgba(52,211,153,0.45)';
-  if (pct > -0.5) return 'rgba(30,41,59,0.8)';
-  if (pct > -2)   return 'rgba(251,113,133,0.45)';
-  if (pct > -5)   return 'rgba(251,113,133,0.75)';
-  if (pct > -10)  return 'rgba(244,63,94,0.85)';
-  return 'rgba(225,29,72,0.95)';
-}
-
-function changeToBorder(pct: number): string {
-  if (pct > 2)  return 'rgba(52,211,153,0.5)';
-  if (pct > 0)  return 'rgba(52,211,153,0.2)';
-  if (pct > -2) return 'rgba(251,113,133,0.2)';
-  return 'rgba(251,113,133,0.5)';
-}
-
-function squarify(items: HeatmapCoin[], x: number, y: number, w: number, h: number): TreeNode[] {
-  if (items.length === 0) return [];
-  const results: TreeNode[] = [];
-  function layout(items: HeatmapCoin[], x: number, y: number, w: number, h: number) {
-    if (items.length === 0) return;
-    if (items.length === 1) { results.push({ ...items[0], x, y, w, h }); return; }
-    const totalVal = items.reduce((s, c) => s + c.marketCap, 0);
-    let accum = 0, splitIdx = 0;
-    for (let i = 0; i < items.length; i++) {
-      accum += items[i].marketCap;
-      if (accum / totalVal >= 0.5) { splitIdx = i + 1; break; }
+function squarify(items: HM[], x: number, y: number, w: number, h: number): TN[] {
+  const res: TN[] = [];
+  function lay(it: HM[], x: number, y: number, w: number, h: number) {
+    if (!it.length) return;
+    if (it.length === 1) { res.push({...it[0], x, y, w, h}); return; }
+    const tot = it.reduce((s,c) => s + c.marketCap, 0);
+    let acc = 0, si = 0;
+    for (let i = 0; i < it.length; i++) {
+      acc += it[i].marketCap;
+      if (acc/tot >= 0.5) { si = i+1; break; }
     }
-    splitIdx = Math.max(1, Math.min(splitIdx, items.length - 1));
-    const group1 = items.slice(0, splitIdx), group2 = items.slice(splitIdx);
-    const ratio1 = group1.reduce((s, c) => s + c.marketCap, 0) / totalVal;
-    if (w >= h) { layout(group1, x, y, w * ratio1, h); layout(group2, x + w * ratio1, y, w * (1 - ratio1), h); }
-    else        { layout(group1, x, y, w, h * ratio1); layout(group2, x, y + h * ratio1, w, h * (1 - ratio1)); }
+    si = Math.max(1, Math.min(si, it.length-1));
+    const g1 = it.slice(0, si), g2 = it.slice(si);
+    const r1 = g1.reduce((s,c) => s+c.marketCap, 0) / tot;
+    if (w >= h) { lay(g1,x,y,w*r1,h); lay(g2,x+w*r1,y,w*(1-r1),h); }
+    else        { lay(g1,x,y,w,h*r1); lay(g2,x,y+h*r1,w,h*(1-r1)); }
   }
-  layout(items, x, y, w, h);
-  return results;
+  lay(items, x, y, w, h);
+  return res;
 }
 
-function drawHeatmap(
-  ctx: CanvasRenderingContext2D, nodes: TreeNode[],
-  w: number, h: number, hoverIdx: number | null, dpr: number,
-): void {
-  ctx.clearRect(0, 0, w, h);
+function draw(ctx: CanvasRenderingContext2D, nodes: TN[], hoverIdx: number|null, dpr: number) {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   for (let i = 0; i < nodes.length; i++) {
-    const n = nodes[i]; const gap = 2;
-    const nx = n.x + gap, ny = n.y + gap, nw = n.w - gap * 2, nh = n.h - gap * 2;
+    const n = nodes[i], g = 2;
+    const nx=n.x+g, ny=n.y+g, nw=n.w-g*2, nh=n.h-g*2;
     if (nw < 4 || nh < 4) continue;
-    const color = changeToColor(n.change), border = changeToBorder(n.change);
-    const isHover = hoverIdx === i;
-    ctx.fillStyle = isHover ? color.replace(/[\d.]+\)$/, m => String(Math.min(1, parseFloat(m) + 0.2)) + ')') : color;
-    ctx.beginPath(); ctx.roundRect(nx, ny, nw, nh, 4); ctx.fill();
-    ctx.strokeStyle = isHover ? 'rgba(255,255,255,0.4)' : border;
-    ctx.lineWidth = isHover ? 1.5 / dpr : 1 / dpr; ctx.stroke();
-    if (nw > 36 && nh > 24) {
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      const cx = nx + nw / 2, cy = ny + nh / 2;
-      const fontSize = Math.min(14, Math.max(8, nw / 6));
-      ctx.fillStyle = 'rgba(255,255,255,0.92)';
-      ctx.font = 'bold ' + fontSize + 'px JetBrains Mono, monospace';
-      ctx.fillText(n.symbol.toUpperCase(), cx, nh > 40 ? cy - fontSize * 0.6 : cy);
-      if (nh > 40) {
-        const chg = (n.change >= 0 ? '+' : '') + n.change.toFixed(2) + '%';
-        ctx.fillStyle = n.change >= 0 ? 'rgba(167,243,208,0.9)' : 'rgba(254,202,202,0.9)';
-        ctx.font = (fontSize * 0.8) + 'px JetBrains Mono, monospace';
-        ctx.fillText(chg, cx, cy + fontSize * 0.7);
+    const col = pctToColor(n.change);
+    const hover = hoverIdx === i;
+    ctx.fillStyle = hover ? col.replace(/[\d.]+\)$/, v => String(Math.min(1, parseFloat(v)+0.22))+')') : col;
+    ctx.beginPath(); ctx.roundRect(nx,ny,nw,nh,5); ctx.fill();
+    ctx.strokeStyle = hover ? 'rgba(255,255,255,0.5)' : (n.change>=0?'rgba(34,255,170,0.2)':'rgba(255,68,136,0.2)');
+    ctx.lineWidth = hover ? 1.5/dpr : 0.8/dpr; ctx.stroke();
+    if (nw > 32 && nh > 20) {
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      const cx2=nx+nw/2, cy2=ny+nh/2;
+      const fs = Math.min(13, Math.max(7, nw/6));
+      ctx.fillStyle = 'rgba(255,255,255,0.93)';
+      ctx.font = 'bold '+fs+'px "JetBrains Mono",monospace';
+      ctx.fillText(n.symbol.toUpperCase(), cx2, nh > 38 ? cy2 - fs*0.6 : cy2);
+      if (nh > 38) {
+        const chg = (n.change>=0?'+':'')+n.change.toFixed(2)+'%';
+        ctx.fillStyle = n.change>=0?'rgba(167,243,208,0.9)':'rgba(254,180,194,0.9)';
+        ctx.font = (fs*0.8)+'px "JetBrains Mono",monospace';
+        ctx.fillText(chg, cx2, cy2+fs*0.7);
       }
     }
   }
 }
 
-function useHeatmapData(timeframe: TimeFrame) {
-  const [coins, setCoins]   = useState<HeatmapCoin[]>([]);
-  const [loading, setLoading] = useState(true);
-  const mountedRef = useRef(true);
+// Direct CoinGecko — no /api proxy
+const CG_URL = (tf: TF) => 'https://api.coingecko.com/api/v3/coins/markets' +
+  '?vs_currency=usd&order=market_cap_desc&per_page=40&page=1' +
+  (tf==='1h' ? '&price_change_percentage=1h' : tf==='7d' ? '&price_change_percentage=7d' : '');
 
-  const fetchData = useCallback(async (signal: AbortSignal) => {
+function useHeatmapData(tf: TF) {
+  const [coins, setCoins] = useState<HM[]>([]);
+  const [loading, setLoading] = useState(true);
+  const m = useRef(true);
+
+  const fetch_ = useCallback(async (sig: AbortSignal) => {
     try {
-      // ✅ push21: via /api/heatmap proxy — COEP-safe
-      const res = await fetch(PROXY_URL, { signal });
-      if (!res.ok || !mountedRef.current) return;
-      const data = await res.json() as Record<string, unknown>[];
-      if (!mountedRef.current) return;
-      const mapped: HeatmapCoin[] = data.map(c => ({
-        id:        String(c.id ?? ''),
-        symbol:    String(c.symbol ?? ''),
-        name:      String(c.name ?? ''),
-        price:     Number(c.current_price ?? 0),
-        change:    timeframe === '1h' ? Number(c.price_change_percentage_1h_in_currency ?? 0) :
-                   timeframe === '7d' ? Number(c.price_change_percentage_7d_in_currency ?? 0) :
-                   Number(c.price_change_percentage_24h ?? 0),
-        marketCap: Number(c.market_cap ?? 1),
-        image:     String(c.image ?? ''),
-      }));
-      setCoins(mapped);
+      const res = await fetch(CG_URL(tf), { signal: sig });
+      if (!res.ok || !m.current) return;
+      const data = await res.json() as Record<string,unknown>[];
+      if (!m.current) return;
+      setCoins(data.map(c => ({
+        id: String(c.id??''), symbol: String(c.symbol??''), name: String(c.name??''),
+        price: Number(c.current_price??0),
+        change: tf==='1h' ? Number(c.price_change_percentage_1h_in_currency??0)
+              : tf==='7d' ? Number(c.price_change_percentage_7d_in_currency??0)
+              : Number(c.price_change_percentage_24h??0),
+        marketCap: Number(c.market_cap??1),
+      })));
       setLoading(false);
-    } catch { /* AbortError expected on cleanup */ }
-  }, [timeframe]);
+    } catch {}
+  }, [tf]);
 
   useEffect(() => {
-    mountedRef.current = true;
+    m.current = true;
     const ctrl = new AbortController();
     setLoading(true);
-    fetchData(ctrl.signal);
-    const t = setInterval(() => fetchData(ctrl.signal), 60_000);
-    return () => { mountedRef.current = false; ctrl.abort(); clearInterval(t); };
-  }, [fetchData]);
+    fetch_(ctrl.signal);
+    const t = setInterval(() => fetch_(ctrl.signal), 60_000);
+    return () => { m.current = false; ctrl.abort(); clearInterval(t); };
+  }, [fetch_]);
 
   return { coins, loading };
 }
 
 const HeatmapTile = memo(() => {
-  const [timeframe, setTimeframe]   = useState<TimeFrame>('24h');
-  const [hoverIdx, setHoverIdx]     = useState<number | null>(null);
-  const [hoverCoin, setHoverCoin]   = useState<TreeNode | null>(null);
-  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
-
-  const canvasRef    = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const animRef      = useRef<number>(0);
-  const nodesRef     = useRef<TreeNode[]>([]);
-
-  const { coins, loading } = useHeatmapData(timeframe);
-  const { backend, isWebGL2 } = useWebGPU();
+  const [tf, setTf] = useState<TF>('24h');
+  const [hoverIdx, setHoverIdx] = useState<number|null>(null);
+  const [hoverCoin, setHoverCoin] = useState<TN|null>(null);
+  const [tipPos, setTipPos] = useState({ x:0, y:0 });
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const contRef   = useRef<HTMLDivElement>(null);
+  const animRef   = useRef(0);
+  const nodesRef  = useRef<TN[]>([]);
+  const { coins, loading } = useHeatmapData(tf);
 
   const nodes = useMemo(() => {
-    if (coins.length === 0 || !containerRef.current) return [];
-    const w = containerRef.current.clientWidth;
-    const h = containerRef.current.clientHeight || 220;
-    const result = squarify(coins, 0, 0, w, h);
-    nodesRef.current = result;
-    return result;
+    if (!coins.length || !contRef.current) return [];
+    const w = contRef.current.clientWidth;
+    const h = contRef.current.clientHeight || 220;
+    const r = squarify(coins, 0, 0, w, h);
+    nodesRef.current = r;
+    return r;
   }, [coins]);
 
-  const draw = useCallback(() => {
-    const canvas = canvasRef.current, container = containerRef.current;
-    if (!canvas || !container) return;
+  const render = useCallback(() => {
+    const canvas = canvasRef.current, cont = contRef.current;
+    if (!canvas || !cont) return;
     const dpr = window.devicePixelRatio || 1;
-    const w = container.clientWidth;
-    const h = container.clientHeight || 220;
-    if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
-      canvas.width = w * dpr; canvas.height = h * dpr;
-      canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+    const w = cont.clientWidth, h = cont.clientHeight || 220;
+    if (canvas.width !== w*dpr || canvas.height !== h*dpr) {
+      canvas.width = w*dpr; canvas.height = h*dpr;
+      canvas.style.width = w+'px'; canvas.style.height = h+'px';
     }
-    const ctx = canvas.getContext('2d', { willReadFrequently: false });
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    if (isWebGL2) ctx.imageSmoothingQuality = 'high';
     ctx.save(); ctx.scale(dpr, dpr);
-    drawHeatmap(ctx, nodes, w, h, hoverIdx, dpr);
+    draw(ctx, nodes, hoverIdx, dpr);
     ctx.restore();
-  }, [nodes, hoverIdx, isWebGL2]);
+  }, [nodes, hoverIdx]);
 
   useEffect(() => {
     cancelAnimationFrame(animRef.current);
-    animRef.current = requestAnimationFrame(draw);
-  }, [draw]);
+    animRef.current = requestAnimationFrame(render);
+  }, [render]);
 
   useEffect(() => {
     const ro = new ResizeObserver(() => {
       cancelAnimationFrame(animRef.current);
-      animRef.current = requestAnimationFrame(draw);
+      animRef.current = requestAnimationFrame(render);
     });
-    if (containerRef.current) ro.observe(containerRef.current);
+    if (contRef.current) ro.observe(contRef.current);
     return () => ro.disconnect();
-  }, [draw]);
+  }, [render]);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    const n = nodesRef.current;
+  const onMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const rect = canvasRef.current!.getBoundingClientRect();
+    const mx = e.clientX-rect.left, my = e.clientY-rect.top;
+    const ns = nodesRef.current;
     let found = -1;
-    for (let i = 0; i < n.length; i++) {
-      const nd = n[i];
-      if (mx >= nd.x && mx <= nd.x + nd.w && my >= nd.y && my <= nd.y + nd.h) {
-        found = i; setHoverCoin(nd); setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top }); break;
-      }
+    for (let i=0;i<ns.length;i++) {
+      const n=ns[i];
+      if (mx>=n.x&&mx<=n.x+n.w&&my>=n.y&&my<=n.y+n.h) { found=i; setHoverCoin(n); setTipPos({x:mx,y:my}); break; }
     }
-    setHoverIdx(found >= 0 ? found : null);
-    if (found < 0) setHoverCoin(null);
+    setHoverIdx(found>=0?found:null);
+    if (found<0) setHoverCoin(null);
   }, []);
 
-  const handleMouseLeave = useCallback(() => { setHoverIdx(null); setHoverCoin(null); }, []);
+  const onLeave = useCallback(() => { setHoverIdx(null); setHoverCoin(null); }, []);
 
-  const handleTimeframe = useCallback((t: TimeFrame) => setTimeframe(t), []);
-
-  const btnBase = useMemo<React.CSSProperties>(() => ({
-    fontFamily: "'JetBrains Mono', monospace", fontSize: 9, padding: '2px 8px', borderRadius: 3,
-    border: '1px solid rgba(96,165,250,0.12)', background: 'transparent',
-    color: 'rgba(148,163,184,0.5)', cursor: 'pointer',
+  const btnStyle = useCallback((active: boolean) => ({
+    fontFamily:"'JetBrains Mono',monospace", fontSize:9, padding:'2px 8px', borderRadius:3,
+    cursor:'pointer' as const,
+    background: active ? 'rgba(0,238,255,0.10)' : 'transparent',
+    border: '1px solid ' + (active ? 'rgba(0,238,255,0.3)' : 'rgba(255,255,255,0.06)'),
+    color: active ? 'rgba(0,238,255,1)' : 'rgba(138,138,158,0.5)',
   }), []);
-
-  const btnActive = useMemo<React.CSSProperties>(() => ({
-    fontFamily: "'JetBrains Mono', monospace", fontSize: 9, padding: '2px 8px', borderRadius: 3,
-    border: '1px solid rgba(96,165,250,0.35)', background: 'rgba(96,165,250,0.1)',
-    color: 'rgba(226,232,240,0.9)', cursor: 'pointer',
-  }), []);
-
-  const backendLabel = useMemo(() => {
-    if (backend === 'webgpu') return '⚡ GPU';
-    if (backend === 'webgl2') return '▣ GL2';
-    return '□ 2D';
-  }, [backend]);
-
-  const backendColor = useMemo(() => {
-    if (backend === 'webgpu') return 'rgba(167,139,250,0.6)';
-    if (backend === 'webgl2') return 'rgba(96,165,250,0.5)';
-    return 'rgba(148,163,184,0.3)';
-  }, [backend]);
-
-  const LEGEND_VALS = Object.freeze([-10, -5, -2, 0, 2, 5, 10]);
-  const LEGEND_LABELS = Object.freeze(['-10%', '-5%', '-2%', '0%', '+2%', '+5%', '+10%']);
 
   return (
-    <GlassCard style={{ height: 300, display: 'flex', flexDirection: 'column', padding: '10px 10px 8px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'rgba(226,232,240,0.7)', fontWeight: 600, letterSpacing: '0.05em' }}>
-            MARKET HEATMAP
-          </span>
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, color: backendColor }}>
-            {backendLabel}
-          </span>
-        </div>
-        <div style={{ display: 'flex', gap: 3 }}>
-          {(['1h', '24h', '7d'] as TimeFrame[]).map(t => (
-            <button
-              key={t}
-              type="button"
-              style={timeframe === t ? btnActive : btnBase}
-              onClick={() => handleTimeframe(t)}
-              aria-label={'Timeframe ' + t}
-              aria-pressed={timeframe === t}
-            >
+    <GlassCard style={{ height:300, display:'flex', flexDirection:'column' as const, padding:'10px 10px 8px' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
+        <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:11, color:'rgba(226,232,240,0.75)', fontWeight:600, letterSpacing:'0.05em' }}>
+          MARKET HEATMAP
+        </span>
+        <div style={{ display:'flex', gap:3 }}>
+          {(['1h','24h','7d'] as TF[]).map(t => (
+            <button key={t} type="button" style={btnStyle(tf===t)} onClick={() => setTf(t)} aria-pressed={tf===t}>
               {t}
             </button>
           ))}
         </div>
       </div>
-
-      <div ref={containerRef} style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+      <div ref={contRef} style={{ flex:1, position:'relative' as const, minHeight:0 }}>
         {loading && (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: 'rgba(96,165,250,0.4)' }}>
-            <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }}>
-              LOADING HEATMAP...
+          <div style={{ position:'absolute' as const, inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <motion.span animate={{ opacity:[0.3,1,0.3] }} transition={{ duration:1.4, repeat:Infinity }}
+              style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:10, color:'rgba(0,238,255,0.4)', letterSpacing:'0.1em' }}>
+              LOADING HEATMAP…
             </motion.span>
           </div>
         )}
-        <canvas
-          ref={canvasRef}
-          style={{ width: '100%', height: '100%', display: 'block', willChange: 'transform' }}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          aria-label="Market heatmap treemap"
-          role="img"
-        />
+        <canvas ref={canvasRef} style={{ width:'100%', height:'100%', display:'block', willChange:'transform' }}
+          onMouseMove={onMove} onMouseLeave={onLeave} aria-label="Market heatmap" role="img" />
         {hoverCoin && (
           <div style={{
-            position: 'absolute',
-            left: Math.min(tooltipPos.x + 8, (containerRef.current?.clientWidth ?? 300) - 140),
-            top:  Math.max(tooltipPos.y - 60, 0),
-            background: 'rgba(5,5,14,0.95)', border: '1px solid rgba(96,165,250,0.2)',
-            borderRadius: 6, padding: '6px 10px', fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 10, pointerEvents: 'none', zIndex: 10, minWidth: 130,
+            position:'absolute' as const,
+            left: Math.min(tipPos.x+8, (contRef.current?.clientWidth??300)-150),
+            top:  Math.max(tipPos.y-70, 0),
+            background:'rgba(5,5,16,0.97)', border:'1px solid rgba(0,238,255,0.2)',
+            borderRadius:8, padding:'8px 12px', fontFamily:"'JetBrains Mono',monospace",
+            fontSize:10, pointerEvents:'none' as const, zIndex:10, minWidth:140,
+            boxShadow:'0 4px 20px rgba(0,0,0,0.6)',
           }}>
-            <div style={{ color: 'rgba(226,232,240,0.9)', fontWeight: 700, marginBottom: 2 }}>{hoverCoin.name}</div>
-            <div style={{ color: 'rgba(148,163,184,0.6)', marginBottom: 2 }}>
-              {'$' + (hoverCoin.price >= 1000 ? hoverCoin.price.toLocaleString('en-US', { maximumFractionDigits: 0 }) : hoverCoin.price >= 1 ? hoverCoin.price.toFixed(4) : hoverCoin.price.toFixed(8))}
+            <div style={{ color:'rgba(230,230,242,0.95)', fontWeight:700, marginBottom:3 }}>{hoverCoin.name}</div>
+            <div style={{ color:'rgba(138,138,158,0.7)', marginBottom:3 }}>
+              {'$' + (hoverCoin.price>=1000 ? hoverCoin.price.toLocaleString('en-US',{maximumFractionDigits:0})
+                    : hoverCoin.price>=1 ? hoverCoin.price.toFixed(4) : hoverCoin.price.toFixed(8))}
             </div>
-            <div style={{ color: hoverCoin.change >= 0 ? 'rgba(52,211,153,0.9)' : 'rgba(251,113,133,0.9)' }}>
-              {(hoverCoin.change >= 0 ? '+' : '') + hoverCoin.change.toFixed(2) + '% (' + timeframe + ')'}
+            <div style={{ color: hoverCoin.change>=0?'rgba(34,255,170,0.9)':'rgba(255,68,136,0.9)', fontWeight:600 }}>
+              {(hoverCoin.change>=0?'+':'')+hoverCoin.change.toFixed(2)+'% ('+tf+')'}
             </div>
           </div>
         )}
       </div>
-
-      <div style={{ display: 'flex', gap: 6, marginTop: 6, alignItems: 'center', fontFamily: "'JetBrains Mono', monospace", fontSize: 8, color: 'rgba(148,163,184,0.3)' }}>
+      <div style={{ display:'flex', gap:8, marginTop:5, alignItems:'center',
+        fontFamily:"'JetBrains Mono',monospace", fontSize:7, color:'rgba(138,138,158,0.25)' }}>
         <span>SIZE = MARKET CAP</span>
-        <span style={{ flex: 1 }} />
-        {LEGEND_LABELS.map((label, i) => (
-          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <div style={{ width: 8, height: 8, borderRadius: 2, background: changeToColor(LEGEND_VALS[i]) }} />
-            <span>{label}</span>
+        <span style={{ flex:1 }} />
+        {[[-10,'rgba(200,10,70,0.8)'],[-2,'rgba(255,68,136,0.5)'],['0','rgba(50,50,70,0.7)'],['+2','rgba(34,255,170,0.5)'],['+10','rgba(0,200,120,0.85)']].map(([l,c]) => (
+          <div key={String(l)} style={{ display:'flex', alignItems:'center', gap:2 }}>
+            <div style={{ width:7, height:7, borderRadius:2, background:String(c) }} />
+            <span>{l}%</span>
           </div>
         ))}
       </div>
     </GlassCard>
   );
 });
-
 HeatmapTile.displayName = 'HeatmapTile';
 export default HeatmapTile;
