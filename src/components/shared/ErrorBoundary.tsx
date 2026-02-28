@@ -1,5 +1,5 @@
 /**
- * ErrorBoundary.tsx — ZERØ MERIDIAN 2026
+ * ErrorBoundary.tsx — ZERØ MERIDIAN 2026 push111
  * Isolates tile crashes — dashboard never goes fully blank.
  * Class component required by React error boundary spec.
  */
@@ -50,7 +50,7 @@ export class ErrorBoundary extends Component<Props, State> {
       }}>
         <span style={{ fontSize: '18px' }}>⚠</span>
         <span style={{
-          fontFamily:    "'Space Mono', monospace",
+          fontFamily:    "'JetBrains Mono', monospace",
           fontSize:      '10px',
           color:         'rgba(248,113,113,0.7)',
           letterSpacing: '0.1em',
@@ -59,7 +59,7 @@ export class ErrorBoundary extends Component<Props, State> {
           {this.props.tileLabel ?? 'Tile'} unavailable
         </span>
         <span style={{
-          fontFamily:  "'Space Mono', monospace",
+          fontFamily:  "'JetBrains Mono', monospace",
           fontSize:    '10px',
           color:       'rgba(100,100,120,1)',
           textAlign:   'center',
@@ -71,7 +71,7 @@ export class ErrorBoundary extends Component<Props, State> {
           onClick={() => this.setState({ hasError: false, error: null })}
           style={{
             marginTop:    '8px',
-            fontFamily:   "'Space Mono', monospace",
+            fontFamily:   "'JetBrains Mono', monospace",
             fontSize:     '9px',
             letterSpacing:'0.1em',
             padding:      '4px 12px',
