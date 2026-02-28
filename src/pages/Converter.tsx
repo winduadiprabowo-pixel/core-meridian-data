@@ -25,6 +25,8 @@ import {
 } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 
+const FONT_MONO = "'JetBrains Mono', monospace";
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const FIAT_CURRENCIES = Object.freeze([
@@ -59,9 +61,9 @@ type Tab = typeof TABS[number];
 const INPUT_BASE = Object.freeze({
   width:        '100%',
   padding:      '8px 12px',
-  borderRadius: '10px',
+  borderRadius: '8px',
   fontSize:     '13px',
-  fontFamily:   "'Space Mono', monospace",
+  fontFamily: FONT_MONO,
   outline:      'none',
   background:   'var(--zm-glass-bg)',
   border:       '1px solid var(--zm-glass-border)',
@@ -70,7 +72,7 @@ const INPUT_BASE = Object.freeze({
 });
 
 const LABEL_STYLE = Object.freeze({
-  fontFamily:   "'Space Mono', monospace",
+  fontFamily: FONT_MONO,
   fontSize:     '10px',
   marginBottom: '5px',
   color:        'var(--zm-text-faint)',
@@ -202,10 +204,10 @@ const CoinSelector = memo(({ assets, value, onChange, label }: CoinSelectorProps
           <img src={selected.image} alt="" style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0 }} />
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '12px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {selected?.name ?? '—'}
           </div>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)' }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'var(--zm-text-faint)' }}>
             {selected ? formatPrice(selected.price) : ''}
           </div>
         </div>
@@ -220,7 +222,7 @@ const CoinSelector = memo(({ assets, value, onChange, label }: CoinSelectorProps
           top:          '100%',
           marginTop:    '4px',
           zIndex:       50,
-          borderRadius: '10px',
+          borderRadius: '8px',
           overflow:     'hidden',
           background:   'var(--zm-bg-base)',
           border:       '1px solid rgba(96,165,250,0.15)',
@@ -238,7 +240,7 @@ const CoinSelector = memo(({ assets, value, onChange, label }: CoinSelectorProps
                 padding:      '6px 8px',
                 borderRadius: '8px',
                 fontSize:     '12px',
-                fontFamily:   "'Space Mono', monospace",
+                fontFamily: FONT_MONO,
                 outline:      'none',
                 background:   'rgba(255,255,255,0.06)',
                 border:       '1px solid rgba(96,165,250,0.15)',
@@ -272,15 +274,15 @@ const CoinSelector = memo(({ assets, value, onChange, label }: CoinSelectorProps
               >
                 {a.image && <img src={a.image} alt="" style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0 }} />}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '12px', fontWeight: 600, color: 'rgba(226,232,240,0.9)' }}>
+                  <div style={{ fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 600, color: 'rgba(226,232,240,0.9)' }}>
                     {a.symbol.toUpperCase()}
                   </div>
-                  <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'var(--zm-text-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {a.name}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'rgba(148,163,184,0.6)' }}>
+                  <div style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'rgba(148,163,184,0.6)' }}>
                     {formatPrice(a.price)}
                   </div>
                 </div>
@@ -356,7 +358,7 @@ const ConverterTab = memo(({ assets, state, dispatch }: {
       <div style={CARD_STYLE}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
           <ArrowLeftRight size={14} style={{ color: 'rgba(96,165,250,0.8)' }} />
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '12px', fontWeight: 600, color: 'var(--zm-text-primary)' }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 600, color: 'var(--zm-text-primary)' }}>
             Coin ↔ Coin Converter
           </span>
         </div>
@@ -386,7 +388,7 @@ const ConverterTab = memo(({ assets, state, dispatch }: {
               justifyContent:'center',
               width:        '36px',
               height:       '36px',
-              borderRadius: '10px',
+              borderRadius: '8px',
               cursor:       'pointer',
               background:   'rgba(96,165,250,0.10)',
               border:       '1px solid rgba(96,165,250,0.22)',
@@ -401,11 +403,11 @@ const ConverterTab = memo(({ assets, state, dispatch }: {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <CoinSelector assets={assets} value={state.toCoin} onChange={v => set('toCoin', v)} label="Ke" />
-            <div style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.15)' }}>
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '14px', fontWeight: 700, color: 'rgba(52,211,153,1)' }}>
+            <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.15)' }}>
+              <div style={{ fontFamily: FONT_MONO, fontSize: '14px', fontWeight: 700, color: 'rgba(52,211,153,1)' }}>
                 {resultCoin > 0 ? resultCoin.toFixed(8).replace(/.?0+$/, '') : '—'}
               </div>
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'rgba(148,163,184,0.4)', marginTop: '2px' }}>
+              <div style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'rgba(148,163,184,0.4)', marginTop: '2px' }}>
                 {toAsset ? toAsset.symbol.toUpperCase() : '—'}
               </div>
             </div>
@@ -415,18 +417,18 @@ const ConverterTab = memo(({ assets, state, dispatch }: {
         {fromAsset && toAsset && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', paddingTop: '12px', marginTop: '12px', borderTop: '1px solid var(--zm-glass-border)' }}>
             <div>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)' }}>
+              <span style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'var(--zm-text-faint)' }}>
                 {'1 ' + fromAsset.symbol.toUpperCase() + ' = '}
               </span>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', fontWeight: 600, color: 'var(--zm-text-primary)' }}>
+              <span style={{ fontFamily: FONT_MONO, fontSize: '11px', fontWeight: 600, color: 'var(--zm-text-primary)' }}>
                 {(fromAsset.price / toAsset.price).toFixed(6) + ' ' + toAsset.symbol.toUpperCase()}
               </span>
             </div>
             <div>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)' }}>
+              <span style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'var(--zm-text-faint)' }}>
                 {'1 ' + toAsset.symbol.toUpperCase() + ' = '}
               </span>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', fontWeight: 600, color: 'var(--zm-text-primary)' }}>
+              <span style={{ fontFamily: FONT_MONO, fontSize: '11px', fontWeight: 600, color: 'var(--zm-text-primary)' }}>
                 {(toAsset.price / fromAsset.price).toFixed(6) + ' ' + fromAsset.symbol.toUpperCase()}
               </span>
             </div>
@@ -438,7 +440,7 @@ const ConverterTab = memo(({ assets, state, dispatch }: {
       <div style={CARD_STYLE}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
           <DollarSign size={14} style={{ color: 'rgba(52,211,153,0.8)' }} />
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '12px', fontWeight: 600, color: 'var(--zm-text-primary)' }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 600, color: 'var(--zm-text-primary)' }}>
             Coin → Fiat
           </span>
         </div>
@@ -456,7 +458,7 @@ const ConverterTab = memo(({ assets, state, dispatch }: {
                     padding:      '5px 10px',
                     borderRadius: '8px',
                     fontSize:     '11px',
-                    fontFamily:   "'Space Mono', monospace",
+                    fontFamily: FONT_MONO,
                     cursor:       'pointer',
                     background:   active ? 'rgba(52,211,153,0.12)' : 'transparent',
                     color:        active ? 'rgba(52,211,153,1)' : 'var(--zm-text-secondary)',
@@ -474,22 +476,22 @@ const ConverterTab = memo(({ assets, state, dispatch }: {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '10px', padding: '12px 16px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.12)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '12px', padding: '12px 16px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.12)' }}>
           <div>
-            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'rgba(148,163,184,0.5)', marginBottom: '4px' }}>
+            <div style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'rgba(148,163,184,0.5)', marginBottom: '4px' }}>
               {fromAmt + ' ' + (fromAsset?.symbol.toUpperCase() ?? '—') + ' ='}
             </div>
-            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '22px', fontWeight: 700, color: 'rgba(52,211,153,1)' }}>
+            <div style={{ fontFamily: FONT_MONO, fontSize: '22px', fontWeight: 700, color: 'rgba(52,211,153,1)' }}>
               {fmtFiat(resultFiat, state.fiatCode, fiatInfo.symbol)}
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'rgba(148,163,184,0.4)', marginBottom: '2px' }}>Rate</div>
-            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', color: 'rgba(148,163,184,0.7)' }}>
+            <div style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'rgba(148,163,184,0.4)', marginBottom: '2px' }}>Rate</div>
+            <div style={{ fontFamily: FONT_MONO, fontSize: '11px', color: 'rgba(148,163,184,0.7)' }}>
               {fmtFiat(getFiatRate(state.fiatCode), state.fiatCode, fiatInfo.symbol) + ' / USD'}
             </div>
             {fromAsset && (
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', marginTop: '2px', color: fromAsset.change24h >= 0 ? 'rgba(52,211,153,0.8)' : 'rgba(251,113,133,0.8)' }}>
+              <div style={{ fontFamily: FONT_MONO, fontSize: '11px', marginTop: '2px', color: fromAsset.change24h >= 0 ? 'rgba(52,211,153,0.8)' : 'rgba(251,113,133,0.8)' }}>
                 {formatChange(fromAsset.change24h) + ' 24h'}
               </div>
             )}
@@ -544,7 +546,7 @@ const DCATab = memo(({ assets, state, dispatch }: {
       <div style={CARD_STYLE}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
           <Calculator size={14} style={{ color: 'rgba(251,191,36,0.8)' }} />
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '12px', fontWeight: 600, color: 'var(--zm-text-primary)' }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 600, color: 'var(--zm-text-primary)' }}>
             DCA Kalkulator
           </span>
         </div>
@@ -566,7 +568,7 @@ const DCATab = memo(({ assets, state, dispatch }: {
                 const active = state.dcaIntervalDays === interval.days;
                 return (
                   <button key={interval.label} onClick={() => set('dcaIntervalDays', interval.days)} style={{
-                    flex: 1, padding: '8px 0', borderRadius: '10px', fontSize: '11px', fontFamily: "'Space Mono', monospace", cursor: 'pointer',
+                    flex: 1, padding: '8px 0', borderRadius: '8px', fontSize: '11px', fontFamily: FONT_MONO, cursor: 'pointer',
                     background: active ? 'rgba(251,191,36,0.12)' : 'transparent',
                     color:      active ? 'rgba(251,191,36,1)' : 'var(--zm-text-secondary)',
                     border:     '1px solid ' + (active ? 'rgba(251,191,36,0.28)' : 'var(--zm-glass-border)'),
@@ -586,7 +588,7 @@ const DCATab = memo(({ assets, state, dispatch }: {
                 const active = state.dcaDurationMonths === dur.months;
                 return (
                   <button key={dur.label} onClick={() => set('dcaDurationMonths', dur.months)} style={{
-                    flex: 1, padding: '8px 0', borderRadius: '10px', fontSize: '11px', fontFamily: "'Space Mono', monospace", cursor: 'pointer',
+                    flex: 1, padding: '8px 0', borderRadius: '8px', fontSize: '11px', fontFamily: FONT_MONO, cursor: 'pointer',
                     background: active ? 'rgba(167,139,250,0.12)' : 'transparent',
                     color:      active ? 'rgba(167,139,250,1)' : 'var(--zm-text-secondary)',
                     border:     '1px solid ' + (active ? 'rgba(167,139,250,0.28)' : 'var(--zm-glass-border)'),
@@ -605,7 +607,7 @@ const DCATab = memo(({ assets, state, dispatch }: {
               <button
                 onClick={() => set('dcaCurrentPrice', !state.dcaCurrentPrice)}
                 style={{
-                  padding: '8px 12px', borderRadius: '10px', fontSize: '11px', fontFamily: "'Space Mono', monospace", cursor: 'pointer', flexShrink: 0,
+                  padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontFamily: FONT_MONO, cursor: 'pointer', flexShrink: 0,
                   background: state.dcaCurrentPrice ? 'rgba(52,211,153,0.10)' : 'transparent',
                   border:     '1px solid ' + (state.dcaCurrentPrice ? 'rgba(52,211,153,0.25)' : 'var(--zm-glass-border)'),
                   color:      state.dcaCurrentPrice ? 'rgba(52,211,153,1)' : 'var(--zm-text-secondary)',
@@ -626,7 +628,7 @@ const DCATab = memo(({ assets, state, dispatch }: {
 
       {dcaResult && (
         <div style={CARD_STYLE}>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '12px', fontWeight: 600, color: 'var(--zm-text-primary)', marginBottom: '16px' }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 600, color: 'var(--zm-text-primary)', marginBottom: '16px' }}>
             Hasil Simulasi
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '16px' }}>
@@ -636,9 +638,9 @@ const DCATab = memo(({ assets, state, dispatch }: {
               { label: 'Nilai Sekarang', value: '$' + dcaResult.currentValue.toLocaleString('en-US', { maximumFractionDigits: 0 }), color: isProfitable ? 'rgba(52,211,153,1)' : 'rgba(251,113,133,1)' },
               { label: 'P&L', value: (dcaResult.pnl >= 0 ? '+' : '') + '$' + Math.abs(dcaResult.pnl).toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' (' + (dcaResult.pnlPct >= 0 ? '+' : '') + dcaResult.pnlPct.toFixed(1) + '%)', color: isProfitable ? 'rgba(52,211,153,1)' : 'rgba(251,113,133,1)' },
             ].map(stat => (
-              <div key={stat.label} style={{ borderRadius: '10px', padding: '12px', background: 'var(--zm-surface-1)', border: '1px solid var(--zm-glass-border)' }}>
-                <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)', marginBottom: '4px' }}>{stat.label}</div>
-                <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '13px', fontWeight: 700, color: stat.color }}>{stat.value}</div>
+              <div key={stat.label} style={{ borderRadius: '12px', padding: '12px', background: 'var(--zm-surface-1)', border: '1px solid var(--zm-glass-border)' }}>
+                <div style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'var(--zm-text-faint)', marginBottom: '4px' }}>{stat.label}</div>
+                <div style={{ fontFamily: FONT_MONO, fontSize: '13px', fontWeight: 700, color: stat.color }}>{stat.value}</div>
               </div>
             ))}
           </div>
@@ -646,18 +648,18 @@ const DCATab = memo(({ assets, state, dispatch }: {
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{ width: '24px', height: '2px', background: 'rgba(96,165,250,0.5)', borderTop: '2px dashed rgba(96,165,250,0.5)' }} />
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'rgba(148,163,184,0.5)' }}>Invested</span>
+                <span style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'rgba(148,163,184,0.5)' }}>Invested</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{ width: '24px', height: '2px', background: 'rgba(52,211,153,1)' }} />
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'rgba(148,163,184,0.5)' }}>Portfolio Value</span>
+                <span style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'rgba(148,163,184,0.5)' }}>Portfolio Value</span>
               </div>
             </div>
-            <div style={{ borderRadius: '10px', overflow: 'hidden', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--zm-glass-border)', padding: '12px 8px 4px' }}>
+            <div style={{ borderRadius: '12px', overflow: 'hidden', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--zm-glass-border)', padding: '12px 8px 4px' }}>
               <DCAChart invested={dcaResult.investedArr} value={dcaResult.valueArr} />
             </div>
           </div>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)', marginTop: '10px' }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'var(--zm-text-faint)', marginTop: '10px' }}>
             * Simulasi menggunakan harga live saat ini sebagai referensi. Bukan financial advice.
           </div>
         </div>
@@ -704,10 +706,10 @@ const PositionSizerTab = memo(({ assets, state, dispatch }: {
       <div style={CARD_STYLE}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
           <Target size={14} style={{ color: 'rgba(251,113,133,0.8)' }} />
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '12px', fontWeight: 600, color: 'var(--zm-text-primary)' }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 600, color: 'var(--zm-text-primary)' }}>
             Position Sizer
           </span>
-          <span style={{ fontSize: '10px', fontFamily: "'Space Mono', monospace", padding: '2px 6px', borderRadius: '4px', marginLeft: 'auto', background: 'rgba(251,113,133,0.1)', color: 'rgba(251,113,133,0.8)', border: '1px solid rgba(251,113,133,0.2)' }}>
+          <span style={{ fontSize: '10px', fontFamily: FONT_MONO, padding: '2px 6px', borderRadius: '4px', marginLeft: 'auto', background: 'rgba(251,113,133,0.1)', color: 'rgba(251,113,133,0.8)', border: '1px solid rgba(251,113,133,0.2)' }}>
             Risk Management
           </span>
         </div>
@@ -729,7 +731,7 @@ const PositionSizerTab = memo(({ assets, state, dispatch }: {
 
       {result ? (
         <div style={CARD_STYLE}>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '12px', fontWeight: 600, color: 'var(--zm-text-primary)', marginBottom: '14px' }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 600, color: 'var(--zm-text-primary)', marginBottom: '14px' }}>
             Hasil Kalkulasi
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
@@ -741,28 +743,28 @@ const PositionSizerTab = memo(({ assets, state, dispatch }: {
               { label: 'Leverage Used',   value: result.leverage.toFixed(2) + 'x',                                                               color: result.leverage > 3 ? 'rgba(251,113,133,1)' : 'rgba(52,211,153,1)' },
               { label: 'R:R (2% TP)',     value: '1:' + result.rrRatio.toFixed(2),                                                               color: result.rrRatio >= 2 ? 'rgba(52,211,153,1)' : 'rgba(251,191,36,1)' },
             ].map(stat => (
-              <div key={stat.label} style={{ borderRadius: '10px', padding: '12px', background: 'var(--zm-surface-1)', border: '1px solid var(--zm-glass-border)' }}>
-                <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)', marginBottom: '4px' }}>{stat.label}</div>
-                <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '13px', fontWeight: 700, color: stat.color }}>{stat.value}</div>
+              <div key={stat.label} style={{ borderRadius: '12px', padding: '12px', background: 'var(--zm-surface-1)', border: '1px solid var(--zm-glass-border)' }}>
+                <div style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'var(--zm-text-faint)', marginBottom: '4px' }}>{stat.label}</div>
+                <div style={{ fontFamily: FONT_MONO, fontSize: '13px', fontWeight: 700, color: stat.color }}>{stat.value}</div>
               </div>
             ))}
           </div>
           {result.leverage > 5 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', borderRadius: '10px', marginTop: '12px', background: 'rgba(251,113,133,0.07)', border: '1px solid rgba(251,113,133,0.18)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', borderRadius: '8px', marginTop: '12px', background: 'rgba(251,113,133,0.07)', border: '1px solid rgba(251,113,133,0.18)' }}>
               <TrendingUp size={12} style={{ color: 'rgba(251,113,133,0.8)' }} />
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', color: 'rgba(251,113,133,0.8)' }}>
+              <span style={{ fontFamily: FONT_MONO, fontSize: '11px', color: 'rgba(251,113,133,0.8)' }}>
                 Leverage tinggi! Pertimbangkan kecilkan position atau perlebar SL.
               </span>
             </div>
           )}
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)', marginTop: '10px' }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'var(--zm-text-faint)', marginTop: '10px' }}>
             * Bukan financial advice. Selalu atur risk sesuai toleransi kamu.
           </div>
         </div>
       ) : (
         <div style={{ ...CARD_STYLE, textAlign: 'center', padding: '40px' }}>
           <Target size={28} style={{ color: 'rgba(148,163,184,0.2)', margin: '0 auto 8px' }} />
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '12px', color: 'var(--zm-text-faint)' }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: '12px', color: 'var(--zm-text-faint)' }}>
             Isi semua field di atas untuk kalkulasi position size
           </div>
         </div>
@@ -803,12 +805,12 @@ const Converter = memo(() => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', willChange: 'transform' }}>
-        <h1 style={{ fontFamily: "'Space Mono', monospace", fontSize: '20px', fontWeight: 700, margin: 0, background: 'linear-gradient(135deg, rgba(96,165,250,1), rgba(167,139,250,1))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '0.04em' }}>
+        <h1 style={{ fontFamily: FONT_MONO, fontSize: '20px', fontWeight: 700, margin: 0, background: 'linear-gradient(135deg, rgba(96,165,250,1), rgba(167,139,250,1))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '0.04em' }}>
           Converter & Tools
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 10px', borderRadius: '6px', background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.15)' }}>
           <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(52,211,153,1)', boxShadow: '0 0 5px rgba(52,211,153,1)', flexShrink: 0 }} />
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'rgba(52,211,153,0.85)', letterSpacing: '0.06em' }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'rgba(52,211,153,0.85)', letterSpacing: '0.06em' }}>
             Live Prices
           </span>
         </div>
@@ -826,9 +828,9 @@ const Converter = memo(() => {
               role="tab"
               style={{
                 padding:      '8px 16px',
-                borderRadius: '10px',
+                borderRadius: '8px',
                 fontSize:     '12px',
-                fontFamily:   "'Space Mono', monospace",
+                fontFamily: FONT_MONO,
                 cursor:       'pointer',
                 background:   active ? 'rgba(96,165,250,0.12)' : 'transparent',
                 color:        active ? 'rgba(96,165,250,1)' : 'var(--zm-text-secondary)',
