@@ -1,4 +1,14 @@
+/**
+ * Intelligence.tsx — ZERØ MERIDIAN 2026 push110
+ * push110: Responsive polish — mobile 320px + desktop 1440px
+ * - useBreakpoint ✓  responsive padding + category filters wrap ✓
+ * - React.memo + displayName ✓
+ * - rgba() only ✓  Zero className ✓  Zero hex color ✓
+ * - JetBrains Mono only ✓
+ */
+
 import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from "react";
+import { useBreakpoint } from "@/hooks/useBreakpoint";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -49,7 +59,7 @@ const SentimentBadge = memo(({ sentiment }: SentimentBadgeProps) => {
     <span style={{
       fontFamily: FONT, fontSize: 9, fontWeight: 700, letterSpacing: "0.08em",
       color, background: `${color}18`, borderRadius: 4,
-      padding: "2px 6px", display: "inline-block",
+      padding: "2px 6px", display: "inline-block", flexShrink: 0,
     }}>
       {sentiment.toUpperCase()}
     </span>
@@ -59,8 +69,8 @@ SentimentBadge.displayName = "SentimentBadge";
 
 // ─── NewsCard ─────────────────────────────────────────────────────────────────
 
-interface NewsCardProps { item: NewsItem; }
-const NewsCard = memo(({ item }: NewsCardProps) => {
+interface NewsCardProps { item: NewsItem; isMobile: boolean; }
+const NewsCard = memo(({ item, isMobile }: NewsCardProps) => {
   const [hovered, setHovered] = useState(false);
   const onEnter = useCallback(() => setHovered(true), []);
   const onLeave = useCallback(() => setHovered(false), []);
@@ -77,28 +87,28 @@ const NewsCard = memo(({ item }: NewsCardProps) => {
     background: hovered ? "rgba(255,255,255,0.04)" : C.glassBg,
     border: `1px solid ${hovered ? "rgba(0,238,255,0.15)" : C.glassBorder}`,
     borderRadius: 12,
-    padding: 16,
+    padding: isMobile ? 12 : 16,
     display: "flex" as const,
     flexDirection: "column" as const,
     gap: 10,
     transition: "background 0.15s ease, border-color 0.15s ease",
     cursor: "pointer",
-  }), [hovered]);
+  }), [hovered, isMobile]);
 
   const handleClick = useCallback(() => window.open(item.url, "_blank"), [item.url]);
 
   return (
     <div style={cardStyle} onMouseEnter={onEnter} onMouseLeave={onLeave} onClick={handleClick}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-        <span style={{ fontFamily: FONT, fontSize: 12, fontWeight: 600, color: C.textPrimary, lineHeight: "1.5", flex: 1 }}>
+        <span style={{ fontFamily: FONT, fontSize: isMobile ? 11 : 12, fontWeight: 600, color: C.textPrimary, lineHeight: "1.5", flex: 1 }}>
           {item.title}
         </span>
         <SentimentBadge sentiment={item.sentiment} />
       </div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" as const, gap: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" as const }}>
           <span style={{ fontFamily: FONT, fontSize: 9, color: C.accent, opacity: 0.8 }}>{item.source}</span>
-          {item.currencies.slice(0, 3).map(c => (
+          {item.currencies.slice(0, isMobile ? 2 : 3).map(c => (
             <span key={c} style={{ fontFamily: FONT, fontSize: 9, color: C.textFaint, background: "rgba(255,255,255,0.05)", borderRadius: 4, padding: "1px 5px" }}>{c}</span>
           ))}
         </div>
@@ -138,6 +148,7 @@ EmptyState.displayName = "EmptyState";
 // ─── Intelligence (Main) ──────────────────────────────────────────────────────
 
 const Intelligence = memo(() => {
+  const { isMobile } = useBreakpoint();
   const [category, setCategory] = useState<CategoryType>("All");
   const [data, setData] = useState<IntelligenceData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -148,11 +159,9 @@ const Intelligence = memo(() => {
     setLoading(true);
     setError(null);
     try {
-      // Primary: CryptoPanic
       const res = await fetch("https://cryptopanic.com/api/free/v1/posts/?auth_token=free&public=true");
       if (!mountedRef.current) return;
       if (!res.ok) {
-        // Fallback: CryptoCompare
         const fallback = await fetch("https://min-api.cryptocompare.com/data/v2/news/?lang=EN");
         if (!mountedRef.current) return;
         if (!fallback.ok) throw new Error("All news sources unavailable");
@@ -225,31 +234,34 @@ const Intelligence = memo(() => {
   }), [category]);
 
   const pageStyle = useMemo(() => ({
-    background: C.bgBase, minHeight: "100vh", color: C.textPrimary, fontFamily: FONT, padding: "20px 16px",
-  }), []);
+    background: C.bgBase, minHeight: "100vh", color: C.textPrimary, fontFamily: FONT,
+    padding: isMobile ? "16px 12px" : "20px 16px",
+  }), [isMobile]);
+
+  const handleRefresh = useCallback(() => fetchData(), [fetchData]);
 
   return (
     <div style={pageStyle}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20, gap: 12 }}>
         <div>
-          <h1 style={{ fontFamily: FONT, fontSize: 20, fontWeight: 700, letterSpacing: "0.06em", color: C.textPrimary, margin: 0 }}>Intelligence</h1>
+          <h1 style={{ fontFamily: FONT, fontSize: isMobile ? 16 : 20, fontWeight: 700, letterSpacing: "0.06em", color: C.textPrimary, margin: 0 }}>Intelligence</h1>
           <p style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: C.textFaint, margin: "6px 0 0" }}>
             News · Sentiment · Updated {lastUpdatedStr}
           </p>
         </div>
         <button
-          style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.accent, background: "rgba(0,238,255,0.08)", border: "1px solid rgba(0,238,255,0.2)", borderRadius: 6, padding: "6px 12px", cursor: "pointer" }}
-          onClick={useCallback(() => fetchData(), [fetchData])}
+          style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.accent, background: "rgba(0,238,255,0.08)", border: "1px solid rgba(0,238,255,0.2)", borderRadius: 6, padding: "6px 12px", cursor: "pointer", flexShrink: 0 }}
+          onClick={handleRefresh}
         >
           ↻ Refresh
         </button>
       </div>
 
-      {/* Category filters */}
+      {/* Category filters — wrap on mobile */}
       <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" as const }}>
         {CATEGORIES.map(c => (
-          <button key={c} style={makeCatStyle(c)} onClick={useCallback(() => setCategory(c), [c])}>
+          <button key={c} style={makeCatStyle(c)} onClick={() => setCategory(c)}>
             {c}
           </button>
         ))}
@@ -277,7 +289,7 @@ const Intelligence = memo(() => {
         filteredNews.length === 0
           ? <EmptyState category={category} onRetry={fetchData} />
           : <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {filteredNews.map(item => <NewsCard key={item.id} item={item} />)}
+              {filteredNews.map(item => <NewsCard key={item.id} item={item} isMobile={isMobile} />)}
             </div>
       )}
     </div>
