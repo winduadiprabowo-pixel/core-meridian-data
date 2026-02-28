@@ -1,18 +1,31 @@
 /**
- * sw.js — ZERØ MERIDIAN 2026 Phase 7
- * UPGRADE Phase 7:
- * - Background Sync: SyncManager queue for offline alerts
- * - Periodic sync: zm-price-sync every 5 minutes
- * - Offline alert queue stored in Cache Storage (IndexedDB in SW context)
+ * sw.js — ZERØ MERIDIAN 2026 push107
+ * push107: Cache bump zm-v4 → zm-v5 (OfflineIndicator assets)
+ *        + Expanded STATIC_ASSETS: /watchlist, /onchain, /sentiment, /defi,
+ *          /portfolio, /alerts, /charts, /orderbook, /derivatives, /converter,
+ *          /intelligence
+ * push99: Background Sync: SyncManager queue for offline alerts
+ *       + Periodic sync: zm-price-sync every 5 minutes
+ *       + Offline alert queue stored in Cache Storage (IndexedDB in SW context)
  */
 
-const CACHE_NAME    = 'zm-v4';
+const CACHE_NAME    = 'zm-v5';
 const OFFLINE_URL   = '/offline.html';
 const STATIC_ASSETS = [
   '/',
   '/dashboard',
   '/markets',
+  '/watchlist',
   '/defi',
+  '/onchain',
+  '/sentiment',
+  '/portfolio',
+  '/alerts',
+  '/charts',
+  '/orderbook',
+  '/derivatives',
+  '/converter',
+  '/intelligence',
   '/offline.html',
   '/manifest.json',
   '/favicon.ico',
@@ -105,7 +118,10 @@ self.addEventListener('fetch', (event) => {
     url.hostname.includes('coingecko.com')     ||
     url.hostname.includes('llama.fi')          ||
     url.hostname.includes('alternative.me')    ||
-    url.hostname.includes('cryptocompare.com')
+    url.hostname.includes('cryptocompare.com') ||
+    url.hostname.includes('etherscan.io')      ||
+    url.hostname.includes('cryptopanic.com')   ||
+    url.hostname.includes('defillama.com')
   );
   if (isExternalApi) return;
 
@@ -154,7 +170,7 @@ self.addEventListener('fetch', (event) => {
 // ─── Background Sync — SyncManager ────────────────────────────────────────────
 
 self.addEventListener('sync', (event) => {
-  // Market data sync: notify clients to refetch
+  // Market data sync: notify clients to refetch + trigger OfflineIndicator
   if (event.tag === 'zm-market-sync' || event.tag === 'zm-bg-sync') {
     event.waitUntil(
       self.clients.matchAll().then(clients => {
@@ -191,8 +207,8 @@ self.addEventListener('push', (event) => {
   const title   = data.title   || 'ZERØ MERIDIAN Alert';
   const options = {
     body:    data.body    || 'Price alert triggered!',
-    icon:    '/favicon.ico',
-    badge:   '/favicon.ico',
+    icon:    '/icon-192.png',
+    badge:   '/icon-192.png',
     tag:     data.tag     || 'zm-alert',
     vibrate: [100, 50, 100],
     data:    { url: data.url || '/alerts' },
