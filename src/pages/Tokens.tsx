@@ -1,4 +1,14 @@
+/**
+ * Tokens.tsx — ZERØ MERIDIAN 2026 push110
+ * push110: Responsive polish — mobile 320px + desktop 1440px
+ * - useBreakpoint ✓  table overflowX scroll on mobile ✓  search input full width mobile ✓
+ * - React.memo + displayName ✓
+ * - rgba() only ✓  Zero className ✓  Zero hex color ✓
+ * - JetBrains Mono only ✓
+ */
+
 import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from "react";
+import { useBreakpoint } from "@/hooks/useBreakpoint";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -58,6 +68,7 @@ const TokenRow = memo(({ token }: TokenRowProps) => {
     background: hovered ? "rgba(255,255,255,0.03)" : "transparent",
     transition: "background 0.15s ease",
     cursor: "pointer",
+    minWidth: "680px",
   }), [hovered]);
 
   const changeColor = useCallback((v: number) => v >= 0 ? C.positive : C.negative, []);
@@ -78,8 +89,8 @@ const TokenRow = memo(({ token }: TokenRowProps) => {
   return (
     <div style={rowStyle} onMouseEnter={onEnter} onMouseLeave={onLeave}>
       <span style={{ fontFamily: FONT, fontSize: 10, color: C.textFaint }}>{token.rank}</span>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: C.textPrimary }}>{token.symbol}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+        <span style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: C.textPrimary, flexShrink: 0 }}>{token.symbol}</span>
         <span style={{ fontFamily: FONT, fontSize: 10, color: C.textFaint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{token.name}</span>
       </div>
       <span style={{ fontFamily: FONT, fontSize: 12, fontWeight: 600, color: C.textPrimary, textAlign: "right" as const }}>{fmtPrice(token.price)}</span>
@@ -155,6 +166,7 @@ const COLS: Array<{ key: SortKey; label: string; align: "left"|"right" }> = Obje
 ]) as any;
 
 const Tokens = memo(() => {
+  const { isMobile } = useBreakpoint();
   const [data, setData] = useState<TokensData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -232,22 +244,25 @@ const Tokens = memo(() => {
   }, [data, search, sortKey, sortDir]);
 
   const pageStyle = useMemo(() => ({
-    background: C.bgBase, minHeight: "100vh", color: C.textPrimary, fontFamily: FONT, padding: "20px 16px",
-  }), []);
+    background: C.bgBase, minHeight: "100vh", color: C.textPrimary, fontFamily: FONT,
+    padding: isMobile ? "16px 12px" : "20px 16px",
+  }), [isMobile]);
 
   const cardStyle = useMemo(() => ({
     background: C.glassBg, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: "hidden" as const,
   }), []);
 
+  const handleRefresh = useCallback(() => fetchData(), [fetchData]);
+
   return (
     <div style={pageStyle}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+      {/* Header — stacked on mobile */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20, gap: 12, flexWrap: "wrap" as const }}>
         <div>
-          <h1 style={{ fontFamily: FONT, fontSize: 20, fontWeight: 700, letterSpacing: "0.06em", color: C.textPrimary, margin: 0 }}>Tokens</h1>
+          <h1 style={{ fontFamily: FONT, fontSize: isMobile ? 16 : 20, fontWeight: 700, letterSpacing: "0.06em", color: C.textPrimary, margin: 0 }}>Tokens</h1>
           <p style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: C.textFaint, margin: "6px 0 0" }}>Top 100 · CoinGecko live data</p>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" as const, width: isMobile ? "100%" : "auto" }}>
           <input
             value={search}
             onChange={handleSearch}
@@ -261,11 +276,13 @@ const Tokens = memo(() => {
               borderRadius: 6,
               padding: "6px 12px",
               outline: "none",
+              flex: isMobile ? 1 : "unset",
+              minWidth: isMobile ? 0 : "auto",
             }}
           />
           <button
-            style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.accent, background: "rgba(0,238,255,0.08)", border: "1px solid rgba(0,238,255,0.2)", borderRadius: 6, padding: "6px 12px", cursor: "pointer" }}
-            onClick={useCallback(() => fetchData(), [fetchData])}
+            style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.accent, background: "rgba(0,238,255,0.08)", border: "1px solid rgba(0,238,255,0.2)", borderRadius: 6, padding: "6px 12px", cursor: "pointer", flexShrink: 0 }}
+            onClick={handleRefresh}
           >
             ↻ Refresh
           </button>
@@ -300,8 +317,9 @@ const Tokens = memo(() => {
         )}
 
         {!loading && !error && (
-          <>
-            <div style={{ display: "grid", gridTemplateColumns: "36px 140px 110px 80px 80px 110px 110px", gap: 12, padding: "8px 16px", borderBottom: `1px solid rgba(255,255,255,0.1)` }}>
+          /* overflowX scroll wrapper for mobile */
+          <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
+            <div style={{ display: "grid", gridTemplateColumns: "36px 140px 110px 80px 80px 110px 110px", gap: 12, padding: "8px 16px", borderBottom: `1px solid rgba(255,255,255,0.1)`, minWidth: "680px" }}>
               {(COLS as any[]).map((col: any, i: number) => (
                 <SortHeader key={i} col={col} sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
               ))}
@@ -310,7 +328,7 @@ const Tokens = memo(() => {
               ? <EmptyState />
               : filteredTokens.map(t => <TokenRow key={t.id} token={t} />)
             }
-          </>
+          </div>
         )}
       </div>
     </div>
