@@ -1,5 +1,5 @@
 // ZERØ MERIDIAN — NotFound.tsx
-// push25: memo() + 100% inline style (zero className) per ZM rules
+// push111: memo() + 100% inline style (zero className) per ZM rules
 
 import { memo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -26,7 +26,7 @@ const NotFound = memo(() => {
       <div style={{ textAlign: 'center' }}>
         <h1 style={{
           marginBottom: '1rem',
-          fontFamily: "'Space Mono', monospace",
+          fontFamily: "'JetBrains Mono', monospace",
           fontSize: '4rem',
           fontWeight: 700,
           color: 'var(--zm-text-primary)',
@@ -36,7 +36,7 @@ const NotFound = memo(() => {
         </h1>
         <p style={{
           marginBottom: '1.5rem',
-          fontFamily: "'Space Mono', monospace",
+          fontFamily: "'JetBrains Mono', monospace",
           fontSize: '1rem',
           color: 'var(--zm-text-secondary)',
           letterSpacing: '0.06em',
@@ -47,7 +47,7 @@ const NotFound = memo(() => {
           href="/"
           aria-label="Return to home page"
           style={{
-            fontFamily: "'Space Mono', monospace",
+            fontFamily: "'JetBrains Mono', monospace",
             fontSize: '0.75rem',
             color: 'rgba(96,165,250,1)',
             textDecoration: 'underline',
