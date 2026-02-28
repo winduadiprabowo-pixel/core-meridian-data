@@ -1,5 +1,6 @@
 /**
- * Fundamentals.tsx — ZERØ MERIDIAN 2026 Phase 12
+ * Fundamentals.tsx — ZERØ MERIDIAN 2026 push108
+ * push108: Space Mono → JetBrains Mono (CRITICAL fix)
  * Token Terminal full-page fundamentals dashboard.
  * Features:
  *   - Revenue leaderboard (1d / 7d / 30d / annualized)
@@ -184,7 +185,7 @@ const ProtocolRow = memo(({ protocol, rank, tab, period }: RowProps) => {
     <div style={rowStyle} role="row" aria-label={protocol.name + ' fundamentals row'}>
       {/* Rank */}
       <span style={{
-        fontFamily: "'Space Mono', monospace",
+        fontFamily: "'JetBrains Mono', monospace",
         fontSize: '10px',
         color: 'var(--zm-text-faint)',
         textAlign: 'center' as const,
@@ -195,7 +196,7 @@ const ProtocolRow = memo(({ protocol, rank, tab, period }: RowProps) => {
       {/* Name + tags */}
       <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '2px', overflow: 'hidden' }}>
         <span style={{
-          fontFamily: "'Space Mono', monospace",
+          fontFamily: "'JetBrains Mono', monospace",
           fontSize: '11px',
           fontWeight: 600,
           color: 'var(--zm-text-primary)',
@@ -207,7 +208,7 @@ const ProtocolRow = memo(({ protocol, rank, tab, period }: RowProps) => {
         </span>
         {protocol.categoryTags.length > 0 && (
           <span style={{
-            fontFamily: "'Space Mono', monospace",
+            fontFamily: "'JetBrains Mono', monospace",
             fontSize: '8px',
             color,
             letterSpacing: '0.06em',
@@ -234,64 +235,64 @@ const ProtocolRow = memo(({ protocol, rank, tab, period }: RowProps) => {
       {/* Values by tab */}
       {tab === 'revenue' && (
         <>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'rgba(52,211,153,0.9)', textAlign: 'right' as const }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(52,211,153,0.9)', textAlign: 'right' as const }}>
             {formatCompact(protocol.revenueOneDayUsd)}
           </span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-secondary)', textAlign: 'right' as const }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'var(--zm-text-secondary)', textAlign: 'right' as const }}>
             {formatCompact(protocol.revenueSevenDayUsd)}
           </span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-secondary)', textAlign: 'right' as const }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'var(--zm-text-secondary)', textAlign: 'right' as const }}>
             {formatCompact(protocol.revenueThirtyDayUsd)}
           </span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'rgba(99,179,237,0.8)', textAlign: 'right' as const }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(99,179,237,0.8)', textAlign: 'right' as const }}>
             {formatCompact(protocol.revenueAnnualizedUsd)}
           </span>
         </>
       )}
       {tab === 'fees' && (
         <>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-warning)', textAlign: 'right' as const }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'var(--zm-warning)', textAlign: 'right' as const }}>
             {formatCompact(protocol.feesOneDayUsd)}
           </span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-secondary)', textAlign: 'right' as const }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'var(--zm-text-secondary)', textAlign: 'right' as const }}>
             {formatCompact(protocol.feesSevenDayUsd)}
           </span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-secondary)', textAlign: 'right' as const }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'var(--zm-text-secondary)', textAlign: 'right' as const }}>
             {formatCompact(protocol.feesThirtyDayUsd)}
           </span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)', textAlign: 'right' as const }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)', textAlign: 'right' as const }}>
             —
           </span>
         </>
       )}
       {tab === 'ratios' && (
         <>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: protocol.priceToSalesRatio != null && protocol.priceToSalesRatio < 10 ? 'rgba(52,211,153,0.9)' : 'var(--zm-text-secondary)', textAlign: 'right' as const }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: protocol.priceToSalesRatio != null && protocol.priceToSalesRatio < 10 ? 'rgba(52,211,153,0.9)' : 'var(--zm-text-secondary)', textAlign: 'right' as const }}>
             {formatNull(protocol.priceToSalesRatio)}
           </span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: protocol.priceToEarningsRatio != null && protocol.priceToEarningsRatio < 30 ? 'rgba(52,211,153,0.9)' : 'var(--zm-text-secondary)', textAlign: 'right' as const }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: protocol.priceToEarningsRatio != null && protocol.priceToEarningsRatio < 30 ? 'rgba(52,211,153,0.9)' : 'var(--zm-text-secondary)', textAlign: 'right' as const }}>
             {formatNull(protocol.priceToEarningsRatio)}
           </span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-secondary)', textAlign: 'right' as const }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'var(--zm-text-secondary)', textAlign: 'right' as const }}>
             {formatNull(protocol.marketcapUsd)}
           </span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)', textAlign: 'right' as const }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)', textAlign: 'right' as const }}>
             {formatNull(protocol.fdvUsd)}
           </span>
         </>
       )}
       {tab === 'treasury' && (
         <>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-violet)', textAlign: 'right' as const }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'var(--zm-violet)', textAlign: 'right' as const }}>
             {formatNull(protocol.treasuryUsd)}
           </span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-secondary)', textAlign: 'right' as const }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'var(--zm-text-secondary)', textAlign: 'right' as const }}>
             {formatNull(protocol.marketcapUsd)}
           </span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)', textAlign: 'right' as const }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)', textAlign: 'right' as const }}>
             {formatNull(protocol.fdvUsd)}
           </span>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)', textAlign: 'right' as const }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)', textAlign: 'right' as const }}>
             —
           </span>
         </>
@@ -398,7 +399,7 @@ const Fundamentals = memo(() => {
   }, [protocols]);
 
   const tabBtnStyle = useCallback((active: boolean) => ({
-    fontFamily: "'Space Mono', monospace",
+    fontFamily: "'JetBrains Mono', monospace",
     fontSize: '10px',
     letterSpacing: '0.08em',
     padding: '5px 14px',
@@ -445,15 +446,15 @@ const Fundamentals = memo(() => {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '12px' }}>
         <div>
-          <h1 style={{ fontFamily: "'Space Mono', monospace", fontSize: '13px', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--zm-text-primary)', margin: 0 }}>
+          <h1 style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--zm-text-primary)', margin: 0 }}>
             FUNDAMENTALS
           </h1>
-          <p style={{ fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)', letterSpacing: '0.06em', margin: '2px 0 0' }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)', letterSpacing: '0.06em', margin: '2px 0 0' }}>
             TOKEN TERMINAL — PROTOCOL REVENUE & FEES
           </p>
         </div>
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: 'var(--zm-text-faint)' }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', color: 'var(--zm-text-faint)' }}>
             {protocols.length + ' protocols'}
           </span>
           <button
@@ -476,10 +477,10 @@ const Fundamentals = memo(() => {
           { label: 'MEDIAN P/E',  value: summaryStats.medianPE > 0 ? summaryStats.medianPE.toFixed(1) + 'x' : '—', color: 'var(--zm-violet)' },
         ].map(stat => (
           <GlassCard key={stat.label} style={{ padding: '12px 16px' }}>
-            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '8px', letterSpacing: '0.1em', color: 'var(--zm-text-faint)', marginBottom: '6px' }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '8px', letterSpacing: '0.1em', color: 'var(--zm-text-faint)', marginBottom: '6px' }}>
               {stat.label}
             </div>
-            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '15px', fontWeight: 700, color: stat.color }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '15px', fontWeight: 700, color: stat.color }}>
               {stat.value}
             </div>
           </GlassCard>
@@ -516,7 +517,7 @@ const Fundamentals = memo(() => {
                 onClick={() => handlePeriod(p.key)}
                 aria-label={'Filter by ' + p.label + ' period'}
                 style={{
-                  fontFamily: "'Space Mono', monospace",
+                  fontFamily: "'JetBrains Mono', monospace",
                   fontSize: '9px',
                   padding: '3px 8px',
                   borderRadius: '4px',
@@ -540,7 +541,7 @@ const Fundamentals = memo(() => {
           onChange={handleSearch}
           aria-label="Search protocols"
           style={{
-            fontFamily: "'Space Mono', monospace",
+            fontFamily: "'JetBrains Mono', monospace",
             fontSize: '10px',
             padding: '5px 10px',
             borderRadius: '5px',
@@ -561,7 +562,7 @@ const Fundamentals = memo(() => {
           background: 'var(--zm-orange-bg)',
           borderRadius: '8px',
           border: '1px solid var(--zm-orange-border)',
-          fontFamily: "'Space Mono', monospace",
+          fontFamily: "'JetBrains Mono', monospace",
           fontSize: '11px',
           color: 'var(--zm-orange)',
         }}>
@@ -588,7 +589,7 @@ const Fundamentals = memo(() => {
               }}
               aria-label={'Sort by ' + col}
               style={{
-                fontFamily: "'Space Mono', monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 fontSize: '8px',
                 letterSpacing: '0.1em',
                 color: 'var(--zm-text-faint)',
@@ -607,7 +608,7 @@ const Fundamentals = memo(() => {
         {/* Rows */}
         <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '3px' }} role="table" aria-label="Protocol fundamentals table">
           {sorted.length === 0 ? (
-            <div style={{ padding: '24px', textAlign: 'center' as const, fontFamily: "'Space Mono', monospace", fontSize: '11px', color: 'var(--zm-text-faint)' }}>
+            <div style={{ padding: '24px', textAlign: 'center' as const, fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: 'var(--zm-text-faint)' }}>
               No protocols found
             </div>
           ) : (
@@ -625,7 +626,7 @@ const Fundamentals = memo(() => {
       </GlassCard>
 
       {/* Footer attribution */}
-      <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '9px', color: 'var(--zm-text-faint)', textAlign: 'center' as const, letterSpacing: '0.08em' }}>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', color: 'var(--zm-text-faint)', textAlign: 'center' as const, letterSpacing: '0.08em' }}>
         DATA: TOKEN TERMINAL FREE TIER — UPDATES EVERY 5 MINUTES
       </div>
     </motion.div>
