@@ -1,16 +1,14 @@
 /**
  * useCryptoData.ts — ZERØ MERIDIAN 2026 Phase 7
- * push97: Fix data kosong — hapus /api proxy layer, langsung ke CoinGecko.
+ * push97: Fix data kosong — langsung ke CoinGecko, skip proxy.
  *         Cloudflare Pages = static hosting, tidak bisa serve /api routes.
- * - useWebTransport: primary transport attempt, WS fallback
- * - useIndexedDB: cache tick history BTC/ETH/SOL
- * Zero JSX. mountedRef + AbortController.
+ * push98: Fix WS RECONNECTING — skip WebTransport, langsung connectWS().
+ * - mountedRef + AbortController.
  */
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useCrypto, useCryptoDispatch } from '@/contexts/CryptoContext';
 import { getReconnectDelay, type CryptoAsset } from '@/lib/formatters';
-import { useWebTransport } from '@/hooks/useWebTransport';
 import { useIndexedDB } from '@/hooks/useIndexedDB';
 
 const SYMBOLS = Object.freeze([
@@ -23,9 +21,7 @@ const SYMBOLS = Object.freeze([
 const WS_URL = 'wss://stream.binance.com:9443/stream?streams=' +
   SYMBOLS.map(s => s + '@ticker').join('/');
 
-const WT_URL = 'https://stream.binance.com:443';
-
-// Direct — no proxy (Cloudflare Pages is static, cannot proxy API keys)
+// Direct CoinGecko — no proxy (CF Pages is static, /api routes = 404)
 const CG_MARKETS = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=7d,30d';
 const CG_GLOBAL  = 'https://api.coingecko.com/api/v3/global';
 const FNG_URL    = 'https://api.alternative.me/fng/?limit=1';
@@ -37,14 +33,12 @@ export function useCryptoData() {
   const { isLeader } = useCrypto();
   const { saveTick, loadTicks } = useIndexedDB();
 
-  const mountedRef    = useRef(true);
-  const abortRef      = useRef(new AbortController());
-  const wsRef         = useRef<WebSocket | null>(null);
-  const attemptRef    = useRef(0);
-  const lastPriceRef  = useRef<Record<string, number>>({});
-  const isLeaderRef   = useRef(isLeader);
-  const wsActiveRef   = useRef(false);
-  const connectWSRef  = useRef<(() => void) | null>(null);
+  const mountedRef   = useRef(true);
+  const abortRef     = useRef(new AbortController());
+  const wsRef        = useRef<WebSocket | null>(null);
+  const attemptRef   = useRef(0);
+  const lastPriceRef = useRef<Record<string, number>>({});
+  const isLeaderRef  = useRef(isLeader);
 
   useEffect(() => { isLeaderRef.current = isLeader; }, [isLeader]);
 
@@ -55,7 +49,8 @@ export function useCryptoData() {
     if (!mountedRef.current || !isLeaderRef.current) return;
     const key = symbol.toLowerCase();
     const prevPrice = lastPriceRef.current[key] ?? price;
-    const direction: 'up' | 'down' | 'neutral' = price > prevPrice ? 'up' : price < prevPrice ? 'down' : 'neutral';
+    const direction: 'up' | 'down' | 'neutral' =
+      price > prevPrice ? 'up' : price < prevPrice ? 'down' : 'neutral';
     lastPriceRef.current[key] = price;
     dispatch({
       type: 'UPDATE_PRICES',
@@ -65,37 +60,10 @@ export function useCryptoData() {
     if (isPersist) saveTick(key, price).catch(() => {});
   }, [dispatch, saveTick]);
 
-  const handleWTMessage = useCallback((data: Uint8Array) => {
-    if (!isLeaderRef.current || !mountedRef.current) return;
-    try {
-      const json = JSON.parse(new TextDecoder().decode(data)) as Record<string, unknown>;
-      const d = (json.data ?? json) as Record<string, unknown>;
-      if (typeof d?.s !== 'string') return;
-      processTick(
-        String(d.s), parseFloat(String(d.c)), parseFloat(String(d.P)),
-        parseFloat(String(d.h)), parseFloat(String(d.l)), parseFloat(String(d.v)),
-      );
-    } catch {}
-  }, [processTick]);
-
-  const handleWTConnected = useCallback(() => {
-    if (!mountedRef.current) return;
-    dispatch({ type: 'SET_WS_STATUS', payload: 'connected' });
-  }, [dispatch]);
-
-  const handleWTError = useCallback(() => {
-    if (!mountedRef.current || wsActiveRef.current) return;
-    connectWSRef.current?.();
-  }, []);
-
-  const { status: wtStatus, isSupported: wtSupported, connect: wtConnect } = useWebTransport({
-    url: WT_URL, onMessage: handleWTMessage, onConnected: handleWTConnected, onError: handleWTError,
-  });
-
   const connectWS = useCallback(() => {
     if (!mountedRef.current || !isLeaderRef.current) return;
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
-    wsActiveRef.current = true;
+
     dispatch({ type: 'SET_WS_STATUS', payload: 'reconnecting' });
 
     const ws = new WebSocket(WS_URL);
@@ -130,8 +98,6 @@ export function useCryptoData() {
     };
     ws.onerror = () => { ws.close(); };
   }, [dispatch, processTick]);
-
-  useEffect(() => { connectWSRef.current = connectWS; }, [connectWS]);
 
   const fetchMarkets = useCallback(async () => {
     if (!isLeaderRef.current) return;
@@ -203,6 +169,7 @@ export function useCryptoData() {
     } catch {}
   }, [dispatch]);
 
+  // Load cached ticks dari IndexedDB
   useEffect(() => {
     if (!isLeader) return;
     void (async () => {
@@ -217,21 +184,18 @@ export function useCryptoData() {
     })();
   }, [isLeader, loadTicks]);
 
+  // Main effect — fetch data + connect WS langsung (skip WebTransport)
   useEffect(() => {
     if (!isLeader) return;
-    mountedRef.current  = true;
-    wsActiveRef.current = false;
-    abortRef.current    = new AbortController();
+    mountedRef.current = true;
+    abortRef.current   = new AbortController();
 
     fetchMarkets();
     fetchGlobal();
     fetchFearGreed();
 
-    if (wtSupported) {
-      wtConnect();
-    } else {
-      connectWS();
-    }
+    // push98: skip WebTransport, langsung connectWS()
+    connectWS();
 
     const t1 = setInterval(fetchMarkets,   30_000);
     const t2 = setInterval(fetchGlobal,    60_000);
@@ -241,16 +205,8 @@ export function useCryptoData() {
       mountedRef.current = false;
       abortRef.current.abort();
       wsRef.current?.close();
-      wsActiveRef.current = false;
       clearInterval(t1); clearInterval(t2); clearInterval(t3);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLeader]);
-
-  useEffect(() => {
-    if (wtStatus === 'connected' && wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
-  }, [wtStatus]);
 }
