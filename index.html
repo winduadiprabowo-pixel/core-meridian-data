@@ -2,24 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- PWA -->
-    <meta name="theme-color" content="#06080e" />
+    <meta name="theme-color" content="#60a5fa" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="ZM Terminal" />
     <link rel="manifest" href="/manifest.json" />
-
-    <!-- Apple touch icon (iOS home screen) -->
-    <link rel="apple-touch-icon" href="/icon-192.png" />
-    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
-    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
 
     <!-- SEO -->
     <title>ZERØ MERIDIAN — Crypto Intelligence Terminal</title>
@@ -27,7 +19,9 @@
     <meta property="og:title" content="ZERØ MERIDIAN" />
     <meta property="og:description" content="Real-time crypto intelligence terminal" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/icon-512.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
     <!-- Preconnect -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -38,45 +32,14 @@
     <link rel="dns-prefetch" href="https://fapi.binance.com" />
     <link rel="dns-prefetch" href="https://coin-images.coingecko.com" />
 
-    <!-- Fonts: Space Grotesk + JetBrains Mono + IBM Plex Mono -->
+    <!-- Fonts -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="./main.tsx"></script>
-
-    <!-- Service Worker Registration -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function () {
-          navigator.serviceWorker.register('/sw.js', { scope: '/' })
-            .then(function (reg) {
-              // Check for updates on each load
-              reg.addEventListener('updatefound', function () {
-                var newSW = reg.installing;
-                if (!newSW) return;
-                newSW.addEventListener('statechange', function () {
-                  if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-                    // New version available — tell SW to skip waiting
-                    newSW.postMessage({ type: 'SKIP_WAITING' });
-                  }
-                });
-              });
-            })
-            .catch(function (err) {
-              console.warn('[ZM] SW registration failed:', err);
-            });
-
-          // Reload once when new SW takes control
-          var refreshing = false;
-          navigator.serviceWorker.addEventListener('controllerchange', function () {
-            if (!refreshing) { refreshing = true; window.location.reload(); }
-          });
-        });
-      }
-    </script>
   </body>
 </html>
