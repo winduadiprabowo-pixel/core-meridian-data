@@ -545,14 +545,14 @@ const Charts = memo(() => {
           {mobileTab === 'pairs' && (
             <motion.div key="pairs" initial={{ opacity:0, x:-20 }} animate={{ opacity:1, x:0 }}
               exit={{ opacity:0, x:-20 }} transition={{ duration:0.18 }}
-              style={{ position:'absolute' as const, inset:0, overflow:'hidden' as const }}>
+              style={{ position:'absolute' as const, inset:0, overflow:'hidden' as const, willChange:'transform' }}>
               <PairList activePair={activePair} onSelect={handleSelect} />
             </motion.div>
           )}
           {mobileTab === 'chart' && (
             <motion.div key="chart" initial={{ opacity:0 }} animate={{ opacity:1 }}
               exit={{ opacity:0 }} transition={{ duration:0.2 }}
-              style={{ position:'absolute' as const, inset:0 }}>
+              style={{ position:'absolute' as const, inset:0, willChange:'transform' }}>
               <TVWidget tvSymbol={activePair.tvSymbol} />
             </motion.div>
           )}
