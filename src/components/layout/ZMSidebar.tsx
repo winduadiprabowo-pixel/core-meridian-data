@@ -1,6 +1,6 @@
 /**
- * ZMSidebar.tsx — ZERØ MERIDIAN 2026 push85
- * push85: FULL ITEMS — semua 20 halaman masuk sidebar, grouped rapi
+ * ZMSidebar.tsx — ZERØ MERIDIAN 2026 push111
+ * push111: FULL ITEMS — semua 20 halaman masuk sidebar, grouped rapi
  * - React.memo + displayName ✓  rgba() only ✓  Zero className ✓
  * - useCallback + useMemo + mountedRef ✓  Object.freeze() ✓
  */
@@ -112,16 +112,17 @@ const ZMSidebar = memo(({ expanded, onToggle, currentPath }: ZMSidebarProps) => 
       padding: expanded ? '8px 12px 8px 14px' : '8px',
       justifyContent: expanded ? 'flex-start' as const : 'center' as const,
       borderRadius: '9px',
-      background: active ? 'rgba(52,211,153,0.07)' : hover ? 'rgba(255,255,255,0.04)' : 'transparent',
-      border: '1px solid ' + (active ? 'rgba(52,211,153,0.16)' : 'transparent'),
-      color: active ? 'rgba(52,211,153,1)' : hover ? 'rgba(200,205,225,1)' : 'rgba(105,110,138,1)',
-      cursor: 'pointer', transition: 'all 0.12s ease', userSelect: 'none' as const,
+      background: active ? 'rgba(52,211,153,0.10)' : hover ? 'rgba(255,255,255,0.05)' : 'transparent',
+      border: '1px solid ' + (active ? 'rgba(52,211,153,0.24)' : hover ? 'rgba(255,255,255,0.06)' : 'transparent'),
+      color: active ? 'rgba(52,211,153,1)' : hover ? 'rgba(220,225,245,1)' : 'rgba(105,110,138,1)',
+      boxShadow: active ? '0 0 12px rgba(52,211,153,0.08)' : 'none',
+      cursor: 'pointer', transition: 'all 0.15s ease', userSelect: 'none' as const,
       width: '100%', textAlign: 'left' as const, position: 'relative' as const, marginBottom: '1px',
     };
   }, [currentPath, hovered, expanded, isActive]);
 
   const labelStyle = useMemo(() => ({
-    fontFamily: "'Space Mono', monospace", fontSize: '11px', letterSpacing: '0.01em',
+    fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', letterSpacing: '0.01em',
     whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 500,
   }), []);
 
@@ -141,7 +142,7 @@ const ZMSidebar = memo(({ expanded, onToggle, currentPath }: ZMSidebarProps) => 
         aria-label={item.label} aria-current={currentPath === item.path ? 'page' : undefined}
         style={getItemStyle(item.id, item.path)}
       >
-        {active && <div style={{ position: 'absolute', left: 0, top: '22%', bottom: '22%', width: '3px', borderRadius: '0 3px 3px 0', background: 'rgba(52,211,153,1)', boxShadow: '0 0 8px rgba(52,211,153,0.6)' }} />}
+        {active && <div style={{ position: 'absolute', left: 0, top: '18%', bottom: '18%', width: '3px', borderRadius: '0 4px 4px 0', background: 'rgba(52,211,153,1)', boxShadow: '0 0 10px rgba(52,211,153,0.8), 0 0 20px rgba(52,211,153,0.3)' }} />}
         <span style={iconWrap}>{item.icon}</span>
         <AnimatePresence>
           {expanded && (
@@ -150,7 +151,7 @@ const ZMSidebar = memo(({ expanded, onToggle, currentPath }: ZMSidebarProps) => 
             >
               <span style={labelStyle}>{item.label}</span>
               {item.badge && (
-                <span style={{ fontFamily:"'Space Mono', monospace", fontSize:'7px', padding:'1px 5px', borderRadius:'3px', background:'rgba(52,211,153,0.09)', border:'1px solid rgba(52,211,153,0.2)', color:'rgba(52,211,153,0.85)', letterSpacing:'0.06em', flexShrink:0, marginLeft:'6px' }}>
+                <span style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:'7px', padding:'1px 5px', borderRadius:'3px', background:'rgba(52,211,153,0.09)', border:'1px solid rgba(52,211,153,0.2)', color:'rgba(52,211,153,0.85)', letterSpacing:'0.06em', flexShrink:0, marginLeft:'6px' }}>
                   {item.badge}
                 </span>
               )}
@@ -165,17 +166,17 @@ const ZMSidebar = memo(({ expanded, onToggle, currentPath }: ZMSidebarProps) => 
     <motion.nav
       animate={{ width: expanded ? 256 : 68 }}
       transition={prefersRM ? { duration:0 } : { duration:0.22, ease:[0.22,1,0.36,1] }}
-      style={{ position:'fixed', top:0, left:0, height:'100vh', background:'rgba(7,9,17,0.98)', borderRight:'1px solid rgba(255,255,255,0.05)', display:'flex', flexDirection:'column', zIndex:60, overflow:'hidden' }}
+      style={{ position:'fixed', top:0, left:0, height:'100vh', background:'rgba(6,8,16,1)', borderRight:'1px solid rgba(52,211,153,0.07)', display:'flex', flexDirection:'column', zIndex:60, overflow:'hidden', boxShadow:'4px 0 32px rgba(0,0,0,0.6)' }}
       aria-label="Main navigation"
     >
       {/* Logo */}
-      <div style={{ height:'64px', display:'flex', alignItems:'center', padding:'0 18px', flexShrink:0, gap:'10px', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
+      <div style={{ height:'64px', display:'flex', alignItems:'center', padding:'0 18px', flexShrink:0, gap:'10px', borderBottom:'1px solid rgba(52,211,153,0.08)' }}>
         <LogoMark />
         <AnimatePresence>
           {expanded && (
             <motion.div initial={{ opacity:0, x:-8 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:-8 }} transition={{ duration:0.14 }} style={{ flex:1 }}>
-              <div style={{ fontFamily:"'Space Mono', monospace", fontSize:'12px', fontWeight:700, letterSpacing:'0.15em', color:'rgba(235,238,255,0.95)' }}>ZERØ</div>
-              <div style={{ fontFamily:"'Space Mono', monospace", fontSize:'7px', letterSpacing:'0.32em', color:'rgba(52,211,153,0.45)', marginTop:'2px' }}>MERIDIAN</div>
+              <div style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:'12px', fontWeight:700, letterSpacing:'0.18em', color:'rgba(240,244,255,1)' }}>ZERØ</div>
+              <div style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:'7px', letterSpacing:'0.36em', color:'rgba(52,211,153,0.6)', marginTop:'2px' }}>MERIDIAN</div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -196,7 +197,7 @@ const ZMSidebar = memo(({ expanded, onToggle, currentPath }: ZMSidebarProps) => 
           return (
             <div key={groupName} style={{ marginBottom:'4px' }}>
               {expanded && (
-                <div style={{ padding:'8px 10px 4px', fontFamily:"'Space Mono', monospace", fontSize:'8px', letterSpacing:'0.2em', color:'rgba(255,255,255,0.14)', textTransform:'uppercase', fontWeight:700 }}>
+                <div style={{ padding:'10px 10px 4px', fontFamily:"'JetBrains Mono', monospace", fontSize:'8px', letterSpacing:'0.22em', color:'rgba(255,255,255,0.18)', textTransform:'uppercase', fontWeight:700 }}>
                   {groupName}
                 </div>
               )}
@@ -208,7 +209,7 @@ const ZMSidebar = memo(({ expanded, onToggle, currentPath }: ZMSidebarProps) => 
       </div>
 
       {/* Bottom */}
-      <div style={{ padding:'8px 8px 12px', borderTop:'1px solid rgba(255,255,255,0.04)', flexShrink:0 }}>
+      <div style={{ padding:'8px 8px 12px', borderTop:'1px solid rgba(52,211,153,0.07)', flexShrink:0 }}>
         {BOTTOM_ITEMS.map(item => (
           <button key={item.id} type="button" onClick={() => handleNav(item.path)}
             onMouseEnter={() => handleHover(item.id)} onMouseLeave={() => handleHover(null)}
