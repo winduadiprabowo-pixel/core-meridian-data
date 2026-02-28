@@ -1,21 +1,13 @@
 /**
- * Markets.tsx — ZERØ MERIDIAN 2026 push27
- * push27: Mobile responsive (useBreakpoint)
- *        + Mobile 4-col layout (Rank, Asset, Price, 24h)
- *        + Duplicate style props fixed (5 → 0)
- *        + Touch targets 48px on interactive elements
- *        + Virtual keyboard handling via proper input styling
- *
- * push23: ALL className → inline style (35 violations fixed)
- * Row height 56px → 40px (terminal standard)
- * - VirtualList untuk 100+ assets tanpa lag
- * - useMarketWorker untuk sort/filter off main thread
- * - React.memo + displayName ✓
- * - rgba() only ✓
- * - Zero template literals di JSX ✓
- * - will-change: transform ✓
- * - aria-label + role ✓
- * - Zero duplicate style props ✓ push27
+ * Markets.tsx — ZERØ MERIDIAN push98
+ * UPGRADE: Coinbase-style clean design
+ * - Coin logos, name + symbol stacked
+ * - Colored change badges
+ * - Sparkline mini charts
+ * - Search filter + sort headers
+ * - Mobile: 4-col compact
+ * - Desktop: full 7-col
+ * - VirtualList: 100+ assets tanpa lag
  */
 
 import { memo, useState, useCallback, useMemo, useEffect, useRef } from 'react';
@@ -27,232 +19,171 @@ import SparklineChart from '@/components/shared/SparklineChart';
 import { formatPrice, formatChange, formatCompact } from '@/lib/formatters';
 import type { CryptoAsset } from '@/lib/formatters';
 
-type SortKey = 'rank' | 'name' | 'price' | 'change24h' | 'change7d' | 'marketCap' | 'volume24h';
-type SortDir = 'asc' | 'desc';
+type SK = 'rank'|'name'|'price'|'change24h'|'change7d'|'marketCap'|'volume24h';
+type SD = 'asc'|'desc';
 
-const ROW_HEIGHT = 40;
-const ROW_HEIGHT_MOBILE = 48; // WCAG touch target
+const ROW_H  = 52;
+const ROW_HM = 56;
 
-// ─── Arrow icons ──────────────────────────────────────────────────────────────
+// ─── Change badge ─────────────────────────────────────────────────────────────
 
-const ArrowUp = () => (
-  <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
-    <path d="M4.5 1.5l-3 4h6l-3-4z" fill="rgba(96,165,250,1)" />
-  </svg>
-);
+const ChangeBadge = memo(({ val, size = 11 }: { val: number; size?: number }) => {
+  const pos = val >= 0;
+  return (
+    <span style={{
+      fontFamily:"'JetBrains Mono',monospace", fontSize:size+'px', fontWeight:600,
+      color: pos ? 'rgba(34,255,170,1)' : 'rgba(255,68,136,1)',
+      background: pos ? 'rgba(34,255,170,0.08)' : 'rgba(255,68,136,0.08)',
+      border: '1px solid ' + (pos ? 'rgba(34,255,170,0.2)' : 'rgba(255,68,136,0.2)'),
+      borderRadius:'4px', padding:'2px 6px', whiteSpace:'nowrap' as const,
+    }}>
+      {(pos?'+':'')+val.toFixed(2)+'%'}
+    </span>
+  );
+});
+ChangeBadge.displayName = 'ChangeBadge';
 
-const ArrowDown = () => (
-  <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
-    <path d="M4.5 7.5l-3-4h6l-3 4z" fill="rgba(96,165,250,1)" />
-  </svg>
-);
+// ─── Sort header ─────────────────────────────────────────────────────────────
 
-const ArrowBoth = () => (
-  <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
-    <path d="M4.5 1l-2 2.5h4L4.5 1zM4.5 8l-2-2.5h4L4.5 8z" fill="currentColor" opacity="0.3" />
-  </svg>
-);
+const SortHdr = memo(({ label, k, sortKey, sortDir, onSort, align='right', width }:
+  { label:string; k:SK; sortKey:SK; sortDir:SD; onSort:(k:SK)=>void; align?:string; width?:number }) => {
+  const active = sortKey === k;
+  return (
+    <button type="button" onClick={() => onSort(k)}
+      style={{
+        fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', letterSpacing:'0.1em',
+        color: active ? 'rgba(0,238,255,0.9)' : 'rgba(80,80,100,0.8)',
+        textAlign: align as 'right'|'left'|'center',
+        cursor:'pointer', background:'none', border:'none', padding:'0', display:'flex',
+        alignItems:'center', gap:'3px', justifyContent: align==='right' ? 'flex-end' : 'flex-start',
+        width: width ? width+'px' : undefined, flexShrink:0,
+        transition:'color 0.15s',
+      }}>
+      {label.toUpperCase()}
+      <span style={{ opacity: active ? 1 : 0.3 }}>{active ? (sortDir==='asc' ? '↑' : '↓') : '↕'}</span>
+    </button>
+  );
+});
+SortHdr.displayName = 'SortHdr';
 
-// ─── AssetRow Desktop ─────────────────────────────────────────────────────────
+// ─── Asset Row ────────────────────────────────────────────────────────────────
 
-interface AssetRowProps {
-  asset: CryptoAsset;
-  index: number;
-  isMobile: boolean;
-}
+const AssetRow = memo(({ asset, index, isMobile }: { asset:CryptoAsset; index:number; isMobile:boolean }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const prev = useRef(asset.price);
+  const m = useRef(true);
 
-const AssetRow = memo(({ asset, index, isMobile }: AssetRowProps) => {
-  const ref        = useRef<HTMLDivElement>(null);
-  const prevPrice  = useRef(asset.price);
-  const mountedRef = useRef(true);
+  useEffect(() => { m.current = true; return () => { m.current = false; }; }, []);
 
   useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
-  }, []);
-
-  useEffect(() => {
-    if (!mountedRef.current || !ref.current) return;
-    if (asset.price === prevPrice.current) return;
-    const cls = asset.priceDirection === 'up'
-      ? 'animate-flash-pos'
-      : asset.priceDirection === 'down'
-      ? 'animate-flash-neg'
-      : '';
-    if (!cls) { prevPrice.current = asset.price; return; }
-    ref.current.classList.remove('animate-flash-pos', 'animate-flash-neg');
+    if (!m.current || !ref.current || asset.price === prev.current) return;
+    const cls = asset.priceDirection==='up' ? 'animate-flash-pos' : asset.priceDirection==='down' ? 'animate-flash-neg' : '';
+    if (!cls) { prev.current = asset.price; return; }
+    ref.current.classList.remove('animate-flash-pos','animate-flash-neg');
     void ref.current.offsetWidth;
     ref.current.classList.add(cls);
-    prevPrice.current = asset.price;
-    const t = setTimeout(() => {
-      if (mountedRef.current) ref.current?.classList.remove(cls);
-    }, 300);
+    prev.current = asset.price;
+    const t = setTimeout(() => { if (m.current) ref.current?.classList.remove(cls); }, 300);
     return () => clearTimeout(t);
   }, [asset.price, asset.priceDirection]);
 
-  const rowBg = index % 2 === 0 ? 'rgba(255,255,255,0.012)' : 'transparent';
-  const change24Color = asset.change24h >= 0 ? 'rgba(52,211,153,1)' : 'rgba(251,113,133,1)';
-  const rowHeight = isMobile ? ROW_HEIGHT_MOBILE : ROW_HEIGHT;
+  const bg = index%2===0 ? 'rgba(255,255,255,0.01)' : 'transparent';
+  const h = isMobile ? ROW_HM : ROW_H;
 
   if (isMobile) {
-    // Mobile: 4 columns only — Rank, Asset, Price, 24h
     return (
-      <div
-        ref={ref}
-        style={{
-          height: rowHeight,
-          background: rowBg,
-          borderBottom: '1px solid rgba(96,165,250,0.05)',
-          display: 'grid',
-          gridTemplateColumns: '28px 1fr 90px 64px',
-          alignItems: 'center',
-          padding: '0 12px',
-          gap: '8px',
-          willChange: 'transform',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(96,165,250,0.04)'; }}
-        onMouseLeave={e => { e.currentTarget.style.background = rowBg; }}
-      >
-        {/* Rank */}
-        <span style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: '10px', textAlign: 'right',
-          color: 'var(--zm-text-faint)',
-        }}>
-          {asset.rank}
-        </span>
-
-        {/* Logo + Symbol */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+      <div ref={ref} style={{ height:h, background:bg,
+        borderBottom:'1px solid rgba(255,255,255,0.04)',
+        display:'grid', gridTemplateColumns:'28px 1fr 90px 72px',
+        alignItems:'center', padding:'0 12px', gap:'8px', willChange:'transform',
+        transition:'background 0.12s' }}
+        onMouseEnter={e=>{e.currentTarget.style.background='rgba(0,238,255,0.03)';}}
+        onMouseLeave={e=>{e.currentTarget.style.background=bg;}}>
+        <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'10px',
+          color:'rgba(80,80,100,0.7)', textAlign:'right' }}>{asset.rank}</span>
+        <div style={{ display:'flex', alignItems:'center', gap:'6px', minWidth:0 }}>
           {asset.image
-            ? <img src={asset.image} alt="" style={{ width: '18px', height: '18px', borderRadius: '50%', flexShrink: 0 }} />
-            : <div style={{ width: '18px', height: '18px', borderRadius: '50%', flexShrink: 0, background: 'rgba(96,165,250,0.2)' }} />
-          }
-          <span style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: '11px', fontWeight: 600,
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            color: 'var(--zm-text-primary)',
-          }}>
-            {asset.symbol.toUpperCase()}
-          </span>
+            ? <img src={asset.image} alt="" style={{ width:'22px', height:'22px', borderRadius:'50%', flexShrink:0 }} />
+            : <div style={{ width:'22px', height:'22px', borderRadius:'50%', flexShrink:0, background:'rgba(0,238,255,0.15)' }} />}
+          <div style={{ minWidth:0 }}>
+            <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'11px', fontWeight:700,
+              color:'rgba(230,230,242,1)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>
+              {asset.symbol.toUpperCase()}
+            </div>
+            <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px',
+              color:'rgba(80,80,100,0.7)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const }}>
+              {asset.name}
+            </div>
+          </div>
         </div>
-
-        {/* Price */}
-        <span style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: '11px', textAlign: 'right',
-          color: 'var(--zm-text-primary)',
-        }}>
-          {formatPrice(asset.price)}
-        </span>
-
-        {/* 24h change */}
-        <span style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: '11px', textAlign: 'right',
-          color: change24Color,
-        }}>
-          {formatChange(asset.change24h)}
-        </span>
+        <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'11px',
+          textAlign:'right', color:'rgba(230,230,242,1)' }}>{formatPrice(asset.price)}</span>
+        <div style={{ display:'flex', justifyContent:'flex-end' }}>
+          <ChangeBadge val={asset.change24h} size={10} />
+        </div>
       </div>
     );
   }
 
-  // Desktop: full columns
-  const change7dColor = (asset.change7d ?? 0) >= 0 ? 'rgba(52,211,153,1)' : 'rgba(251,113,133,1)';
-
   return (
-    <div
-      ref={ref}
-      style={{
-        height: rowHeight,
-        background: rowBg,
-        borderBottom: '1px solid rgba(96,165,250,0.05)',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 16px',
-        gap: '12px',
-        transition: 'background 0.15s',
-        willChange: 'transform',
-      }}
-      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(96,165,250,0.04)'; }}
-      onMouseLeave={e => { e.currentTarget.style.background = rowBg; }}
-    >
-      <span style={{
-        fontFamily: "'JetBrains Mono', monospace", fontSize: '11px',
-        width: '28px', flexShrink: 0, textAlign: 'right',
-        color: 'var(--zm-text-faint)',
-      }}>
+    <div ref={ref} style={{ height:h, background:bg,
+      borderBottom:'1px solid rgba(255,255,255,0.035)',
+      display:'flex', alignItems:'center', padding:'0 16px', gap:'0',
+      transition:'background 0.12s', willChange:'transform', cursor:'pointer' }}
+      onMouseEnter={e=>{e.currentTarget.style.background='rgba(0,238,255,0.025)';}}
+      onMouseLeave={e=>{e.currentTarget.style.background=bg;}}>
+
+      {/* Rank */}
+      <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'11px',
+        width:'36px', flexShrink:0, textAlign:'right', color:'rgba(80,80,100,0.6)', paddingRight:'12px' }}>
         {asset.rank}
       </span>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '150px', flexShrink: 0 }}>
+      {/* Asset */}
+      <div style={{ display:'flex', alignItems:'center', gap:'10px', width:'180px', flexShrink:0 }}>
         {asset.image
-          ? <img src={asset.image} alt="" style={{ width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0 }} />
-          : <div style={{ width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, background: 'rgba(96,165,250,0.2)' }} />
-        }
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <span style={{
-            fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', fontWeight: 600,
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            color: 'var(--zm-text-primary)',
-          }}>
-            {asset.symbol.toUpperCase()}
-          </span>
-          <span style={{
-            fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            color: 'var(--zm-text-faint)',
-          }}>
-            {asset.name}
-          </span>
+          ? <img src={asset.image} alt="" style={{ width:'28px', height:'28px', borderRadius:'50%', flexShrink:0 }} />
+          : <div style={{ width:'28px', height:'28px', borderRadius:'50%', flexShrink:0, background:'rgba(0,238,255,0.1)' }} />}
+        <div>
+          <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'12px', fontWeight:700,
+            color:'rgba(230,230,242,1)' }}>{asset.symbol.toUpperCase()}</div>
+          <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px',
+            color:'rgba(80,80,100,0.7)' }}>{asset.name}</div>
         </div>
       </div>
 
-      <span style={{
-        fontFamily: "'JetBrains Mono', monospace", fontSize: '11px',
-        width: '100px', flexShrink: 0, textAlign: 'right',
-        color: 'var(--zm-text-primary)',
-      }}>
+      {/* Price */}
+      <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'12px', fontWeight:600,
+        marginLeft:'auto', color:'rgba(230,230,242,1)', minWidth:'110px', textAlign:'right' }}>
         {formatPrice(asset.price)}
       </span>
 
-      <span style={{
-        fontFamily: "'JetBrains Mono', monospace", fontSize: '11px',
-        width: '72px', flexShrink: 0, textAlign: 'right',
-        color: change24Color,
-      }}>
-        {formatChange(asset.change24h)}
-      </span>
+      {/* 24h */}
+      <div style={{ minWidth:'90px', display:'flex', justifyContent:'flex-end', paddingRight:'12px' }}>
+        <ChangeBadge val={asset.change24h} />
+      </div>
 
-      <span style={{
-        fontFamily: "'JetBrains Mono', monospace", fontSize: '11px',
-        width: '72px', flexShrink: 0, textAlign: 'right',
-        color: change7dColor,
-      }}>
-        {formatChange(asset.change7d ?? 0)}
-      </span>
+      {/* 7d */}
+      <div style={{ minWidth:'80px', display:'flex', justifyContent:'flex-end', paddingRight:'12px' }}>
+        <ChangeBadge val={asset.change7d ?? 0} size={10} />
+      </div>
 
-      <span style={{
-        fontFamily: "'JetBrains Mono', monospace", fontSize: '11px',
-        width: '100px', flexShrink: 0, textAlign: 'right',
-        color: 'var(--zm-text-secondary)',
-      }}>
+      {/* Market Cap */}
+      <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'11px',
+        minWidth:'100px', textAlign:'right', color:'rgba(138,138,158,0.7)', paddingRight:'12px' }}>
         {formatCompact(asset.marketCap)}
       </span>
 
-      <span style={{
-        fontFamily: "'JetBrains Mono', monospace", fontSize: '11px',
-        width: '100px', flexShrink: 0, textAlign: 'right',
-        color: 'var(--zm-text-secondary)',
-      }}>
+      {/* Volume */}
+      <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'11px',
+        minWidth:'90px', textAlign:'right', color:'rgba(138,138,158,0.55)', paddingRight:'12px' }}>
         {formatCompact(asset.volume24h)}
       </span>
 
-      <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
-        {asset.sparkline && asset.sparkline.length > 1 && (
-          <SparklineChart data={asset.sparkline} width={80} height={28} color="auto" />
+      {/* Sparkline */}
+      <div style={{ width:'80px', flexShrink:0 }}>
+        {asset.sparkline && asset.sparkline.length > 0 && (
+          <SparklineChart data={asset.sparkline} positive={(asset.change7d ?? 0) >= 0} width={80} height={32} />
         )}
       </div>
     </div>
@@ -260,244 +191,124 @@ const AssetRow = memo(({ asset, index, isMobile }: AssetRowProps) => {
 });
 AssetRow.displayName = 'AssetRow';
 
-// ─── HeaderCell ───────────────────────────────────────────────────────────────
-
-interface HeaderCellProps {
-  label:   string;
-  sortKey: SortKey;
-  current: SortKey;
-  dir:     SortDir;
-  onSort:  (key: SortKey) => void;
-  width?:  string | number;
-  align?:  'left' | 'right';
-}
-
-const HeaderCell = memo(({ label, sortKey, current, dir, onSort, width = 'auto', align = 'right' }: HeaderCellProps) => {
-  const isActive = current === sortKey;
-  const color    = isActive ? 'rgba(96,165,250,1)' : 'var(--zm-text-faint)';
-  return (
-    <button
-      type="button"
-      style={{
-        fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px',
-        textAlign: align,
-        display: 'flex', alignItems: 'center',
-        justifyContent: align === 'right' ? 'flex-end' : 'flex-start',
-        gap: '4px', color,
-        background: 'transparent', border: 'none', cursor: 'pointer',
-        padding: 0, width, flexShrink: 0, letterSpacing: '0.06em',
-        minHeight: 36,
-      }}
-      onClick={() => onSort(sortKey)}
-      aria-label={'Sort by ' + label + (isActive ? (dir === 'asc' ? ', ascending' : ', descending') : '')}
-      aria-sort={isActive ? (dir === 'asc' ? 'ascending' : 'descending') : 'none'}
-    >
-      {label}
-      {isActive
-        ? dir === 'asc' ? <ArrowUp /> : <ArrowDown />
-        : <ArrowBoth />
-      }
-    </button>
-  );
-});
-HeaderCell.displayName = 'HeaderCell';
-
-// ─── Markets Page ─────────────────────────────────────────────────────────────
+// ─── Markets ──────────────────────────────────────────────────────────────────
 
 const Markets = memo(() => {
   const { assets } = useCrypto();
-  const worker     = useMarketWorker();
   const { isMobile } = useBreakpoint();
+  const [sortKey, setSortKey] = useState<SK>('rank');
+  const [sortDir, setSortDir] = useState<SD>('asc');
+  const [search, setSearch] = useState('');
+  const searchRef = useRef('');
+  const m = useRef(true);
 
-  const [query,     setQuery]     = useState('');
-  const [sortKey,   setSortKey]   = useState<SortKey>('rank');
-  const [sortDir,   setSortDir]   = useState<SortDir>('asc');
-  const [filtered,  setFiltered]  = useState<CryptoAsset[]>(assets);
-  const [isWorking, setIsWorking] = useState(false);
-  const mountedRef = useRef(true);
+  useEffect(() => { m.current = true; return () => { m.current = false; }; }, []);
 
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
-  }, []);
+  const { sorted } = useMarketWorker({ assets, sortKey, sortDir, search });
 
-  useEffect(() => {
-    if (assets.length === 0) return;
-    setIsWorking(true);
-    worker.sortAndFilter(assets, sortKey, sortDir, query)
-      .then(result => {
-        if (!mountedRef.current) return;
-        setFiltered(result.assets);
-      })
-      .catch(() => {
-        if (!mountedRef.current) return;
-        const q = query.toLowerCase();
-        const list = assets.filter(a =>
-          !q || a.name.toLowerCase().includes(q) || a.symbol.toLowerCase().includes(q)
-        );
-        list.sort((a, b) => {
-          const mul = sortDir === 'asc' ? 1 : -1;
-          if (sortKey === 'name') return mul * a.name.localeCompare(b.name);
-          return mul * ((a[sortKey] as number ?? 0) - (b[sortKey] as number ?? 0));
-        });
-        setFiltered(list);
-      })
-      .finally(() => {
-        if (mountedRef.current) setIsWorking(false);
-      });
-  }, [assets, sortKey, sortDir, query, worker]);
-
-  const handleSort = useCallback((key: SortKey) => {
-    setSortKey(prev => {
-      if (prev === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-      else setSortDir('desc');
-      return key;
-    });
-  }, []);
+  const handleSort = useCallback((k: SK) => {
+    if (!m.current) return;
+    setSortDir(d => sortKey === k ? (d==='asc'?'desc':'asc') : 'desc');
+    setSortKey(k);
+  }, [sortKey]);
 
   const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
+    if (!m.current) return;
+    searchRef.current = e.target.value;
+    setSearch(e.target.value);
   }, []);
 
-  const rowHeight = isMobile ? ROW_HEIGHT_MOBILE : ROW_HEIGHT;
+  const rowHeight = isMobile ? ROW_HM : ROW_H;
 
   const renderRow = useCallback((asset: CryptoAsset, index: number) => (
-    <AssetRow asset={asset} index={index} isMobile={isMobile} />
+    <AssetRow key={asset.id} asset={asset} index={index} isMobile={isMobile} />
   ), [isMobile]);
 
-  const getKey = useCallback((asset: CryptoAsset) => asset.id, []);
+  const containerStyle = useMemo(() => ({
+    background:'rgba(8,10,18,1)', borderRadius:'12px',
+    border:'1px solid rgba(255,255,255,0.06)', overflow:'hidden' as const,
+  }), []);
 
-  const listHeight = useMemo(() => Math.min(
-    window.innerHeight - 240,
-    filtered.length * rowHeight
-  ), [filtered.length, rowHeight]);
+  const headerStyle = useMemo(() => ({
+    padding: isMobile ? '12px 12px 10px' : '14px 16px 12px',
+    borderBottom:'1px solid rgba(255,255,255,0.05)',
+    display:'flex', alignItems:'center', gap:'12px', flexWrap:'wrap' as const,
+    background:'rgba(255,255,255,0.015)',
+  }), [isMobile]);
+
+  const colHdrStyle = useMemo(() => ({
+    display: isMobile ? 'none' : 'flex',
+    alignItems:'center', padding:'8px 16px',
+    borderBottom:'1px solid rgba(255,255,255,0.04)',
+    background:'rgba(255,255,255,0.01)',
+    position:'sticky' as const, top:0, zIndex:2,
+  }), [isMobile]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} role="main" aria-label="Live Markets">
-
+    <div style={{ padding: isMobile ? '12px' : '16px 20px' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <h1 style={{
-            fontSize: isMobile ? '16px' : '20px',
-            fontWeight: 700,
-            fontFamily: "'IBM Plex Mono', monospace",
-            color: 'var(--zm-text-primary)',
-            letterSpacing: '0.04em',
-            margin: 0,
-          }}>
-            Live Markets
-          </h1>
-          <span style={{
-            fontSize: '11px',
-            fontFamily: "'JetBrains Mono', monospace",
-            padding: '2px 8px', borderRadius: '4px',
-            background: 'rgba(52,211,153,0.1)',
-            color: 'rgba(52,211,153,1)',
-          }}>
-            {filtered.length} assets
-          </span>
-          {isWorking && (
-            <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", color: 'var(--zm-text-faint)' }}>
-              sorting...
-            </span>
-          )}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'16px', flexWrap:'wrap' as const, gap:'10px' }}>
+        <div>
+          <h1 style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'16px', fontWeight:700,
+            color:'rgba(230,230,242,1)', margin:0, letterSpacing:'0.06em' }}>MARKETS</h1>
+          <p style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:'10px',
+            color:'rgba(80,80,100,0.8)', margin:'2px 0 0', letterSpacing:'0.06em' }}>
+            {sorted.length} assets · LIVE
+          </p>
         </div>
-
-        {/* Search - virtual keyboard friendly */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '8px',
-          padding: '6px 12px', borderRadius: '8px',
-          background: 'var(--zm-glass-bg)', border: '1px solid var(--zm-glass-border)',
-          minWidth: isMobile ? '100%' : '200px',
-          minHeight: isMobile ? 48 : 'auto',
-        }}>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-            <circle cx="5" cy="5" r="3.5" stroke="currentColor" strokeWidth="1.5" opacity="0.5" />
-            <line x1="8" y1="8" x2="11" y2="11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
-          </svg>
+        {/* Search */}
+        <div style={{ position:'relative' as const }}>
           <input
-            type="search"
-            placeholder="Search assets..."
-            value={query}
+            type="text"
+            placeholder="Search assets…"
+            value={search}
             onChange={handleSearch}
-            aria-label="Search assets"
             style={{
-              background: 'transparent', outline: 'none', border: 'none',
-              fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px',
-              flex: 1, color: 'var(--zm-text-primary)',
-              WebkitAppearance: 'none',
+              fontFamily:"'JetBrains Mono',monospace", fontSize:'11px',
+              background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)',
+              borderRadius:'8px', padding:'8px 12px 8px 32px',
+              color:'rgba(230,230,242,0.9)', outline:'none',
+              width: isMobile ? '160px' : '220px',
             }}
+            aria-label="Search assets"
           />
+          <span style={{ position:'absolute' as const, left:'10px', top:'50%', transform:'translateY(-50%)',
+            fontSize:'12px', color:'rgba(80,80,100,0.6)' }}>⌕</span>
         </div>
       </div>
 
-      {/* Table */}
-      <div style={{
-        background: 'var(--zm-glass-bg)', border: '1px solid var(--zm-glass-border)',
-        borderRadius: '12px', overflow: 'hidden',
-      }}>
-        {/* Column headers */}
-        {isMobile ? (
-          // Mobile: 4 column header
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '28px 1fr 90px 64px',
-            alignItems: 'center',
-            padding: '0 12px',
-            gap: '8px',
-            position: 'sticky' as const,
-            top: 0,
-            zIndex: 10,
-            height: '36px',
-            background: 'var(--zm-topbar-bg)',
-            borderBottom: '1px solid var(--zm-glass-border)',
-            backdropFilter: 'blur(12px)',
-          }}>
-            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: 'var(--zm-text-faint)', letterSpacing: '0.06em', textAlign: 'right' }}>#</span>
-            <HeaderCell label="Asset"  sortKey="name"      current={sortKey} dir={sortDir} onSort={handleSort} width="100%" align="left" />
-            <HeaderCell label="Price"  sortKey="price"     current={sortKey} dir={sortDir} onSort={handleSort} width={90} />
-            <HeaderCell label="24h"    sortKey="change24h" current={sortKey} dir={sortDir} onSort={handleSort} width={64} />
-          </div>
-        ) : (
-          // Desktop: full columns
-          <div style={{
-            display: 'flex', alignItems: 'center',
-            padding: '0 16px', gap: '12px',
-            position: 'sticky' as const, top: 0, zIndex: 10,
-            height: '36px',
-            background: 'var(--zm-topbar-bg)',
-            borderBottom: '1px solid var(--zm-glass-border)',
-            backdropFilter: 'blur(12px)',
-          }}>
-            <span style={{ width: '28px', flexShrink: 0 }} />
-            <span style={{ width: '150px', flexShrink: 0, textAlign: 'left' }}>
-              <HeaderCell label="Asset" sortKey="name" current={sortKey} dir={sortDir} onSort={handleSort} width={150} align="left" />
-            </span>
-            <HeaderCell label="Price"   sortKey="price"     current={sortKey} dir={sortDir} onSort={handleSort} width={100} />
-            <HeaderCell label="24h"     sortKey="change24h" current={sortKey} dir={sortDir} onSort={handleSort} width={72} />
-            <HeaderCell label="7d"      sortKey="change7d"  current={sortKey} dir={sortDir} onSort={handleSort} width={72} />
-            <HeaderCell label="Mkt Cap" sortKey="marketCap" current={sortKey} dir={sortDir} onSort={handleSort} width={100} />
-            <HeaderCell label="Volume"  sortKey="volume24h" current={sortKey} dir={sortDir} onSort={handleSort} width={100} />
-            <span style={{ marginLeft: 'auto', fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: 'var(--zm-text-faint)', letterSpacing: '0.06em' }}>
-              7d Chart
-            </span>
+      <div style={containerStyle}>
+        {/* Table header */}
+        {!isMobile && (
+          <div style={colHdrStyle}>
+            <SortHdr label="#" k="rank" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="right" width={36} />
+            <SortHdr label="Asset" k="name" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="left" width={180} />
+            <SortHdr label="Price" k="price" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} width={110} />
+            <SortHdr label="24h" k="change24h" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} width={90} />
+            <SortHdr label="7d" k="change7d" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} width={80} />
+            <SortHdr label="Mkt Cap" k="marketCap" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} width={100} />
+            <SortHdr label="Volume" k="volume24h" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} width={90} />
+            <span style={{ width:'80px', flexShrink:0, fontFamily:"'JetBrains Mono',monospace",
+              fontSize:'9px', color:'rgba(80,80,100,0.6)', textAlign:'center' }}>7D CHART</span>
           </div>
         )}
-
-        {/* Virtual rows */}
-        <VirtualList
-          items={filtered}
-          itemHeight={rowHeight}
-          height={listHeight || 400}
-          overscan={5}
-          renderItem={renderRow}
-          getKey={getKey}
-        />
+        {/* Rows */}
+        {sorted.length === 0 ? (
+          <div style={{ padding:'40px', textAlign:'center' as const,
+            fontFamily:"'JetBrains Mono',monospace", fontSize:'11px', color:'rgba(80,80,100,0.6)' }}>
+            {assets.length === 0 ? 'Loading market data…' : 'No results for "' + search + '"'}
+          </div>
+        ) : (
+          <VirtualList
+            items={sorted}
+            itemHeight={rowHeight}
+            containerHeight={Math.min(sorted.length * rowHeight, window.innerHeight - 200)}
+            renderItem={renderRow}
+          />
+        )}
       </div>
     </div>
   );
 });
 Markets.displayName = 'Markets';
-
 export default Markets;
