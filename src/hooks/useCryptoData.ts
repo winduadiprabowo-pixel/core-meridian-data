@@ -1,8 +1,9 @@
 /**
  * useCryptoData.ts — ZERØ MERIDIAN 2026 Phase 7
- * UPGRADE Phase 7:
+ * push97: Fix data kosong — hapus /api proxy layer, langsung ke CoinGecko.
+ *         Cloudflare Pages = static hosting, tidak bisa serve /api routes.
  * - useWebTransport: primary transport attempt, WS fallback
- * - useIndexedDB: cache tick history for BTC/ETH/SOL
+ * - useIndexedDB: cache tick history BTC/ETH/SOL
  * Zero JSX. mountedRef + AbortController.
  */
 
@@ -22,28 +23,14 @@ const SYMBOLS = Object.freeze([
 const WS_URL = 'wss://stream.binance.com:9443/stream?streams=' +
   SYMBOLS.map(s => s + '@ticker').join('/');
 
-// WebTransport URL (attempted first, falls back to WS gracefully)
 const WT_URL = 'https://stream.binance.com:443';
 
-const EDGE_MARKETS = '/api/markets';
-const EDGE_GLOBAL  = '/api/global?t=global';
-const EDGE_FNG     = '/api/global?t=fng';
-
+// Direct — no proxy (Cloudflare Pages is static, cannot proxy API keys)
 const CG_MARKETS = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=7d,30d';
 const CG_GLOBAL  = 'https://api.coingecko.com/api/v3/global';
 const FNG_URL    = 'https://api.alternative.me/fng/?limit=1';
 
 const PERSIST_SYMBOLS = Object.freeze(['btcusdt', 'ethusdt', 'solusdt'] as const);
-
-async function fetchWithFallback(primary: string, fallback: string, signal: AbortSignal): Promise<Response> {
-  try {
-    const res = await fetch(primary, { signal });
-    if (res.ok) return res;
-    throw new Error('primary failed');
-  } catch {
-    return fetch(fallback, { signal });
-  }
-}
 
 export function useCryptoData() {
   const dispatch = useCryptoDispatch();
@@ -149,7 +136,7 @@ export function useCryptoData() {
   const fetchMarkets = useCallback(async () => {
     if (!isLeaderRef.current) return;
     try {
-      const res = await fetchWithFallback(EDGE_MARKETS, CG_MARKETS, abortRef.current.signal);
+      const res = await fetch(CG_MARKETS, { signal: abortRef.current.signal });
       if (!res.ok || !mountedRef.current) return;
       const data = await res.json() as Record<string, unknown>[];
       if (!mountedRef.current) return;
@@ -185,7 +172,7 @@ export function useCryptoData() {
   const fetchGlobal = useCallback(async () => {
     if (!isLeaderRef.current) return;
     try {
-      const res = await fetchWithFallback(EDGE_GLOBAL, CG_GLOBAL, abortRef.current.signal);
+      const res = await fetch(CG_GLOBAL, { signal: abortRef.current.signal });
       if (!res.ok || !mountedRef.current) return;
       const json = await res.json() as { data: Record<string, unknown> };
       const d = json.data;
@@ -207,7 +194,7 @@ export function useCryptoData() {
   const fetchFearGreed = useCallback(async () => {
     if (!isLeaderRef.current) return;
     try {
-      const res = await fetchWithFallback(EDGE_FNG, FNG_URL, abortRef.current.signal);
+      const res = await fetch(FNG_URL, { signal: abortRef.current.signal });
       if (!res.ok || !mountedRef.current) return;
       const json = await res.json() as { data: Record<string, string>[] };
       const d = json.data?.[0];
@@ -216,7 +203,6 @@ export function useCryptoData() {
     } catch {}
   }, [dispatch]);
 
-  // Pre-warm price cache from IndexedDB
   useEffect(() => {
     if (!isLeader) return;
     void (async () => {
@@ -241,7 +227,6 @@ export function useCryptoData() {
     fetchGlobal();
     fetchFearGreed();
 
-    // WebTransport first, WS fallback via handleWTError
     if (wtSupported) {
       wtConnect();
     } else {
