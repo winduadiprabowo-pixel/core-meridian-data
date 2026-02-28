@@ -782,6 +782,11 @@ const Converter = memo(() => {
   const mountedRef = useRef(true);
   const [activeTab, setActiveTab] = useState<Tab>('Converter');
   const [state, dispatch]         = useReducer(reducer, INITIAL);
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (assets.length > 0) setLastUpdated(Date.now());
+  }, [assets]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -793,16 +798,37 @@ const Converter = memo(() => {
     setActiveTab(tab);
   }, []);
 
+  const pageStyle = useMemo(() => ({
+    display: 'flex', flexDirection: 'column' as const, gap: '16px',
+    padding: isMobile ? '12px' : '16px', minHeight: '100vh',
+  }), [isMobile]);
+
+  const lastUpdStr = lastUpdated
+    ? new Date(lastUpdated).toLocaleTimeString()
+    : '—';
+
+  if (!loading && assets.length === 0) {
+    return (
+      <div style={pageStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: '13px', color: 'rgba(255,68,136,1)' }}>⚠ Gagal memuat data aset. Periksa koneksi internet.</div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading && assets.length === 0) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-        <Loader2 style={{ color: 'rgba(96,165,250,1)', animation: 'spin 1s linear infinite' }} size={32} />
+      <div style={pageStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+          <Loader2 style={{ color: 'rgba(96,165,250,1)', animation: 'spin 1s linear infinite' }} size={32} />
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div style={pageStyle}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', willChange: 'transform' }}>
         <h1 style={{ fontFamily: FONT_MONO, fontSize: '20px', fontWeight: 700, margin: 0, background: 'linear-gradient(135deg, rgba(96,165,250,1), rgba(167,139,250,1))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '0.04em' }}>
@@ -814,6 +840,7 @@ const Converter = memo(() => {
             Live Prices
           </span>
         </div>
+        <span style={{ fontFamily: FONT_MONO, fontSize: '10px', color: 'rgba(80,80,100,1)', marginLeft: 'auto' }}>Updated: {lastUpdStr}</span>
       </div>
 
       {/* Tabs */}
