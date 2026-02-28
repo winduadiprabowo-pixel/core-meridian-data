@@ -1,4 +1,14 @@
+/**
+ * SmartMoney.tsx — ZERØ MERIDIAN 2026 push110
+ * push110: Responsive polish — mobile 320px + desktop 1440px
+ * - useBreakpoint ✓  table overflowX scroll on mobile ✓
+ * - React.memo + displayName ✓
+ * - rgba() only ✓  Zero className ✓  Zero hex color ✓
+ * - JetBrains Mono only ✓
+ */
+
 import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from "react";
+import { useBreakpoint } from "@/hooks/useBreakpoint";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -56,6 +66,7 @@ const FlowRow = memo(({ flow }: FlowRowProps) => {
     borderBottom: `1px solid ${C.glassBorder}`,
     background: hovered ? "rgba(255,255,255,0.03)" : "transparent",
     transition: "background 0.15s ease",
+    minWidth: "500px",
   }), [hovered]);
 
   const badgeStyle = useMemo(() => ({
@@ -111,6 +122,7 @@ EmptyState.displayName = "EmptyState";
 // ─── SmartMoney (Main) ────────────────────────────────────────────────────────
 
 const SmartMoney = memo(() => {
+  const { isMobile } = useBreakpoint();
   const [activeTab, setActiveTab] = useState<TabType>("Whale Flows");
   const [data, setData] = useState<SmartMoneyData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -121,7 +133,6 @@ const SmartMoney = memo(() => {
     setLoading(true);
     setError(null);
     try {
-      // Real implementation: Etherscan whale tracker via useWhaleTracker hook
       const res = await fetch("https://api.etherscan.io/v2/api?module=account&action=txlist&address=0x&sort=desc");
       if (!mountedRef.current) return;
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -152,37 +163,41 @@ const SmartMoney = memo(() => {
 
   const makeTabStyle = useCallback((t: TabType) => ({
     fontFamily: FONT,
-    fontSize: 10,
+    fontSize: isMobile ? 9 : 10,
     fontWeight: 600,
     letterSpacing: "0.08em",
     color: t === activeTab ? C.accent : C.textFaint,
     background: "transparent",
     border: "none",
     borderBottom: `2px solid ${t === activeTab ? C.accent : "transparent"}`,
-    padding: "8px 14px",
+    padding: isMobile ? "8px 10px" : "8px 14px",
     cursor: "pointer",
     transition: "color 0.15s ease",
-  }), [activeTab]);
+    whiteSpace: "nowrap" as const,
+  }), [activeTab, isMobile]);
 
   const pageStyle = useMemo(() => ({
-    background: C.bgBase, minHeight: "100vh", color: C.textPrimary, fontFamily: FONT, padding: "20px 16px",
-  }), []);
+    background: C.bgBase, minHeight: "100vh", color: C.textPrimary, fontFamily: FONT,
+    padding: isMobile ? "16px 12px" : "20px 16px",
+  }), [isMobile]);
 
   const cardStyle = useMemo(() => ({
     background: C.glassBg, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: "hidden" as const,
   }), []);
 
+  const handleRefresh = useCallback(() => fetchData(), [fetchData]);
+
   return (
     <div style={pageStyle}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20, gap: 12 }}>
         <div>
-          <h1 style={{ fontFamily: FONT, fontSize: 20, fontWeight: 700, letterSpacing: "0.06em", color: C.textPrimary, margin: 0 }}>Smart Money</h1>
+          <h1 style={{ fontFamily: FONT, fontSize: isMobile ? 16 : 20, fontWeight: 700, letterSpacing: "0.06em", color: C.textPrimary, margin: 0 }}>Smart Money</h1>
           <p style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: C.textFaint, margin: "6px 0 0" }}>Whale flows · On-chain intelligence</p>
         </div>
         <button
-          style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.accent, background: "rgba(0,238,255,0.08)", border: "1px solid rgba(0,238,255,0.2)", borderRadius: 6, padding: "6px 12px", cursor: "pointer" }}
-          onClick={useCallback(() => fetchData(), [fetchData])}
+          style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.accent, background: "rgba(0,238,255,0.08)", border: "1px solid rgba(0,238,255,0.2)", borderRadius: 6, padding: "6px 12px", cursor: "pointer", flexShrink: 0 }}
+          onClick={handleRefresh}
         >
           ↻ Refresh
         </button>
@@ -190,16 +205,16 @@ const SmartMoney = memo(() => {
 
       {/* Main Card */}
       <div style={cardStyle}>
-        {/* Card Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: `1px solid ${C.glassBorder}` }}>
-          <div style={{ display: "flex", gap: 0 }}>
+        {/* Card Header — tabs scrollable on mobile */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", borderBottom: `1px solid ${C.glassBorder}`, overflowX: "auto" as const }}>
+          <div style={{ display: "flex", gap: 0, flexShrink: 0 }}>
             {TABS.map(t => (
-              <button key={t} style={makeTabStyle(t)} onClick={useCallback(() => setActiveTab(t), [t])}>
+              <button key={t} style={makeTabStyle(t)} onClick={() => setActiveTab(t)}>
                 {t}
               </button>
             ))}
           </div>
-          <span style={{ fontFamily: FONT, fontSize: 9, color: C.textFaint }}>Updated {lastUpdatedStr}</span>
+          <span style={{ fontFamily: FONT, fontSize: 9, color: C.textFaint, flexShrink: 0, paddingLeft: 12 }}>Updated {lastUpdatedStr}</span>
         </div>
 
         {loading && (
@@ -221,8 +236,9 @@ const SmartMoney = memo(() => {
         )}
 
         {!loading && !error && activeTab === "Whale Flows" && (
-          <>
-            <div style={{ display: "grid", gridTemplateColumns: "60px 52px 100px 1fr 1fr 70px", gap: 12, padding: "8px 16px", borderBottom: `1px solid rgba(255,255,255,0.1)` }}>
+          /* overflowX scroll wrapper for mobile */
+          <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
+            <div style={{ display: "grid", gridTemplateColumns: "60px 52px 100px 1fr 1fr 70px", gap: 12, padding: "8px 16px", borderBottom: `1px solid rgba(255,255,255,0.1)`, minWidth: "500px" }}>
               {["Symbol","Side","USD Value","From","To","Time"].map(h => (
                 <span key={h} style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: C.textFaint }}>{h}</span>
               ))}
@@ -231,7 +247,7 @@ const SmartMoney = memo(() => {
               ? <EmptyState />
               : (data!.flows as WhaleFlow[]).map(f => <FlowRow key={f.id} flow={f} />)
             }
-          </>
+          </div>
         )}
 
         {!loading && !error && activeTab !== "Whale Flows" && (
