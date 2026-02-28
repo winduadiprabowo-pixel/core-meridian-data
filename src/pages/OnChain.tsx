@@ -45,7 +45,7 @@ const Shimmer = memo(({ w = '100%', h = 14 }: { w?: string | number; h?: number 
     <motion.div
       animate={{ x: ['-100%', '200%'] }}
       transition={{ duration: 1.4, repeat: Infinity, ease: 'linear' }}
-      style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, transparent, rgba(0,238,255,0.07), transparent)' }}
+      style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, transparent, rgba(0,238,255,0.07), transparent)', willChange: 'transform' }}
     />
   </div>
 ));
