@@ -134,7 +134,7 @@ const NewsCard = memo(({ item }: { item: NewsItem }) => {
   const handleClick = useCallback(() => { window.open(item.url, '_blank', 'noopener,noreferrer'); }, [item.url]);
 
   return (
-    <motion.div style={cardStyle} onClick={handleClick} whileHover={{ scale: 1.01 }} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+    <motion.div style={{...cardStyle, willChange:'transform'}} onClick={handleClick} whileHover={{ scale: 1.01 }} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' as const }}>
         <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
         <span style={{ fontFamily: FONT_MONO, fontSize: '10px', color: C.accent, letterSpacing: '0.06em', textTransform: 'uppercase' as const, fontWeight: 700 }}>{item.source}</span>
