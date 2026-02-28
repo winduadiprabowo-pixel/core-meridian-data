@@ -25,6 +25,8 @@ import { formatPrice, formatChange, formatCompact, deterministicJitter } from '@
 import type { CryptoAsset } from '@/lib/formatters';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import {
+
+const FONT_MONO = "'JetBrains Mono', monospace";
   Bell, BellOff, Plus, Trash2, Volume2, VolumeX, CheckCircle2,
   TrendingUp, TrendingDown, Activity, AlertTriangle, Zap, X,
   Settings, History, ChevronDown, ChevronUp,
@@ -312,7 +314,7 @@ const AddAlertForm = memo(({ assets, onAdd, onClose, idCounter }: AddAlertFormPr
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Bell size={16} style={{ color: 'rgba(96,165,250,1)' }} />
-            <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: 14, fontWeight: 700, color: 'var(--zm-text-primary)' }}>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 14, fontWeight: 700, color: 'var(--zm-text-primary)' }}>
               New Alert
             </span>
           </div>
@@ -327,13 +329,13 @@ const AddAlertForm = memo(({ assets, onAdd, onClose, idCounter }: AddAlertFormPr
 
         {/* Asset Select */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 10, fontFamily: 'var(--font-mono-ui)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6, display: 'block', color: 'var(--zm-text-faint)' }}>
+          <label style={{ fontSize: 10, fontFamily: FONT_MONO, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6, display: 'block', color: 'var(--zm-text-faint)' }}>
             Asset
           </label>
           <select
             value={symbol}
             onChange={e => setSymbol(e.target.value)}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, fontSize: 14, fontFamily: 'var(--font-mono-ui)', outline: 'none', boxSizing: 'border-box', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(96,165,250,0.14)', color: 'var(--zm-text-primary)' }}
+            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, fontSize: 14, fontFamily: FONT_MONO, outline: 'none', boxSizing: 'border-box', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(96,165,250,0.14)', color: 'var(--zm-text-primary)' }}
           >
             {topAssets.map(a => (
               <option key={a.id} value={a.symbol.toLowerCase()} style={{ background: 'rgba(8,8,24,1)' }}>
@@ -342,7 +344,7 @@ const AddAlertForm = memo(({ assets, onAdd, onClose, idCounter }: AddAlertFormPr
             ))}
           </select>
           {selectedAsset && (
-            <div style={{ marginTop: 4, fontSize: 11, fontFamily: 'monospace', color: 'var(--zm-text-faint)' }}>
+            <div style={{ marginTop: 4, fontSize: 11, fontFamily: FONT_MONO, color: 'var(--zm-text-faint)' }}>
               Current: {formatPrice(selectedAsset.price)} · {formatChange(selectedAsset.change24h)}
             </div>
           )}
@@ -350,7 +352,7 @@ const AddAlertForm = memo(({ assets, onAdd, onClose, idCounter }: AddAlertFormPr
 
         {/* Alert Type */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 10, fontFamily: 'var(--font-mono-ui)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6, display: 'block', color: 'var(--zm-text-faint)' }}>
+          <label style={{ fontSize: 10, fontFamily: FONT_MONO, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6, display: 'block', color: 'var(--zm-text-faint)' }}>
             Alert Type
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -367,7 +369,7 @@ const AddAlertForm = memo(({ assets, onAdd, onClose, idCounter }: AddAlertFormPr
                   style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, textAlign: 'left', transition: 'all 0.15s', cursor: 'pointer', background: active ? cfg.bg : 'rgba(255,255,255,0.03)', border: '1px solid ' + (active ? cfg.border : 'rgba(255,255,255,0.06)'), color: active ? cfg.color : 'var(--zm-text-secondary)', willChange: 'transform' }}
                 >
                   <cfg.icon size={12} />
-                  <span style={{ fontSize: 11, fontFamily: 'var(--font-mono-ui)' }}>{cfg.label}</span>
+                  <span style={{ fontSize: 11, fontFamily: FONT_MONO }}>{cfg.label}</span>
                 </button>
               );
             })}
@@ -376,7 +378,7 @@ const AddAlertForm = memo(({ assets, onAdd, onClose, idCounter }: AddAlertFormPr
 
         {/* Target */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 10, fontFamily: 'var(--font-mono-ui)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6, display: 'block', color: 'var(--zm-text-faint)' }}>
+          <label style={{ fontSize: 10, fontFamily: FONT_MONO, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6, display: 'block', color: 'var(--zm-text-faint)' }}>
             {isPercent ? 'Change % Target' : 'Price Target (USD)'}
           </label>
           <input
@@ -384,16 +386,16 @@ const AddAlertForm = memo(({ assets, onAdd, onClose, idCounter }: AddAlertFormPr
             value={target}
             onChange={e => setTarget(e.target.value)}
             placeholder={placeholder}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, fontSize: 14, fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(96,165,250,0.14)', color: 'var(--zm-text-primary)' }}
+            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, fontSize: 14, fontFamily: FONT_MONO, outline: 'none', boxSizing: 'border-box', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(96,165,250,0.14)', color: 'var(--zm-text-primary)' }}
           />
           {error && (
-            <div style={{ marginTop: 4, fontSize: 11, fontFamily: 'monospace', color: 'var(--zm-text-negative)' }}>{error}</div>
+            <div style={{ marginTop: 4, fontSize: 11, fontFamily: FONT_MONO, color: 'var(--zm-text-negative)' }}>{error}</div>
           )}
         </div>
 
         {/* Note */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 10, fontFamily: 'var(--font-mono-ui)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6, display: 'block', color: 'var(--zm-text-faint)' }}>
+          <label style={{ fontSize: 10, fontFamily: FONT_MONO, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6, display: 'block', color: 'var(--zm-text-faint)' }}>
             Note (optional)
           </label>
           <input
@@ -402,7 +404,7 @@ const AddAlertForm = memo(({ assets, onAdd, onClose, idCounter }: AddAlertFormPr
             onChange={e => setNote(e.target.value)}
             placeholder="e.g. Resistance level, DCA point..."
             maxLength={80}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, fontSize: 14, fontFamily: 'var(--font-mono-ui)', outline: 'none', boxSizing: 'border-box', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(96,165,250,0.14)', color: 'var(--zm-text-primary)' }}
+            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, fontSize: 14, fontFamily: FONT_MONO, outline: 'none', boxSizing: 'border-box', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(96,165,250,0.14)', color: 'var(--zm-text-primary)' }}
           />
         </div>
 
@@ -416,7 +418,7 @@ const AddAlertForm = memo(({ assets, onAdd, onClose, idCounter }: AddAlertFormPr
             style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, flex: 1, transition: 'all 0.15s', cursor: 'pointer', background: sound ? 'rgba(96,165,250,0.10)' : 'rgba(255,255,255,0.03)', border: '1px solid ' + (sound ? 'rgba(96,165,250,0.25)' : 'rgba(255,255,255,0.06)'), color: sound ? 'rgba(96,165,250,1)' : 'var(--zm-text-faint)' }}
           >
             {sound ? <Volume2 size={13} /> : <VolumeX size={13} />}
-            <span style={{ fontSize: 11, fontFamily: 'var(--font-mono-ui)' }}>Sound</span>
+            <span style={{ fontSize: 11, fontFamily: FONT_MONO }}>Sound</span>
           </button>
           <button
             onClick={() => setPush(p => !p)}
@@ -426,7 +428,7 @@ const AddAlertForm = memo(({ assets, onAdd, onClose, idCounter }: AddAlertFormPr
             style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, flex: 1, transition: 'all 0.15s', cursor: 'pointer', background: push ? 'rgba(167,139,250,0.10)' : 'rgba(255,255,255,0.03)', border: '1px solid ' + (push ? 'rgba(167,139,250,0.25)' : 'rgba(255,255,255,0.06)'), color: push ? 'rgba(167,139,250,1)' : 'var(--zm-text-faint)' }}
           >
             {push ? <Bell size={13} /> : <BellOff size={13} />}
-            <span style={{ fontSize: 11, fontFamily: 'var(--font-mono-ui)' }}>Push</span>
+            <span style={{ fontSize: 11, fontFamily: FONT_MONO }}>Push</span>
           </button>
         </div>
 
@@ -435,7 +437,7 @@ const AddAlertForm = memo(({ assets, onAdd, onClose, idCounter }: AddAlertFormPr
           onClick={handleSubmit}
           type="button"
           aria-label="Create new price alert"
-          style={{ width: '100%', padding: '10px 0', borderRadius: 8, fontFamily: 'var(--font-mono-ui)', fontSize: 14, fontWeight: 600, transition: 'all 0.15s', cursor: 'pointer', background: 'rgba(96,165,250,0.18)', border: '1px solid rgba(96,165,250,0.30)', color: 'rgba(96,165,250,1)' }}
+          style={{ width: '100%', padding: '10px 0', borderRadius: 8, fontFamily: FONT_MONO, fontSize: 14, fontWeight: 600, transition: 'all 0.15s', cursor: 'pointer', background: 'rgba(96,165,250,0.18)', border: '1px solid rgba(96,165,250,0.30)', color: 'rgba(96,165,250,1)' }}
         >
           Set Alert
         </button>
@@ -487,21 +489,21 @@ const AlertCard = memo(({ alert, currentPrice, currentChange, onRemove, onToggle
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {alert.image && <img src={alert.image} alt="" style={{ width: 20, height: 20, borderRadius: '50%' }} />}
-          <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: 12, fontWeight: 700, color: 'var(--zm-text-primary)' }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: 12, fontWeight: 700, color: 'var(--zm-text-primary)' }}>
             {alert.symbol.toUpperCase()}
           </span>
           <div
                         style={{ display: 'flex', alignItems: 'center', gap: 4, borderRadius: 4, padding: '2px 6px', background: cfg.bg, border: '1px solid ' + cfg.border }}
           >
             <cfg.icon size={10} style={{ color: cfg.color }} />
-            <span style={{ fontSize: 9, fontFamily: 'var(--font-mono-ui)', color: cfg.color }}>
+            <span style={{ fontSize: 9, fontFamily: FONT_MONO, color: cfg.color }}>
               {cfg.label}
             </span>
           </div>
           <div
                         style={{ borderRadius: 4, padding: '2px 6px', background: sCfg.bg }}
           >
-            <span style={{ fontSize: 9, fontFamily: 'var(--font-mono-ui)', color: sCfg.color }}>
+            <span style={{ fontSize: 9, fontFamily: FONT_MONO, color: sCfg.color }}>
               {sCfg.label}
             </span>
           </div>
@@ -535,16 +537,16 @@ const AlertCard = memo(({ alert, currentPrice, currentChange, onRemove, onToggle
 
       {/* Target */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
-        <span style={{ fontFamily: 'monospace', fontSize: 18, fontWeight: 700, color: cfg.color }}>
+        <span style={{ fontFamily: FONT_MONO, fontSize: 18, fontWeight: 700, color: cfg.color }}>
           {isPercent ? formatChange(alert.target) : formatPrice(alert.target)}
         </span>
         {currentPrice !== undefined && !isPercent && (
-          <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--zm-text-secondary)' }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: 'var(--zm-text-secondary)' }}>
             now {formatPrice(currentPrice)}
           </span>
         )}
         {currentChange !== undefined && isPercent && (
-          <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--zm-text-secondary)' }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: 'var(--zm-text-secondary)' }}>
             now {formatChange(currentChange)}
           </span>
         )}
@@ -560,7 +562,7 @@ const AlertCard = memo(({ alert, currentPrice, currentChange, onRemove, onToggle
               style={{ height: '100%', borderRadius: '50vw', transition: 'all 0.5s', width: (progress.pct * 100).toFixed(1) + '%', background: cfg.color, willChange: 'width' }}
             />
           </div>
-          <div style={{ fontSize: 9, fontFamily: 'monospace', marginTop: 2, color: 'var(--zm-text-faint)' }}>
+          <div style={{ fontSize: 9, fontFamily: FONT_MONO, marginTop: 2, color: 'var(--zm-text-faint)' }}>
             {(progress.pct * 100).toFixed(1) + '% toward target'}
           </div>
         </div>
@@ -570,7 +572,7 @@ const AlertCard = memo(({ alert, currentPrice, currentChange, onRemove, onToggle
       {alert.status === 'triggered' && alert.triggeredPrice !== undefined && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
           <CheckCircle2 size={11} style={{ color: cfg.color }} />
-          <span style={{ fontSize: 10, fontFamily: 'monospace', color: 'var(--zm-text-secondary)' }}>
+          <span style={{ fontSize: 10, fontFamily: FONT_MONO, color: 'var(--zm-text-secondary)' }}>
             {'Triggered at ' + formatPrice(alert.triggeredPrice) + ' · ' + new Date(alert.triggeredAt!).toLocaleTimeString()}
           </span>
         </div>
@@ -578,7 +580,7 @@ const AlertCard = memo(({ alert, currentPrice, currentChange, onRemove, onToggle
 
       {/* Note */}
       {alert.note && (
-        <div style={{ fontSize: 10, fontFamily: 'var(--font-mono-ui)', marginTop: 4, color: 'var(--zm-text-faint)' }}>
+        <div style={{ fontSize: 10, fontFamily: FONT_MONO, marginTop: 4, color: 'var(--zm-text-faint)' }}>
           {alert.note}
         </div>
       )}
@@ -597,21 +599,21 @@ const LogEntry = memo(({ entry }: { entry: TriggeredLog }) => {
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {entry.image && <img src={entry.image} alt="" style={{ width: 16, height: 16, borderRadius: '50%' }} />}
-        <span style={{ fontFamily: 'var(--font-mono-ui)', fontSize: 11, fontWeight: 600, color: 'var(--zm-text-primary)' }}>
+        <span style={{ fontFamily: FONT_MONO, fontSize: 11, fontWeight: 600, color: 'var(--zm-text-primary)' }}>
           {entry.symbol.toUpperCase()}
         </span>
         <div
                     style={{ display: 'flex', alignItems: 'center', gap: 4, borderRadius: 4, padding: '2px 6px', background: cfg.bg }}
         >
           <cfg.icon size={9} style={{ color: cfg.color }} />
-          <span style={{ fontSize: 9, fontFamily: 'var(--font-mono-ui)', color: cfg.color }}>{cfg.label}</span>
+          <span style={{ fontSize: 9, fontFamily: FONT_MONO, color: cfg.color }}>{cfg.label}</span>
         </div>
       </div>
       <div style={{ textAlign: 'right' }}>
-        <div style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--zm-text-primary)' }}>
+        <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: 'var(--zm-text-primary)' }}>
           {formatPrice(entry.triggeredPrice)}
         </div>
-        <div style={{ fontFamily: 'monospace', fontSize: 9, color: 'var(--zm-text-faint)' }}>
+        <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: 'var(--zm-text-faint)' }}>
           {new Date(entry.triggeredAt).toLocaleString()}
         </div>
       </div>
@@ -647,10 +649,10 @@ const AlertToast = memo(({ toast, onDismiss }: { toast: ToastItem; onDismiss: (i
         <cfg.icon size={14} style={{ color: cfg.color }} />
       </div>
       <div style={{ flex: 1 }}>
-        <div style={{ fontFamily: 'var(--font-mono-ui)', fontSize: 12, fontWeight: 700, color: cfg.color }}>
+        <div style={{ fontFamily: FONT_MONO, fontSize: 12, fontWeight: 700, color: cfg.color }}>
           {cfg.label} — {toast.symbol.toUpperCase()}
         </div>
-        <div style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--zm-text-secondary)' }}>
+        <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: 'var(--zm-text-secondary)' }}>
           {isPercent
             ? formatChange(toast.price) + ' (target ' + formatChange(toast.target) + ')'
             : formatPrice(toast.price) + ' (target ' + formatPrice(toast.target) + ')'}
@@ -816,12 +818,12 @@ const Alerts = memo(() => {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-mono-ui)', margin: 0, background: 'linear-gradient(90deg, var(--zm-accent) 0%, var(--zm-violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Alerts Center</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 700, fontFamily: FONT_MONO, margin: 0, background: 'linear-gradient(90deg, var(--zm-accent) 0%, var(--zm-violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Alerts Center</h1>
           <div
                         style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 8px', borderRadius: 4, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)' }}
           >
             <WsStatusDot status={wsStatus} />
-            <span style={{ fontSize: 10, fontFamily: 'var(--font-mono-ui)', color: 'rgba(52,211,153,0.9)' }}>
+            <span style={{ fontSize: 10, fontFamily: FONT_MONO, color: 'rgba(52,211,153,0.9)' }}>
               {wsStatus === 'connected' ? 'LIVE · Prices realtime' : wsStatus.toUpperCase()}
             </span>
           </div>
@@ -834,7 +836,7 @@ const Alerts = memo(() => {
             type="button"
             aria-pressed={state.soundEnabled}
             aria-label={state.soundEnabled ? 'Mute alert sounds' : 'Unmute alert sounds'}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, fontSize: 11, fontFamily: 'var(--font-mono-ui)', transition: 'all 0.15s', background: state.soundEnabled ? 'rgba(96,165,250,0.10)' : 'rgba(255,255,255,0.04)', border: '1px solid ' + (state.soundEnabled ? 'rgba(96,165,250,0.22)' : 'rgba(255,255,255,0.08)'), color: state.soundEnabled ? 'rgba(96,165,250,1)' : 'var(--zm-text-faint)' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, fontSize: 11, fontFamily: FONT_MONO, transition: 'all 0.15s', background: state.soundEnabled ? 'rgba(96,165,250,0.10)' : 'rgba(255,255,255,0.04)', border: '1px solid ' + (state.soundEnabled ? 'rgba(96,165,250,0.22)' : 'rgba(255,255,255,0.08)'), color: state.soundEnabled ? 'rgba(96,165,250,1)' : 'var(--zm-text-faint)' }}
           >
             {state.soundEnabled ? <Volume2 size={12} /> : <VolumeX size={12} />}
             Sound
@@ -844,7 +846,7 @@ const Alerts = memo(() => {
             type="button"
             aria-pressed={state.pushEnabled}
             aria-label={state.pushEnabled ? 'Disable push notifications' : 'Enable push notifications'}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, fontSize: 11, fontFamily: 'var(--font-mono-ui)', transition: 'all 0.15s', background: state.pushEnabled ? 'rgba(167,139,250,0.10)' : 'rgba(255,255,255,0.04)', border: '1px solid ' + (state.pushEnabled ? 'rgba(167,139,250,0.22)' : 'rgba(255,255,255,0.08)'), color: state.pushEnabled ? 'rgba(167,139,250,1)' : 'var(--zm-text-faint)' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, fontSize: 11, fontFamily: FONT_MONO, transition: 'all 0.15s', background: state.pushEnabled ? 'rgba(167,139,250,0.10)' : 'rgba(255,255,255,0.04)', border: '1px solid ' + (state.pushEnabled ? 'rgba(167,139,250,0.22)' : 'rgba(255,255,255,0.08)'), color: state.pushEnabled ? 'rgba(167,139,250,1)' : 'var(--zm-text-faint)' }}
             title={pushPermission === 'denied' ? 'Push notifications blocked by browser' : ''}
           >
             {state.pushEnabled ? <Bell size={12} /> : <BellOff size={12} />}
@@ -856,7 +858,7 @@ const Alerts = memo(() => {
             disabled={state.alerts.length >= MAX_ALERTS}
             aria-label="Create new price alert"
             aria-disabled={state.alerts.length >= MAX_ALERTS}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 16px', borderRadius: 8, fontSize: 11, fontFamily: 'var(--font-mono-ui)', fontWeight: 600, transition: 'all 0.15s', cursor: 'pointer', background: 'rgba(96,165,250,0.16)', border: '1px solid rgba(96,165,250,0.30)', color: 'rgba(96,165,250,1)', opacity: state.alerts.length >= MAX_ALERTS ? 0.5 : 1 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 16px', borderRadius: 8, fontSize: 11, fontFamily: FONT_MONO, fontWeight: 600, transition: 'all 0.15s', cursor: 'pointer', background: 'rgba(96,165,250,0.16)', border: '1px solid rgba(96,165,250,0.30)', color: 'rgba(96,165,250,1)', opacity: state.alerts.length >= MAX_ALERTS ? 0.5 : 1 }}
           >
             <Plus size={13} />
             New Alert
@@ -874,12 +876,12 @@ const Alerts = memo(() => {
         ].map(s => (
           <div key={s.label} style={{ padding: 16, background: 'var(--zm-glass-bg)', border: '1px solid var(--zm-glass-border)', borderRadius: '12px', position: 'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span style={{ fontSize: 10, fontFamily: 'var(--font-mono-ui)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--zm-text-faint)' }}>
+              <span style={{ fontSize: 10, fontFamily: FONT_MONO, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--zm-text-faint)' }}>
                 {s.label}
               </span>
               <s.icon size={13} style={{ color: s.color }} />
             </div>
-            <div style={{ fontFamily: 'monospace', fontSize: 24, fontWeight: 700, color: s.color }}>
+            <div style={{ fontFamily: FONT_MONO, fontSize: 24, fontWeight: 700, color: s.color }}>
               {s.value}
             </div>
           </div>
@@ -896,7 +898,7 @@ const Alerts = memo(() => {
             aria-selected={tab === t}
             aria-label={t === 'alerts' ? 'My Alerts tab' : 'Trigger History tab'}
             onClick={() => setTab(t)}
-            style={{ padding: '6px 16px', borderRadius: 8, fontSize: 11, fontFamily: 'var(--font-mono-ui)', fontWeight: 600, textTransform: 'capitalize', transition: 'all 0.15s', cursor: 'pointer', background: tab === t ? 'rgba(96,165,250,0.12)' : 'rgba(255,255,255,0.03)', border: '1px solid ' + (tab === t ? 'rgba(96,165,250,0.25)' : 'rgba(255,255,255,0.06)'), color: tab === t ? 'rgba(96,165,250,1)' : 'var(--zm-text-faint)' }}
+            style={{ padding: '6px 16px', borderRadius: 8, fontSize: 11, fontFamily: FONT_MONO, fontWeight: 600, textTransform: 'capitalize', transition: 'all 0.15s', cursor: 'pointer', background: tab === t ? 'rgba(96,165,250,0.12)' : 'rgba(255,255,255,0.03)', border: '1px solid ' + (tab === t ? 'rgba(96,165,250,0.25)' : 'rgba(255,255,255,0.06)'), color: tab === t ? 'rgba(96,165,250,1)' : 'var(--zm-text-faint)' }}
           >
             {t === 'alerts' ? 'My Alerts' : 'Trigger History'}
           </button>
@@ -915,7 +917,7 @@ const Alerts = memo(() => {
                 onClick={() => setFilterStatus(f)}
                 aria-pressed={filterStatus === f}
                 aria-label={'Filter by ' + f + ' alerts'}
-                style={{ padding: '4px 10px', borderRadius: 4, fontSize: 10, fontFamily: 'var(--font-mono-ui)', textTransform: 'capitalize', transition: 'all 0.15s', cursor: 'pointer', background: filterStatus === f ? 'rgba(96,165,250,0.10)' : 'transparent', border: '1px solid ' + (filterStatus === f ? 'rgba(96,165,250,0.22)' : 'rgba(255,255,255,0.06)'), color: filterStatus === f ? 'rgba(96,165,250,1)' : 'var(--zm-text-faint)' }}
+                style={{ padding: '4px 10px', borderRadius: 4, fontSize: 10, fontFamily: FONT_MONO, textTransform: 'capitalize', transition: 'all 0.15s', cursor: 'pointer', background: filterStatus === f ? 'rgba(96,165,250,0.10)' : 'transparent', border: '1px solid ' + (filterStatus === f ? 'rgba(96,165,250,0.22)' : 'rgba(255,255,255,0.06)'), color: filterStatus === f ? 'rgba(96,165,250,1)' : 'var(--zm-text-faint)' }}
               >
                 {f}
               </button>
@@ -925,7 +927,7 @@ const Alerts = memo(() => {
           {filteredAlerts.length === 0 ? (
             <div style={{ padding: 48, textAlign: 'center', background: 'var(--zm-glass-bg)', border: '1px solid var(--zm-glass-border)', borderRadius: '12px', position: 'relative' }}>
               <Bell size={32} style={{ color: 'var(--zm-text-faint)', margin:'0 auto', marginBottom:12, display:'block' }} />
-              <div style={{ fontFamily: 'var(--font-mono-ui)', fontSize: 14, color: 'var(--zm-text-secondary)' }}>
+              <div style={{ fontFamily: FONT_MONO, fontSize: 14, color: 'var(--zm-text-secondary)' }}>
                 {state.alerts.length === 0
                   ? 'Belum ada alert. Klik "New Alert" buat mulai!'
                   : 'Tidak ada alert dengan filter ini.'}
@@ -955,7 +957,7 @@ const Alerts = memo(() => {
       {tab === 'history' && (
         <div style={{ padding: 16, background: 'var(--zm-glass-bg)', border: '1px solid var(--zm-glass-border)', borderRadius: '12px', position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 12, fontFamily: 'var(--font-mono-ui)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--zm-text-faint)' }}>
+            <h2 style={{ fontSize: 12, fontFamily: FONT_MONO, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--zm-text-faint)' }}>
               Trigger History ({state.log.length})
             </h2>
             {state.log.length > 0 && (
@@ -963,7 +965,7 @@ const Alerts = memo(() => {
                 type="button"
                 onClick={() => dispatch({ type: 'CLEAR_LOG' })}
                 aria-label="Clear trigger history"
-                                style={{ fontSize: 10, fontFamily: 'var(--font-mono-ui)', display: 'flex', alignItems: 'center', gap: 4, transition: 'color 0.15s', color: 'rgba(251,113,133,0.6)' }}
+                                style={{ fontSize: 10, fontFamily: FONT_MONO, display: 'flex', alignItems: 'center', gap: 4, transition: 'color 0.15s', color: 'rgba(251,113,133,0.6)' }}
               >
                 <Trash2 size={11} /> Clear All
               </button>
@@ -973,7 +975,7 @@ const Alerts = memo(() => {
           {state.log.length === 0 ? (
             <div style={{ textAlign: 'center', paddingTop: 40, paddingBottom: 40 }}>
               <History size={28} style={{ color: 'var(--zm-text-faint)', margin:'0 auto', marginBottom:8, display:'block' }} />
-              <div style={{ fontFamily: 'var(--font-mono-ui)', fontSize: 12, color: 'var(--zm-text-secondary)' }}>
+              <div style={{ fontFamily: FONT_MONO, fontSize: 12, color: 'var(--zm-text-secondary)' }}>
                 Belum ada alert yang triggered.
               </div>
             </div>
@@ -987,7 +989,7 @@ const Alerts = memo(() => {
                   type="button"
                   onClick={() => setShowLogAll(s => !s)}
                   aria-label={showLogAll ? 'Show fewer log entries' : 'Show all log entries'}
-                                    style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 12, fontSize: 10, fontFamily: 'var(--font-mono-ui)', transition: 'color 0.15s,background 0.15s', color: 'var(--zm-text-faint)' }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 12, fontSize: 10, fontFamily: FONT_MONO, transition: 'color 0.15s,background 0.15s', color: 'var(--zm-text-faint)' }}
                 >
                   {showLogAll ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
                   {showLogAll ? 'Sembunyikan' : 'Lihat semua ' + state.log.length + ' entri'}
