@@ -283,6 +283,7 @@ const LoadBar = memo(({ w = '100%', h = 12 }: { w?: string | number; h?: number 
       style={{
         position: 'absolute', inset: 0,
         background: 'linear-gradient(90deg, transparent, rgba(0,238,255,0.08), transparent)',
+        willChange: 'transform',
       }}
     />
   </div>
