@@ -32,7 +32,7 @@ const C = Object.freeze({
 });
 
 const FONT_MONO = "'JetBrains Mono', monospace";
-const FONT_UI   = "'Space Grotesk', sans-serif";
+const FONT_UI   = "'JetBrains Mono', monospace";
 
 const LS_KEY = 'zm_portfolio_v1';
 
@@ -149,7 +149,7 @@ const AddModal = memo(({ onAdd, onClose, existingSymbols }: {
 
   const inputSt = useMemo(() => Object.freeze({
     width: '100%', background: C.input, border: '1px solid ' + C.inputBorder,
-    borderRadius: '10px', padding: '10px 14px',
+    borderRadius: '12px', padding: '10px 14px',
     fontFamily: FONT_MONO, fontSize: '13px', color: C.textPrimary,
     outline: 'none', boxSizing: 'border-box' as const,
   }), []);
@@ -190,7 +190,7 @@ const AddModal = memo(({ onAdd, onClose, existingSymbols }: {
           {err && <p style={{ fontFamily: FONT_MONO, fontSize: '11px', color: C.negative, margin: 0 }}>⚠ {err}</p>}
           <button
             onClick={handleSubmit}
-            style={{ width: '100%', padding: '12px', background: 'rgba(0,238,255,0.12)', border: '1px solid rgba(0,238,255,0.3)', borderRadius: '10px', color: C.accent, fontFamily: FONT_MONO, fontSize: '13px', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.06em', marginTop: '4px' }}
+            style={{ width: '100%', padding: '12px', background: 'rgba(0,238,255,0.12)', border: '1px solid rgba(0,238,255,0.3)', borderRadius: '8px', color: C.accent, fontFamily: FONT_MONO, fontSize: '13px', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.06em', marginTop: '4px' }}
           >
             + ADD TO PORTFOLIO
           </button>
@@ -435,7 +435,7 @@ const Portfolio: React.FC = () => {
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           {holdings.length > 0 && (
-            <button onClick={openAdd} style={{ padding: '9px 18px', background: 'rgba(0,238,255,0.12)', border: '1px solid rgba(0,238,255,0.3)', borderRadius: '10px', color: C.accent, fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.05em' }}>
+            <button onClick={openAdd} style={{ padding: '9px 18px', background: 'rgba(0,238,255,0.12)', border: '1px solid rgba(0,238,255,0.3)', borderRadius: '8px', color: C.accent, fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.05em' }}>
               + ADD
             </button>
           )}
@@ -459,7 +459,7 @@ const Portfolio: React.FC = () => {
       {holdings.length > 0 && (
         <div style={{ display: 'flex', gap: '4px', padding: '4px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', alignSelf: 'flex-start' as const }}>
           {TABS.map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '8px 14px', borderRadius: '9px', border: 'none', cursor: 'pointer', fontFamily: FONT_UI, fontSize: '12px', fontWeight: 600, background: activeTab === tab ? 'rgba(0,238,255,0.15)' : 'transparent', color: activeTab === tab ? C.accent : C.textSec, outline: activeTab === tab ? '1px solid rgba(0,238,255,0.3)' : 'none', transition: 'all 0.18s' }}>
+            <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '8px 14px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontFamily: FONT_MONO, fontSize: '12px', fontWeight: 600, background: activeTab === tab ? 'rgba(0,238,255,0.15)' : 'transparent', color: activeTab === tab ? C.accent : C.textSec, outline: activeTab === tab ? '1px solid rgba(0,238,255,0.3)' : 'none', transition: 'all 0.18s' }}>
               {tab}
             </button>
           ))}
@@ -473,7 +473,7 @@ const Portfolio: React.FC = () => {
           <AnimatePresence mode="wait">
             <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
               {activeTab === 'Holdings' && (
-                <div style={{ background: C.card, border: '1px solid ' + C.border, borderRadius: '14px', overflow: 'hidden' as const }}>
+                <div style={{ background: C.card, border: '1px solid ' + C.border, borderRadius: '12px', overflow: 'hidden' as const }}>
                   <div style={{ display: 'grid', gridTemplateColumns: hdrCols, alignItems: 'center', gap: '10px', padding: '10px 16px', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                     {!isMobile && <div />}
                     <span style={{ ...hdrSt, textAlign: 'left' as const }}>Asset</span>
@@ -504,7 +504,7 @@ const Portfolio: React.FC = () => {
               )}
 
               {activeTab === 'Allocation' && (
-                <div style={{ background: C.card, border: '1px solid ' + C.border, borderRadius: '14px', padding: '24px' }}>
+                <div style={{ background: C.card, border: '1px solid ' + C.border, borderRadius: '12px', padding: '24px' }}>
                   <div style={{ fontFamily: FONT_MONO, fontSize: '10px', color: C.textSec, letterSpacing: '0.12em', textTransform: 'uppercase' as const, marginBottom: '20px' }}>Allocation by Value</div>
                   {allocSlices.length > 0
                     ? <AllocationPie slices={allocSlices} />
