@@ -18,7 +18,6 @@ interface SkeletonBaseProps {
   width?: string | number;
   height?: string | number;
   borderRadius?: string | number;
-  className?: string;
 }
 
 const SHIMMER_STYLE = Object.freeze({
@@ -27,9 +26,8 @@ const SHIMMER_STYLE = Object.freeze({
   animation: 'shimmer 1.8s ease infinite',
 });
 
-const SkeletonBase = memo(({ width, height = 16, borderRadius = 6, className }: SkeletonBaseProps) => (
+const SkeletonBase = memo(({ width, height = 16, borderRadius = 6 }: SkeletonBaseProps) => (
   <div
-    className={className}
     style={{
       ...SHIMMER_STYLE,
       width: width ?? '100%',
