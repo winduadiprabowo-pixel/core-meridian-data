@@ -58,7 +58,6 @@ export default defineConfig(({ mode }) => ({
           'vendor-query':  ['@tanstack/react-query'],
           'vendor-motion': ['framer-motion'],
           'vendor-three':  ['three'],
-          'vendor-gsap':   ['gsap'],
           'vendor-radix': [
             '@radix-ui/react-dialog',
             '@radix-ui/react-dropdown-menu',
