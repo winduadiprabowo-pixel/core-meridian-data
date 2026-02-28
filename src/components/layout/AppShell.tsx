@@ -1,5 +1,6 @@
 /**
- * AppShell.tsx — ZERØ MERIDIAN 2026 push85
+ * AppShell.tsx — ZERØ MERIDIAN 2026 push103
+ * push103: useDevicePerf → reduce overlay backdropFilter on low/mid device
  * push85: Integrate CommandPalette + Ctrl+K global shortcut
  * - React.memo + displayName ✓  rgba() only ✓  Zero className ✓
  * - useCallback + useMemo + mountedRef ✓
@@ -15,6 +16,7 @@ import PageTransition from '../shared/PageTransition';
 import GlobalStatsBar from '../shared/GlobalStatsBar';
 import CommandPalette from '../shared/CommandPalette';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { useDevicePerf } from '@/hooks/useDevicePerf';
 import PWAInstallPrompt from '@/components/shared/PWAInstallPrompt';
 
 interface AppShellProps { children: React.ReactNode; currentPath?: string; }
@@ -44,6 +46,7 @@ const AppShell: React.FC<AppShellProps> = ({ children, currentPath: propPath }) 
   const prefersRM  = useReducedMotion();
   const location   = useLocation();
   const { isMobile, isTablet } = useBreakpoint();
+  const { blur }   = useDevicePerf();
 
   const currentPath      = propPath ?? location.pathname;
   const showBottomNav    = isMobile;
@@ -113,11 +116,15 @@ const AppShell: React.FC<AppShellProps> = ({ children, currentPath: propPath }) 
     overflowX:     'hidden' as const,
   }), [showBottomNav, isMobile]);
 
+  // blur fallback: on low/mid device skip backdropFilter on overlay
   const overlayStyle = useMemo(() => ({
     position: 'fixed' as const, inset: 0, zIndex: 149,
     background: 'rgba(5,5,14,0.7)',
-    backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)',
-  }), []);
+    ...(blur
+      ? { backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)' }
+      : {}
+    ),
+  }), [blur]);
 
   const drawerStyle = useMemo(() => ({
     position: 'fixed' as const, top: 0, left: 0, bottom: 0,
