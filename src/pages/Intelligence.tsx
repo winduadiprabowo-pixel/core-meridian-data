@@ -29,7 +29,7 @@ const C = Object.freeze({
 });
 
 const FONT_MONO = "'JetBrains Mono', monospace";
-const FONT_UI   = "'Space Grotesk', sans-serif";
+const FONT_UI   = "'JetBrains Mono', monospace";
 
 const TABS = Object.freeze(['News Feed', 'Market Sentiment', 'Narratives', 'Funding & OI'] as const);
 type Tab = typeof TABS[number];
@@ -80,7 +80,7 @@ function fgLabel(value: number): string {
 // ─── TabBar ───────────────────────────────────────────────────────────────────
 const TabBtn = memo(({ label, active, onClick }: { label: Tab; active: boolean; onClick: (t: Tab) => void }) => {
   const style = useMemo(() => Object.freeze({
-    padding: '8px 14px', borderRadius: '9px', border: 'none', cursor: 'pointer',
+    padding: '8px 14px', borderRadius: '6px', border: 'none', cursor: 'pointer',
     fontFamily: FONT_UI, fontSize: '12px', fontWeight: 600 as const,
     whiteSpace: 'nowrap' as const, transition: 'all 0.18s',
     background: active ? 'rgba(0,238,255,0.15)' : 'transparent',
@@ -242,7 +242,7 @@ const MarketSentiment = memo(() => {
   const btcDom = globalData.btcDominance ?? 0;
   const ethDom = globalData.ethDominance ?? 0;
   const altDom = Math.max(0, 100 - btcDom - ethDom);
-  const cardSt = useMemo(() => Object.freeze({ background: C.card, border: '1px solid ' + C.border, borderRadius: '14px', padding: '20px', display: 'flex', flexDirection: 'column' as const, gap: '16px' }), []);
+  const cardSt = useMemo(() => Object.freeze({ background: C.card, border: '1px solid ' + C.border, borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column' as const, gap: '16px' }), []);
   const secLbl = useMemo(() => Object.freeze({ fontFamily: FONT_MONO, fontSize: '10px', color: C.textSec, letterSpacing: '0.12em', textTransform: 'uppercase' as const, fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '10px' }), []);
   return (
     <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '16px' }}>
@@ -304,7 +304,7 @@ const NarrativeCard = memo(({ narrative, articleCount, sentimentScore }: { narra
   const sentColor = sentimentScore > 0 ? C.positive : sentimentScore < 0 ? C.negative : C.textSec;
   const sentLabel = sentimentScore > 0 ? '▲ Bullish' : sentimentScore < 0 ? '▼ Bearish' : '— Neutral';
   return (
-    <motion.div style={{ background: C.card, border: '1px solid ' + C.border, borderRadius: '14px', padding: '18px', display: 'flex', flexDirection: 'column' as const, gap: '14px', position: 'relative' as const, overflow: 'hidden' as const }} whileHover={{ scale: 1.02 }} transition={{ duration: 0.15 }}>
+    <motion.div style={{ background: C.card, border: '1px solid ' + C.border, borderRadius: '12px', padding: '18px', display: 'flex', flexDirection: 'column' as const, gap: '14px', position: 'relative' as const, overflow: 'hidden' as const }} whileHover={{ scale: 1.02 }} transition={{ duration: 0.15 }}>
       <div style={{ position: 'absolute' as const, top: '-20px', right: '-20px', width: '80px', height: '80px', borderRadius: '50%', background: narrative.color.replace('1)', '0.06)'), filter: 'blur(20px)', pointerEvents: 'none' as const }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <span style={{ fontSize: '22px', lineHeight: '1' }}>{narrative.icon}</span>
@@ -346,7 +346,7 @@ const Narratives = memo(() => {
   }), [news]);
   return (
     <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '16px' }}>
-      <p style={{ fontFamily: FONT_UI, fontSize: '13px', color: C.textSec, lineHeight: '1.6', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)', margin: 0 }}>
+      <p style={{ fontFamily: FONT_UI, fontSize: '13px', color: C.textSec, lineHeight: '1.6', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)', margin: 0 }}>
         Narrative tracking analyzes recent news headlines to identify trending themes. Article count and sentiment are computed from live news feed.
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
@@ -382,10 +382,10 @@ const FundingOI = memo(({ isMobile }: { isMobile: boolean }) => {
   const lastStr = lastUpdatedFunding ? new Date(lastUpdatedFunding).toLocaleTimeString() : '—';
   return (
     <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '16px' }}>
-      <div style={{ padding: '12px 16px', background: 'rgba(0,238,255,0.04)', border: '1px solid rgba(0,238,255,0.1)', borderRadius: '10px', fontFamily: FONT_UI, fontSize: '13px', color: C.textSec, lineHeight: '1.6' }}>
+      <div style={{ padding: '12px 16px', background: 'rgba(0,238,255,0.04)', border: '1px solid rgba(0,238,255,0.1)', borderRadius: '12px', fontFamily: FONT_UI, fontSize: '13px', color: C.textSec, lineHeight: '1.6' }}>
         <strong style={{ color: C.accent }}>Funding Rate</strong> — Positive = longs pay shorts (crowded long → bearish signal). Negative = shorts pay longs (crowded short → bullish signal). Data: Binance Futures.
       </div>
-      <div style={{ background: C.card, border: '1px solid ' + C.border, borderRadius: '14px', overflow: 'hidden' as const }}>
+      <div style={{ background: C.card, border: '1px solid ' + C.border, borderRadius: '12px', overflow: 'hidden' as const }}>
         <div style={{ display: 'grid', gridTemplateColumns: cols, gap: '12px', padding: '10px 16px', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <span style={{ ...hdrSt, textAlign: 'left' as const }}>Symbol</span>
           <span style={hdrSt}>Rate %</span>
