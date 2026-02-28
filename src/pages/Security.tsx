@@ -1,4 +1,14 @@
+/**
+ * Security.tsx — ZERØ MERIDIAN 2026 push110
+ * push110: Responsive polish — mobile 320px + desktop 1440px
+ * - useBreakpoint ✓  metrics responsive grid ✓  table overflowX scroll ✓
+ * - React.memo + displayName ✓
+ * - rgba() only ✓  Zero className ✓  Zero hex color ✓
+ * - JetBrains Mono only ✓
+ */
+
 import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from "react";
+import { useBreakpoint } from "@/hooks/useBreakpoint";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -97,6 +107,7 @@ const EventRow = memo(({ event }: EventRowProps) => {
     background: hovered ? "rgba(255,255,255,0.03)" : "transparent",
     transition: "background 0.15s ease",
     cursor: "default",
+    minWidth: "500px",
   }), [hovered]);
 
   const badgeStyle = useMemo(() => ({
@@ -143,6 +154,7 @@ EmptyState.displayName = "EmptyState";
 // ─── Security (Main) ──────────────────────────────────────────────────────────
 
 const Security = memo(() => {
+  const { isMobile, isTablet } = useBreakpoint();
   const [filter, setFilter] = useState<FilterType>("ALL");
   const [data, setData] = useState<SecurityData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -153,7 +165,6 @@ const Security = memo(() => {
     setLoading(true);
     setError(null);
     try {
-      // TODO: replace with real endpoint, e.g. /api/security/events
       const res = await fetch("https://api.example.com/security/events");
       if (!mountedRef.current) return;
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -201,32 +212,38 @@ const Security = memo(() => {
   }), [filter]);
 
   const pageStyle = useMemo(() => ({
-    background: C.bgBase, minHeight: "100vh", color: C.textPrimary, fontFamily: FONT, padding: "20px 16px",
-  }), []);
+    background: C.bgBase, minHeight: "100vh", color: C.textPrimary, fontFamily: FONT,
+    padding: isMobile ? "16px 12px" : "20px 16px",
+  }), [isMobile]);
 
   const cardStyle = useMemo(() => ({
     background: C.glassBg, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: "hidden" as const,
   }), []);
 
+  // metrics: mobile=2col, tablet=2col, desktop=4col
+  const metricsGridCols = isMobile ? "repeat(2,1fr)" : isTablet ? "repeat(2,1fr)" : "repeat(4,1fr)";
+
+  const handleRefresh = useCallback(() => fetchData(), [fetchData]);
+
   return (
     <div style={pageStyle}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20, gap: 12 }}>
         <div>
-          <h1 style={{ fontFamily: FONT, fontSize: 20, fontWeight: 700, letterSpacing: "0.06em", color: C.textPrimary, margin: 0 }}>Security</h1>
+          <h1 style={{ fontFamily: FONT, fontSize: isMobile ? 16 : 20, fontWeight: 700, letterSpacing: "0.06em", color: C.textPrimary, margin: 0 }}>Security</h1>
           <p style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: C.textFaint, margin: "6px 0 0" }}>Threat monitoring · Incident feed</p>
         </div>
         <button
-          style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.accent, background: "rgba(0,238,255,0.08)", border: "1px solid rgba(0,238,255,0.2)", borderRadius: 6, padding: "6px 12px", cursor: "pointer" }}
-          onClick={useCallback(() => fetchData(), [fetchData])}
+          style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.accent, background: "rgba(0,238,255,0.08)", border: "1px solid rgba(0,238,255,0.2)", borderRadius: 6, padding: "6px 12px", cursor: "pointer", flexShrink: 0 }}
+          onClick={handleRefresh}
         >
           ↻ Refresh
         </button>
       </div>
 
-      {/* Metrics */}
+      {/* Metrics — responsive grid */}
       {data && data.metrics.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: metricsGridCols, gap: 12, marginBottom: 20 }}>
           {data.metrics.map(m => <MetricCard key={m.label} metric={m} />)}
         </div>
       )}
@@ -238,10 +255,10 @@ const Security = memo(() => {
           <span style={{ fontFamily: FONT, fontSize: 9, color: C.textFaint }}>Updated {lastUpdatedStr}</span>
         </div>
 
-        {/* Filters */}
-        <div style={{ display: "flex", gap: 6, padding: "10px 16px", borderBottom: `1px solid ${C.glassBorder}` }}>
+        {/* Filters — wrap on mobile */}
+        <div style={{ display: "flex", gap: 6, padding: "10px 16px", borderBottom: `1px solid ${C.glassBorder}`, flexWrap: "wrap" as const }}>
           {FILTERS.map(f => (
-            <button key={f} style={makeFilterStyle(f)} onClick={useCallback(() => setFilter(f), [f])}>
+            <button key={f} style={makeFilterStyle(f)} onClick={() => setFilter(f)}>
               {f}
             </button>
           ))}
@@ -266,8 +283,9 @@ const Security = memo(() => {
         )}
 
         {!loading && !error && (
-          <>
-            <div style={{ display: "grid", gridTemplateColumns: "80px 72px 1fr 100px 80px", gap: 12, padding: "8px 16px", borderBottom: `1px solid rgba(255,255,255,0.1)` }}>
+          /* overflowX scroll wrapper for mobile */
+          <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
+            <div style={{ display: "grid", gridTemplateColumns: "80px 72px 1fr 100px 80px", gap: 12, padding: "8px 16px", borderBottom: `1px solid rgba(255,255,255,0.1)`, minWidth: "500px" }}>
               {["Time","Severity","Message","Type","Source"].map(h => (
                 <span key={h} style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: C.textFaint }}>{h}</span>
               ))}
@@ -276,7 +294,7 @@ const Security = memo(() => {
               ? <EmptyState filter={filter} />
               : filteredEvents.map(e => <EventRow key={e.id} event={e} />)
             }
-          </>
+          </div>
         )}
       </div>
     </div>
