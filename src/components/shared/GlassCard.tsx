@@ -1,13 +1,14 @@
 /**
- * GlassCard.tsx — ZERØ MERIDIAN push101
- * FIXED: Zero className ✓ — removed 'zm-corners' className violation
- * - React.memo + displayName ✓  rgba() only ✓  Zero template literals ✓
+ * GlassCard.tsx — ZERØ MERIDIAN push103
+ * push103: useDevicePerf → fallback tanpa blur di low/mid device
+ * - React.memo + displayName ✓  rgba() only ✓  Zero className ✓
  * - useMemo style objects ✓  backdropFilter reduced for mobile perf ✓
  */
 
 import { memo, type ReactNode, type CSSProperties, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { HOVER, TAP, TRANSITION } from '@/lib/motion';
+import { useDevicePerf } from '@/hooks/useDevicePerf';
 
 interface GlassCardProps {
   children:      ReactNode;
@@ -26,11 +27,21 @@ const GlassCard = memo(({
   accentColor, padding = '1rem', role, 'aria-label': ariaLabel,
 }: GlassCardProps) => {
 
+  const { heavyBlur } = useDevicePerf();
+
   const baseStyle = useMemo((): CSSProperties => ({
     background:           'var(--zm-glass-bg)',
-    backdropFilter:       'blur(12px) saturate(160%)',
-    WebkitBackdropFilter: 'blur(12px) saturate(160%)',
-    border:               '1px solid ' + (accentColor
+    ...(heavyBlur
+      ? {
+          backdropFilter:       'blur(12px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(12px) saturate(160%)',
+        }
+      : {
+          // Fallback: slightly richer background instead of blur
+          background: 'rgba(18,22,38,0.97)',
+        }
+    ),
+    border:        '1px solid ' + (accentColor
       ? accentColor.replace(/[\d.]+\)$/, '0.22)')
       : 'var(--zm-glass-border)'),
     borderRadius:  12,
@@ -38,7 +49,7 @@ const GlassCard = memo(({
     position:      'relative',
     willChange:    'transform',
     ...style,
-  }), [accentColor, padding, style]);
+  }), [accentColor, padding, style, heavyBlur]);
 
   const topLineStyle = useMemo((): CSSProperties | null => {
     if (!accentColor) return null;
