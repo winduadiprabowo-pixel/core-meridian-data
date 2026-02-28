@@ -1,10 +1,9 @@
 /**
- * Networks.tsx — ZERØ MERIDIAN 2026 push84
- * push84: REAL DATA — public RPC endpoints, no API key.
- * 8 chains: ETH, BSC, Polygon, Arbitrum, Optimism, Avalanche, Base, Fantom
- * Data: block height, gas price, latency, status, TPS estimate.
+ * Networks.tsx — ZERØ MERIDIAN 2026 push110
+ * push110: Fix font — Space Grotesk → JetBrains Mono (standar wajib)
  * - React.memo + displayName ✓
- * - rgba() only ✓  Zero className ✓  Zero template literals in JSX ✓
+ * - rgba() only ✓  Zero className ✓  Zero hex color ✓
+ * - FONT = JetBrains Mono ONLY ✓
  * - useCallback + useMemo ✓
  */
 
@@ -12,6 +11,8 @@ import React, { memo, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNetworkStats, type ChainStats } from '@/hooks/useNetworkStats';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+
+const FONT = "'JetBrains Mono', monospace";
 
 function fmtBlock(n: number): string {
   return n > 0 ? n.toLocaleString('en-US') : '—';
@@ -64,12 +65,12 @@ const ChainCard = React.memo(({ chain, isMobile }: { chain: ChainStats; isMobile
     background: 'rgba(255,255,255,0.03)',
     border: '1px solid rgba(255,255,255,0.07)',
     borderRadius: '14px',
-    padding: '16px',
+    padding: isMobile ? '12px' : '16px',
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '12px',
     transition: 'border-color 0.2s',
-  }), []);
+  }), [isMobile]);
 
   const rowStyle = useMemo(() => Object.freeze({
     display: 'flex',
@@ -78,14 +79,14 @@ const ChainCard = React.memo(({ chain, isMobile }: { chain: ChainStats; isMobile
   }), []);
 
   const nameStyle = useMemo(() => Object.freeze({
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontSize: '14px',
+    fontFamily: FONT,
+    fontSize: isMobile ? '12px' : '14px',
     fontWeight: 700,
     color: 'rgba(255,255,255,0.9)',
-  }), []);
+  }), [isMobile]);
 
   const symbolStyle = useMemo(() => Object.freeze({
-    fontFamily: "'JetBrains Mono', monospace",
+    fontFamily: FONT,
     fontSize: '10px',
     color: chain.color,
     background: chain.color.replace('1)', '0.1)'),
@@ -96,7 +97,7 @@ const ChainCard = React.memo(({ chain, isMobile }: { chain: ChainStats; isMobile
   }), [chain.color]);
 
   const statLabelStyle = useMemo(() => Object.freeze({
-    fontFamily: "'JetBrains Mono', monospace",
+    fontFamily: FONT,
     fontSize: '9px',
     color: 'rgba(255,255,255,0.3)',
     letterSpacing: '0.08em',
@@ -104,7 +105,7 @@ const ChainCard = React.memo(({ chain, isMobile }: { chain: ChainStats; isMobile
   }), []);
 
   const statValStyle = useMemo(() => Object.freeze({
-    fontFamily: "'JetBrains Mono', monospace",
+    fontFamily: FONT,
     fontSize: '12px',
     fontWeight: 600,
     color: 'rgba(255,255,255,0.8)',
@@ -128,7 +129,7 @@ const ChainCard = React.memo(({ chain, isMobile }: { chain: ChainStats; isMobile
           <span style={nameStyle}>{chain.name}</span>
           <span style={symbolStyle}>{chain.symbol}</span>
         </div>
-        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: statusColor, fontWeight: 700 }}>
+        <span style={{ fontFamily: FONT, fontSize: '10px', color: statusColor, fontWeight: 700 }}>
           {statusLabel}
         </span>
       </div>
@@ -155,7 +156,7 @@ const ChainCard = React.memo(({ chain, isMobile }: { chain: ChainStats; isMobile
           <div style={statLabelStyle}>Latency</div>
           <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <LatencyBar ms={chain.latencyMs} />
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
+            <span style={{ fontFamily: FONT, fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
               {fmtLatency(chain.latencyMs)}
             </span>
           </div>
@@ -164,7 +165,7 @@ const ChainCard = React.memo(({ chain, isMobile }: { chain: ChainStats; isMobile
           href={chain.explorerUrl}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(0,200,255,0.5)', textDecoration: 'none' }}
+          style={{ fontFamily: FONT, fontSize: '10px', color: 'rgba(0,200,255,0.5)', textDecoration: 'none' }}
         >
           Explorer ↗
         </a>
@@ -193,7 +194,7 @@ const SummaryBar = React.memo(({ chains }: { chains: ChainStats[] }) => {
     background: color.replace('1)', '0.06)'),
     border: '1px solid ' + color.replace('1)', '0.18)'),
     borderRadius: '10px', padding: '6px 12px',
-    fontFamily: "'JetBrains Mono', monospace",
+    fontFamily: FONT,
     fontSize: '12px', color,
   });
 
@@ -241,16 +242,16 @@ const Networks: React.FC = () => {
     <div style={{ padding: isMobile ? '16px 12px' : '24px', maxWidth: '1100px' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap' as const, gap: '12px' }}>
-        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '20px', fontWeight: 700, color: 'rgba(255,255,255,0.9)', margin: 0 }}>
+        <h1 style={{ fontFamily: FONT, fontSize: isMobile ? '16px' : '20px', fontWeight: 700, color: 'rgba(255,255,255,0.9)', margin: 0 }}>
           🌐 Network Intelligence
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {lastUpdatedStr && (
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(255,255,255,0.25)' }}>
+            <span style={{ fontFamily: FONT, fontSize: '10px', color: 'rgba(255,255,255,0.25)' }}>
               {lastUpdatedStr}
             </span>
           )}
-          <button onClick={refetch} style={{ padding: '7px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', fontFamily: "'Space Grotesk', sans-serif", fontSize: '12px', cursor: 'pointer' }}>
+          <button onClick={refetch} style={{ padding: '7px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', fontFamily: FONT, fontSize: '12px', cursor: 'pointer' }}>
             ↺ Refresh
           </button>
         </div>
@@ -266,9 +267,9 @@ const Networks: React.FC = () => {
           </motion.div>
         ) : error ? (
           <motion.div key="err" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            style={{ padding: '32px 16px', textAlign: 'center' as const, fontFamily: "'Space Grotesk', sans-serif", fontSize: '14px', color: 'rgba(251,113,133,0.8)' }}>
+            style={{ padding: '32px 16px', textAlign: 'center' as const, fontFamily: FONT, fontSize: '14px', color: 'rgba(251,113,133,0.8)' }}>
             <div>⚠ {error}</div>
-            <button onClick={refetch} style={{ marginTop: '12px', padding: '8px 20px', borderRadius: '8px', background: 'rgba(251,113,133,0.1)', border: '1px solid rgba(251,113,133,0.3)', color: 'rgba(251,113,133,0.9)', fontFamily: "'Space Grotesk', sans-serif", fontSize: '13px', cursor: 'pointer' }}>Retry</button>
+            <button onClick={refetch} style={{ marginTop: '12px', padding: '8px 20px', borderRadius: '8px', background: 'rgba(251,113,133,0.1)', border: '1px solid rgba(251,113,133,0.3)', color: 'rgba(251,113,133,0.9)', fontFamily: FONT, fontSize: '13px', cursor: 'pointer' }}>Retry</button>
           </motion.div>
         ) : (
           <motion.div key="data" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={gridStyle}>
@@ -283,7 +284,7 @@ const Networks: React.FC = () => {
 
       {/* Footer */}
       {!loading && chains.length > 0 && (
-        <div style={{ marginTop: '16px', fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ marginTop: '16px', fontFamily: FONT, fontSize: '10px', color: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(52,211,153,0.8)', display: 'inline-block' }} />
           Live · Public RPC · refresh 15s
         </div>
