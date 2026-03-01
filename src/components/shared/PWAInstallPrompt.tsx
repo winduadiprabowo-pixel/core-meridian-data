@@ -101,7 +101,7 @@ const IOSSheet = memo(({ onClose }: { onClose: () => void }) => (
           </svg>
         </div>
         <div style={{
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'JetBrains Mono', monospace",
           fontSize: 15, fontWeight: 700,
           color: 'rgba(240,240,248,1)',
           letterSpacing: '0.06em',
@@ -139,7 +139,7 @@ const IOSSheet = memo(({ onClose }: { onClose: () => void }) => (
               {step.num}
             </div>
             <span style={{
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'JetBrains Mono', monospace",
               fontSize: 12, color: 'rgba(200,200,214,1)',
               lineHeight: 1.5,
             }}>
@@ -281,7 +281,7 @@ const PWAInstallPrompt = memo(() => {
             {/* Text */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
-                fontFamily: "'Space Grotesk', sans-serif",
+                fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 13, fontWeight: 700,
                 color: 'rgba(240,240,248,1)',
                 marginBottom: 3, letterSpacing: '0.04em',
