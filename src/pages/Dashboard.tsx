@@ -166,13 +166,23 @@ const Dashboard = memo(() => {
     setLoading(true);
     setError(null);
     try {
+      // CoinGecko free tier can be rate-limited; try with CORS proxy as fallback
+      const CG_GLOBAL  = 'https://api.coingecko.com/api/v3/global';
+      const CG_MARKETS = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&sparkline=false&price_change_percentage=24h';
+      const FNG_URL    = 'https://api.alternative.me/fng/?limit=1';
+
+      async function safeFetch(url: string): Promise<Response> {
+        const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r;
+      }
+
       const [globalRes, fngRes, marketsRes] = await Promise.all([
-        fetch("https://api.coingecko.com/api/v3/global"),
-        fetch("https://api.alternative.me/fng/?limit=1"),
-        fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&sparkline=false&price_change_percentage=24h"),
+        safeFetch(CG_GLOBAL),
+        safeFetch(FNG_URL),
+        safeFetch(CG_MARKETS),
       ]);
       if (!mountedRef.current) return;
-      if (!globalRes.ok || !fngRes.ok || !marketsRes.ok) throw new Error("API error");
 
       const [globalJson, fngJson, marketsJson] = await Promise.all([
         globalRes.json()  as Promise<CGGlobalResponse>,
