@@ -1,10 +1,9 @@
 /**
- * Intelligence.tsx — ZERØ MERIDIAN 2026 push110
+ * Intelligence.tsx — ZERØ MERIDIAN push130
+ * push130: Zero :any — CCNewsItem + CPNewsItem + CPCurrency interfaces
  * push110: Responsive polish — mobile 320px + desktop 1440px
- * - useBreakpoint ✓  responsive padding + category filters wrap ✓
- * - React.memo + displayName ✓
- * - rgba() only ✓  Zero className ✓  Zero hex color ✓
- * - JetBrains Mono only ✓
+ * - useBreakpoint ✓  React.memo + displayName ✓
+ * - rgba() only ✓  Zero className ✓  Zero hex color ✓  Zero :any ✓
  */
 
 import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from "react";
@@ -30,19 +29,49 @@ const C = Object.freeze({
 const CATEGORIES = Object.freeze(["All","Bitcoin","Ethereum","DeFi","Regulation","Macro"] as const);
 type CategoryType = typeof CATEGORIES[number];
 
+// ─── Raw API types ─────────────────────────────────────────────────────────────
+
+interface CCSourceInfo { name?: string; }
+interface CCNewsItem {
+  id?:          number | string;
+  title?:       string;
+  url?:         string;
+  source?:      string;
+  source_info?: CCSourceInfo;
+  published_on?: number;
+  categories?:  string;
+}
+interface CCResponse { Data?: CCNewsItem[]; }
+
+interface CPCurrency { code?: string; }
+interface CPVotes    { positive?: number; negative?: number; }
+interface CPSource   { title?: string; }
+interface CPNewsItem {
+  id?:           number | string;
+  title?:        string;
+  url?:          string;
+  source?:       CPSource;
+  published_at?: string;
+  votes?:        CPVotes;
+  currencies?:   CPCurrency[];
+}
+interface CPResponse { results?: CPNewsItem[]; }
+
+// ─── App types ────────────────────────────────────────────────────────────────
+
 interface NewsItem {
-  id: string;
-  title: string;
-  source: string;
-  url: string;
+  id:          string;
+  title:       string;
+  source:      string;
+  url:         string;
   publishedAt: number;
-  sentiment: "positive"|"negative"|"neutral";
-  votes: { positive: number; negative: number; };
-  currencies: string[];
+  sentiment:   "positive" | "negative" | "neutral";
+  votes:       { positive: number; negative: number; };
+  currencies:  string[];
 }
 
 interface IntelligenceData {
-  news: NewsItem[];
+  news:        NewsItem[];
   lastUpdated: number;
 }
 
@@ -72,15 +101,15 @@ SentimentBadge.displayName = "SentimentBadge";
 interface NewsCardProps { item: NewsItem; isMobile: boolean; }
 const NewsCard = memo(({ item, isMobile }: NewsCardProps) => {
   const [hovered, setHovered] = useState(false);
-  const onEnter = useCallback(() => setHovered(true), []);
+  const onEnter = useCallback(() => setHovered(true),  []);
   const onLeave = useCallback(() => setHovered(false), []);
 
   const ts = useMemo(() => {
     const diff = Math.floor((Date.now() - item.publishedAt) / 1000);
     if (diff < 60) return `${diff}s ago`;
-    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
-    return `${Math.floor(diff/86400)}d ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
   }, [item.publishedAt]);
 
   const cardStyle = useMemo(() => ({
@@ -150,10 +179,10 @@ EmptyState.displayName = "EmptyState";
 const Intelligence = memo(() => {
   const { isMobile } = useBreakpoint();
   const [category, setCategory] = useState<CategoryType>("All");
-  const [data, setData] = useState<IntelligenceData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const mountedRef = useRef(true);
+  const [data, setData]         = useState<IntelligenceData | null>(null);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState<string | null>(null);
+  const mountedRef              = useRef(true);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -161,38 +190,49 @@ const Intelligence = memo(() => {
     try {
       const res = await fetch("https://cryptopanic.com/api/free/v1/posts/?auth_token=free&public=true");
       if (!mountedRef.current) return;
+
       if (!res.ok) {
+        // Fallback: CryptoCompare
         const fallback = await fetch("https://min-api.cryptocompare.com/data/v2/news/?lang=EN");
         if (!mountedRef.current) return;
         if (!fallback.ok) throw new Error("All news sources unavailable");
-        const json = await fallback.json();
+        const json = await fallback.json() as CCResponse;
         if (!mountedRef.current) return;
-        const items: NewsItem[] = (json.Data ?? []).slice(0, 30).map((n: any) => ({
-          id: String(n.id),
-          title: n.title,
-          source: n.source_info?.name ?? n.source,
-          url: n.url,
-          publishedAt: n.published_on * 1000,
-          sentiment: "neutral" as const,
-          votes: { positive: 0, negative: 0 },
-          currencies: n.categories?.split("|").filter(Boolean) ?? [],
+
+        const items: NewsItem[] = (json.Data ?? []).slice(0, 30).map((n): NewsItem => ({
+          id:          String(n.id ?? ""),
+          title:       n.title ?? "",
+          source:      n.source_info?.name ?? n.source ?? "Unknown",
+          url:         n.url ?? "",
+          publishedAt: (n.published_on ?? 0) * 1000,
+          sentiment:   "neutral",
+          votes:       { positive: 0, negative: 0 },
+          currencies:  (n.categories ?? "").split("|").filter(Boolean),
         }));
         setData({ news: items, lastUpdated: Date.now() });
         return;
       }
-      const json = await res.json();
+
+      // Primary: CryptoPanic
+      const json = await res.json() as CPResponse;
       if (!mountedRef.current) return;
-      const items: NewsItem[] = (json.results ?? []).slice(0, 30).map((n: any) => ({
-        id: String(n.id),
-        title: n.title,
-        source: n.source?.title ?? "Unknown",
-        url: n.url,
-        publishedAt: new Date(n.published_at).getTime(),
-        sentiment: n.votes?.negative > n.votes?.positive ? "negative" : n.votes?.positive > 5 ? "positive" : "neutral",
-        votes: { positive: n.votes?.positive ?? 0, negative: n.votes?.negative ?? 0 },
-        currencies: (n.currencies ?? []).map((c: any) => c.code).slice(0, 3),
-      }));
+
+      const items: NewsItem[] = (json.results ?? []).slice(0, 30).map((n): NewsItem => {
+        const pos = n.votes?.positive ?? 0;
+        const neg = n.votes?.negative ?? 0;
+        return {
+          id:          String(n.id ?? ""),
+          title:       n.title ?? "",
+          source:      n.source?.title ?? "Unknown",
+          url:         n.url ?? "",
+          publishedAt: new Date(n.published_at ?? "").getTime(),
+          sentiment:   neg > pos ? "negative" : pos > 5 ? "positive" : "neutral",
+          votes:       { positive: pos, negative: neg },
+          currencies:  (n.currencies ?? []).map(c => c.code ?? "").filter(Boolean).slice(0, 3),
+        };
+      });
       setData({ news: items, lastUpdated: Date.now() });
+
     } catch (e) {
       if (!mountedRef.current) return;
       setError(`Failed to load intelligence data: ${e instanceof Error ? e.message : "Unknown error"}`);
@@ -211,8 +251,8 @@ const Intelligence = memo(() => {
     if (!data?.lastUpdated) return "—";
     const diff = Math.floor((Date.now() - data.lastUpdated) / 1000);
     if (diff < 60) return `${diff}s ago`;
-    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-    return `${Math.floor(diff/3600)}h ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    return `${Math.floor(diff / 3600)}h ago`;
   }, [data]);
 
   const filteredNews = useMemo(() => {
@@ -258,12 +298,10 @@ const Intelligence = memo(() => {
         </button>
       </div>
 
-      {/* Category filters — wrap on mobile */}
+      {/* Category filters */}
       <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" as const }}>
         {CATEGORIES.map(c => (
-          <button key={c} style={makeCatStyle(c)} onClick={() => setCategory(c)}>
-            {c}
-          </button>
+          <button key={c} style={makeCatStyle(c)} onClick={() => setCategory(c)}>{c}</button>
         ))}
       </div>
 
