@@ -1,7 +1,8 @@
 /**
- * useCryptoNews.ts — ZERØ MERIDIAN 2026 push85
+ * useCryptoNews.ts — ZERØ MERIDIAN push129
+ * push129: Zero :any — all API responses typed with proper interfaces
  * News from CryptoPanic free API + CryptoCompare fallback.
- * - mountedRef pattern ✓  useCallback ✓  useMemo ✓
+ * mountedRef pattern ✓  useCallback ✓  useMemo ✓
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -11,14 +12,65 @@ export interface NewsItem {
   title: string;
   url: string;
   source: string;
-  publishedAt: number; // ms timestamp
-  currencies: string[];  // ['BTC', 'ETH', ...]
+  publishedAt: number;
+  currencies: string[];
   sentiment: 'bullish' | 'bearish' | 'neutral';
   kind: 'news' | 'media';
   votes?: { positive: number; negative: number; important: number };
 }
 
 export type NewsFilter = 'ALL' | 'IMPORTANT' | 'BTC' | 'ETH' | 'ALTCOIN';
+
+// ─── Raw API types ─────────────────────────────────────────────────────────────
+
+interface CPVotes {
+  positive?: number;
+  negative?: number;
+  important?: number;
+}
+
+interface CPCurrency {
+  code?: string;
+}
+
+interface CPSource {
+  title?: string;
+}
+
+interface CPNewsItem {
+  id?: number | string;
+  title?: string;
+  url?: string;
+  source?: CPSource;
+  published_at?: string;
+  currencies?: CPCurrency[];
+  kind?: string;
+  votes?: CPVotes;
+}
+
+interface CPResponse {
+  results?: CPNewsItem[];
+}
+
+interface CCSourceInfo {
+  name?: string;
+}
+
+interface CCNewsItem {
+  id?: number | string;
+  title?: string;
+  url?: string;
+  source?: string;
+  source_info?: CCSourceInfo;
+  published_on?: number;
+  categories?: string;
+}
+
+interface CCResponse {
+  Data?: CCNewsItem[];
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function detectSentiment(title: string, votes?: { positive: number; negative: number }): 'bullish' | 'bearish' | 'neutral' {
   if (votes) {
@@ -35,25 +87,30 @@ function detectSentiment(title: string, votes?: { positive: number; negative: nu
   return 'neutral';
 }
 
+// ─── Fetch functions ───────────────────────────────────────────────────────────
+
 async function fetchCryptoPanic(): Promise<NewsItem[]> {
   const res = await fetch(
     'https://cryptopanic.com/api/free/v1/posts/?auth_token=&public=true&filter=important',
     { signal: AbortSignal.timeout(8000) }
   );
   if (!res.ok) throw new Error('CryptoPanic error');
-  const data = await res.json();
-  return (data.results ?? []).slice(0, 50).map((item: any, i: number): NewsItem => ({
-    id: String(item.id ?? i),
-    title: item.title,
-    url: item.url,
-    source: item.source?.title ?? 'Unknown',
-    publishedAt: new Date(item.published_at).getTime(),
-    currencies: (item.currencies ?? []).map((c: any) => c.code),
-    sentiment: detectSentiment(item.title, item.votes),
-    kind: item.kind ?? 'news',
-    votes: item.votes ? {
+  const data = await res.json() as CPResponse;
+  return (data.results ?? []).slice(0, 50).map((item, i): NewsItem => ({
+    id:          String(item.id ?? i),
+    title:       item.title ?? '',
+    url:         item.url ?? '',
+    source:      item.source?.title ?? 'Unknown',
+    publishedAt: new Date(item.published_at ?? '').getTime(),
+    currencies:  (item.currencies ?? []).map(c => c.code ?? '').filter(Boolean),
+    sentiment:   detectSentiment(item.title ?? '', item.votes ? {
       positive: item.votes.positive ?? 0,
       negative: item.votes.negative ?? 0,
+    } : undefined),
+    kind: (item.kind === 'media' ? 'media' : 'news') as 'news' | 'media',
+    votes: item.votes ? {
+      positive:  item.votes.positive  ?? 0,
+      negative:  item.votes.negative  ?? 0,
       important: item.votes.important ?? 0,
     } : undefined,
   }));
@@ -65,25 +122,26 @@ async function fetchCryptoCompare(): Promise<NewsItem[]> {
     { signal: AbortSignal.timeout(8000) }
   );
   if (!res.ok) throw new Error('CryptoCompare error');
-  const data = await res.json();
-  return (data.Data ?? []).slice(0, 50).map((item: any): NewsItem => {
+  const data = await res.json() as CCResponse;
+  const TRACK = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'MATIC', 'AVAX', 'DOT', 'LINK'] as const;
+  return (data.Data ?? []).slice(0, 50).map((item): NewsItem => {
     const cats = (item.categories ?? '').toUpperCase();
-    const currencies: string[] = [];
-    ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'MATIC', 'AVAX', 'DOT', 'LINK'].forEach(c => {
-      if (item.title.toUpperCase().includes(c) || cats.includes(c)) currencies.push(c);
-    });
+    const titleUp = (item.title ?? '').toUpperCase();
+    const currencies: string[] = TRACK.filter(c => titleUp.includes(c) || cats.includes(c));
     return {
-      id: String(item.id),
-      title: item.title,
-      url: item.url,
-      source: item.source_info?.name ?? item.source ?? 'Unknown',
-      publishedAt: item.published_on * 1000,
+      id:          String(item.id),
+      title:       item.title ?? '',
+      url:         item.url ?? '',
+      source:      item.source_info?.name ?? item.source ?? 'Unknown',
+      publishedAt: (item.published_on ?? 0) * 1000,
       currencies,
-      sentiment: detectSentiment(item.title),
-      kind: 'news',
+      sentiment:   detectSentiment(item.title ?? ''),
+      kind:        'news',
     };
   });
 }
+
+// ─── Return type ──────────────────────────────────────────────────────────────
 
 interface UseCryptoNewsReturn {
   news: NewsItem[];
@@ -96,13 +154,15 @@ interface UseCryptoNewsReturn {
   lastUpdated: number | null;
 }
 
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
 export function useCryptoNews(): UseCryptoNewsReturn {
-  const [news, setNews] = useState<NewsItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<NewsFilter>('ALL');
+  const [news, setNews]               = useState<NewsItem[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState<string | null>(null);
+  const [filter, setFilter]           = useState<NewsFilter>('ALL');
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
-  const mountedRef = useRef(true);
+  const mountedRef                    = useRef(true);
 
   const fetchNews = useCallback(async () => {
     if (!mountedRef.current) return;
@@ -114,7 +174,7 @@ export function useCryptoNews(): UseCryptoNewsReturn {
       setNews(items);
       setLastUpdated(Date.now());
       setError(null);
-    } catch (e) {
+    } catch {
       if (!mountedRef.current) return;
       setError('Failed to load news');
     } finally {
@@ -125,19 +185,19 @@ export function useCryptoNews(): UseCryptoNewsReturn {
   useEffect(() => {
     mountedRef.current = true;
     fetchNews();
-    const interval = setInterval(fetchNews, 5 * 60 * 1000); // 5min refresh
+    const interval = setInterval(fetchNews, 5 * 60 * 1000);
     return () => {
       mountedRef.current = false;
       clearInterval(interval);
     };
   }, [fetchNews]);
 
-  const filteredNews = useCallback(() => {
-    if (filter === 'ALL') return news;
+  const filteredNews = useCallback((): NewsItem[] => {
+    if (filter === 'ALL')       return news;
     if (filter === 'IMPORTANT') return news.filter(n => n.votes && n.votes.important > 0);
-    if (filter === 'BTC') return news.filter(n => n.currencies.includes('BTC') || n.title.toUpperCase().includes('BITCOIN'));
-    if (filter === 'ETH') return news.filter(n => n.currencies.includes('ETH') || n.title.toUpperCase().includes('ETHEREUM'));
-    if (filter === 'ALTCOIN') return news.filter(n => !n.currencies.includes('BTC') && !n.currencies.includes('ETH'));
+    if (filter === 'BTC')       return news.filter(n => n.currencies.includes('BTC') || n.title.toUpperCase().includes('BITCOIN'));
+    if (filter === 'ETH')       return news.filter(n => n.currencies.includes('ETH') || n.title.toUpperCase().includes('ETHEREUM'));
+    if (filter === 'ALTCOIN')   return news.filter(n => !n.currencies.includes('BTC') && !n.currencies.includes('ETH'));
     return news;
   }, [news, filter]);
 
