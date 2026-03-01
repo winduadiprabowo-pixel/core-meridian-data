@@ -76,7 +76,7 @@ const STATIC = Object.freeze({
     margin:               0,
   },
   description: {
-    fontFamily: "'Space Grotesk', sans-serif",
+    fontFamily: "'JetBrains Mono', monospace",
     fontSize:   13,
     color:      'rgba(138,138,158,1)',
     lineHeight: 1.65,
@@ -99,7 +99,7 @@ const STATIC = Object.freeze({
     animation:    'none', // no tailwind animate-pulse
   },
   badgeText: {
-    fontFamily:    "'IBM Plex Mono', monospace",
+    fontFamily:    "'JetBrains Mono', monospace",
     fontSize:      11,
     color:         'rgba(80,80,100,1)',
     letterSpacing: '0.04em',
