@@ -1,11 +1,13 @@
 /**
- * GlobalStatsBar.tsx — ZERØ MERIDIAN push103
- * push103: useDevicePerf → remove backdropFilter on low/mid device
+ * GlobalStatsBar.tsx — ZERØ MERIDIAN push128
+ * push128: Fix TypeError "Cannot read properties of undefined (reading 'loading')"
+ *   - Fix: useGlobalStats() returns GlobalStats directly, not { stats }
+ *   - Fix: marketCapChange → marketCapChange24h, activeCurrencies → activeCryptos
  * - React.memo + displayName ✓  rgba() only ✓  Zero className ✓
  * - useCallback + useMemo + mountedRef ✓
  */
 
-import { memo, useMemo, useCallback, useRef, useEffect, useState } from 'react';
+import { memo, useMemo, useRef, useEffect } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useGlobalStats } from '@/hooks/useGlobalStats';
 import { formatCompact } from '@/lib/formatters';
@@ -84,7 +86,8 @@ Div.displayName = 'Div';
 
 const GlobalStatsBar = memo(() => {
   const mountedRef = useRef(true);
-  const { stats }  = useGlobalStats();
+  // FIX: useGlobalStats() returns GlobalStats directly — no destructuring
+  const stats      = useGlobalStats();
   const { isMobile } = useBreakpoint();
   const { blur }   = useDevicePerf();
 
@@ -95,7 +98,7 @@ const GlobalStatsBar = memo(() => {
 
   const barStyle = useMemo(() => ({
     position: 'fixed' as const, top: 0, left: 0, right: 0, zIndex: 200, height: 28,
-    background: blur ? 'rgba(5,6,12,1)' : 'rgba(5,6,12,1)',
+    background: 'rgba(5,6,12,1)',
     ...(blur
       ? { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }
       : {}
@@ -120,12 +123,13 @@ const GlobalStatsBar = memo(() => {
     );
   }
 
-  const totalMcap  = stats.totalMarketCap   ?? 0;
-  const totalVol   = stats.totalVolume24h   ?? 0;
-  const btcDom     = stats.btcDominance     ?? 0;
-  const ethDom     = stats.ethDominance     ?? 0;
-  const mcapChange = stats.marketCapChange  ?? 0;
-  const actCoins   = stats.activeCurrencies ?? 0;
+  // FIX: Use correct field names from GlobalStats interface
+  const totalMcap  = stats.totalMarketCap      ?? 0;
+  const totalVol   = stats.totalVolume24h       ?? 0;
+  const btcDom     = stats.btcDominance         ?? 0;
+  const ethDom     = stats.ethDominance         ?? 0;
+  const mcapChange = stats.marketCapChange24h   ?? 0;  // was: marketCapChange
+  const actCoins   = stats.activeCryptos        ?? 0;  // was: activeCurrencies
 
   return (
     <div style={barStyle} role="complementary" aria-label="Global market statistics">
