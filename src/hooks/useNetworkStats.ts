@@ -1,8 +1,7 @@
 /**
- * useNetworkStats.ts — ZERØ MERIDIAN 2026 push84
+ * useNetworkStats.ts — ZERØ MERIDIAN push129
+ * push129: Zero :any — all API responses typed with proper interfaces
  * REAL DATA — Public RPC endpoints, no API key required.
- * Chains: Ethereum, BSC, Polygon, Arbitrum, Optimism, Avalanche, Base, Fantom
- * Data per chain: block height, gas price, TPS estimate, latency, status
  * Zero JSX. mountedRef + AbortController. useCallback/useMemo.
  */
 
@@ -30,83 +29,29 @@ export interface NetworksState {
   lastUpdated: number | null;
 }
 
-// Public RPC endpoints — no key needed
+// ─── Raw API types ─────────────────────────────────────────────────────────────
+
+interface JsonRpcResult {
+  id: number;
+  result?: string;
+}
+
+// ─── Chain config ──────────────────────────────────────────────────────────────
+
 const CHAINS = Object.freeze([
-  {
-    id: 1,
-    name: 'Ethereum',
-    symbol: 'ETH',
-    color: 'rgba(98,126,234,1)',
-    rpcUrl: 'https://eth.llamarpc.com',
-    explorerUrl: 'https://etherscan.io',
-    avgBlockTime: 12,
-  },
-  {
-    id: 56,
-    name: 'BNB Chain',
-    symbol: 'BNB',
-    color: 'rgba(240,185,11,1)',
-    rpcUrl: 'https://bsc-dataseed1.binance.org',
-    explorerUrl: 'https://bscscan.com',
-    avgBlockTime: 3,
-  },
-  {
-    id: 137,
-    name: 'Polygon',
-    symbol: 'MATIC',
-    color: 'rgba(130,71,229,1)',
-    rpcUrl: 'https://polygon.llamarpc.com',
-    explorerUrl: 'https://polygonscan.com',
-    avgBlockTime: 2,
-  },
-  {
-    id: 42161,
-    name: 'Arbitrum',
-    symbol: 'ARB',
-    color: 'rgba(40,160,240,1)',
-    rpcUrl: 'https://arb1.arbitrum.io/rpc',
-    explorerUrl: 'https://arbiscan.io',
-    avgBlockTime: 0.25,
-  },
-  {
-    id: 10,
-    name: 'Optimism',
-    symbol: 'OP',
-    color: 'rgba(255,4,32,1)',
-    rpcUrl: 'https://mainnet.optimism.io',
-    explorerUrl: 'https://optimistic.etherscan.io',
-    avgBlockTime: 2,
-  },
-  {
-    id: 43114,
-    name: 'Avalanche',
-    symbol: 'AVAX',
-    color: 'rgba(232,65,66,1)',
-    rpcUrl: 'https://api.avax.network/ext/bc/C/rpc',
-    explorerUrl: 'https://snowtrace.io',
-    avgBlockTime: 2,
-  },
-  {
-    id: 8453,
-    name: 'Base',
-    symbol: 'BASE',
-    color: 'rgba(0,82,255,1)',
-    rpcUrl: 'https://mainnet.base.org',
-    explorerUrl: 'https://basescan.org',
-    avgBlockTime: 2,
-  },
-  {
-    id: 250,
-    name: 'Fantom',
-    symbol: 'FTM',
-    color: 'rgba(19,181,236,1)',
-    rpcUrl: 'https://rpc.ftm.tools',
-    explorerUrl: 'https://ftmscan.com',
-    avgBlockTime: 1,
-  },
+  { id: 1,     name: 'Ethereum',  symbol: 'ETH',  color: 'rgba(98,126,234,1)',  rpcUrl: 'https://eth.llamarpc.com',               explorerUrl: 'https://etherscan.io',             avgBlockTime: 12 },
+  { id: 56,    name: 'BNB Chain', symbol: 'BNB',  color: 'rgba(240,185,11,1)', rpcUrl: 'https://bsc-dataseed1.binance.org',       explorerUrl: 'https://bscscan.com',              avgBlockTime: 3 },
+  { id: 137,   name: 'Polygon',   symbol: 'MATIC', color: 'rgba(130,71,229,1)', rpcUrl: 'https://polygon.llamarpc.com',           explorerUrl: 'https://polygonscan.com',          avgBlockTime: 2 },
+  { id: 42161, name: 'Arbitrum',  symbol: 'ARB',  color: 'rgba(40,160,240,1)', rpcUrl: 'https://arb1.arbitrum.io/rpc',            explorerUrl: 'https://arbiscan.io',              avgBlockTime: 0.25 },
+  { id: 10,    name: 'Optimism',  symbol: 'OP',   color: 'rgba(255,4,32,1)',   rpcUrl: 'https://mainnet.optimism.io',             explorerUrl: 'https://optimistic.etherscan.io',  avgBlockTime: 2 },
+  { id: 43114, name: 'Avalanche', symbol: 'AVAX', color: 'rgba(232,65,66,1)',  rpcUrl: 'https://api.avax.network/ext/bc/C/rpc',   explorerUrl: 'https://snowtrace.io',             avgBlockTime: 2 },
+  { id: 8453,  name: 'Base',      symbol: 'BASE', color: 'rgba(0,82,255,1)',   rpcUrl: 'https://mainnet.base.org',                explorerUrl: 'https://basescan.org',             avgBlockTime: 2 },
+  { id: 250,   name: 'Fantom',    symbol: 'FTM',  color: 'rgba(19,181,236,1)', rpcUrl: 'https://rpc.ftm.tools',                  explorerUrl: 'https://ftmscan.com',              avgBlockTime: 1 },
 ] as const);
 
-const REFRESH_MS = 15_000; // 15s
+const REFRESH_MS = 15_000;
+
+// ─── Fetch helper ──────────────────────────────────────────────────────────────
 
 async function fetchChainStats(
   chain: typeof CHAINS[number],
@@ -116,7 +61,7 @@ async function fetchChainStats(
 
   const body = JSON.stringify([
     { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] },
-    { jsonrpc: '2.0', id: 2, method: 'eth_gasPrice',   params: [] },
+    { jsonrpc: '2.0', id: 2, method: 'eth_gasPrice',    params: [] },
   ]);
 
   const res = await fetch(chain.rpcUrl, {
@@ -137,8 +82,8 @@ async function fetchChainStats(
     };
   }
 
-  const data: any[] = await res.json();
-  const blockHex = data.find(d => d.id === 1)?.result ?? '0x0';
+  const data = await res.json() as JsonRpcResult[];
+  const blockHex    = data.find(d => d.id === 1)?.result ?? '0x0';
   const gasPriceHex = data.find(d => d.id === 2)?.result ?? '0x0';
 
   const blockNumber  = parseInt(blockHex, 16);
@@ -154,6 +99,8 @@ async function fetchChainStats(
     latencyMs, status, tpsEstimate, lastUpdated: Date.now(),
   };
 }
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useNetworkStats() {
   const [state, setState] = useState<NetworksState>({
@@ -173,7 +120,6 @@ export function useNetworkStats() {
     setState(prev => ({ ...prev, loading: prev.chains.length === 0, error: null }));
 
     try {
-      // Fetch all chains in parallel
       const results = await Promise.allSettled(
         CHAINS.map(chain => fetchChainStats(chain, signal))
       );
@@ -192,10 +138,15 @@ export function useNetworkStats() {
       });
 
       setState({ chains, loading: false, error: null, lastUpdated: Date.now() });
-    } catch (err: any) {
-      if (err?.name === 'AbortError') return;
+
+    } catch (err: unknown) {
+      if ((err as Error)?.name === 'AbortError') return;
       if (!mountedRef.current) return;
-      setState(prev => ({ ...prev, loading: false, error: err?.message ?? 'Fetch failed' }));
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: (err instanceof Error) ? err.message : 'Fetch failed',
+      }));
     }
 
     if (mountedRef.current) {
