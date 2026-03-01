@@ -11,6 +11,8 @@
 
 @layer base {
   :root {
+    --zm-font-ui:             'JetBrains Mono', monospace;
+    --zm-font-data:           'JetBrains Mono', monospace;
     --zm-bg-base:             rgba(5,7,13,1);
     --zm-bg-secondary:        rgba(8,10,18,1);
     --zm-sidebar-bg:          rgba(7,9,17,0.98);
