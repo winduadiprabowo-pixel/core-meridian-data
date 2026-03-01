@@ -1,10 +1,9 @@
 /**
- * Derivatives.tsx — ZERØ MERIDIAN 2026 push110
+ * Derivatives.tsx — ZERØ MERIDIAN push130
+ * push130: Zero :any — BinancePremiumIndex + BinanceOIItem interfaces
  * push110: Responsive polish — mobile 320px + desktop 1440px
- * - useBreakpoint ✓  mobile: summary 1col, table overflowX scroll ✓
- * - React.memo + displayName ✓
- * - rgba() only ✓  Zero className ✓  Zero hex color ✓
- * - JetBrains Mono only ✓
+ * - useBreakpoint ✓  React.memo + displayName ✓
+ * - rgba() only ✓  Zero className ✓  Zero hex color ✓  Zero :any ✓
  */
 
 import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from "react";
@@ -29,18 +28,35 @@ const C = Object.freeze({
 
 const PAIRS = Object.freeze(["BTCUSDT","ETHUSDT","SOLUSDT","BNBUSDT","XRPUSDT","ADAUSDT","DOGEUSDT","AVAXUSDT"]);
 
-interface FundingRate {
-  symbol: string;
-  fundingRate: number;
+// ─── Raw API types ─────────────────────────────────────────────────────────────
+
+interface BinancePremiumIndex {
+  symbol:          string;
+  markPrice:       string;
+  indexPrice:      string;
+  lastFundingRate: string;
   nextFundingTime: number;
-  markPrice: number;
-  indexPrice: number;
-  openInterest: number;
+}
+
+interface BinanceOIItem {
+  symbol:       string;
+  openInterest: string;
+}
+
+// ─── App types ────────────────────────────────────────────────────────────────
+
+interface FundingRate {
+  symbol:         string;
+  fundingRate:    number;
+  nextFundingTime: number;
+  markPrice:      number;
+  indexPrice:     number;
+  openInterest:   number;
   openInterestUsd: number;
 }
 
 interface DerivativesData {
-  rates: FundingRate[];
+  rates:       FundingRate[];
   lastUpdated: number;
 }
 
@@ -49,11 +65,11 @@ interface DerivativesData {
 interface FundingRowProps { rate: FundingRate; }
 const FundingRow = memo(({ rate }: FundingRowProps) => {
   const [hovered, setHovered] = useState(false);
-  const onEnter = useCallback(() => setHovered(true), []);
+  const onEnter = useCallback(() => setHovered(true),  []);
   const onLeave = useCallback(() => setHovered(false), []);
 
   const fundingColor = useMemo(() => {
-    if (rate.fundingRate > 0.001) return C.positive;
+    if (rate.fundingRate >  0.001) return C.positive;
     if (rate.fundingRate < -0.001) return C.negative;
     return C.textFaint;
   }, [rate.fundingRate]);
@@ -79,8 +95,8 @@ const FundingRow = memo(({ rate }: FundingRowProps) => {
   }), [hovered]);
 
   const fmtUsd = useCallback((n: number) => {
-    if (n >= 1e9) return `$${(n/1e9).toFixed(2)}B`;
-    if (n >= 1e6) return `$${(n/1e6).toFixed(2)}M`;
+    if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
+    if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
     return `$${n.toLocaleString()}`;
   }, []);
 
@@ -125,10 +141,10 @@ EmptyState.displayName = "EmptyState";
 
 const Derivatives = memo(() => {
   const { isMobile, isTablet } = useBreakpoint();
-  const [data, setData] = useState<DerivativesData | null>(null);
+  const [data, setData]       = useState<DerivativesData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const mountedRef = useRef(true);
+  const [error, setError]     = useState<string | null>(null);
+  const mountedRef            = useRef(true);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -140,30 +156,34 @@ const Derivatives = memo(() => {
       ]);
       if (!mountedRef.current) return;
       if (!fundingRes.ok) throw new Error(`Binance HTTP ${fundingRes.status}`);
-      const [fundingJson, oiJson] = await Promise.all([fundingRes.json(), oiRes.json()]);
+
+      const [fundingJson, oiJson] = await Promise.all([
+        fundingRes.json() as Promise<BinancePremiumIndex[]>,
+        oiRes.json()      as Promise<BinanceOIItem | BinanceOIItem[]>,
+      ]);
       if (!mountedRef.current) return;
 
       const oiMap: Record<string, number> = {};
       const oiArr = Array.isArray(oiJson) ? oiJson : [oiJson];
-      oiArr.forEach((o: any) => { oiMap[o.symbol] = parseFloat(o.openInterest); });
+      oiArr.forEach(o => { oiMap[o.symbol] = parseFloat(o.openInterest); });
 
       const rates: FundingRate[] = fundingJson
-        .filter((f: any) => PAIRS.includes(f.symbol))
-        .map((f: any) => {
+        .filter(f => PAIRS.includes(f.symbol))
+        .map(f => {
           const mp = parseFloat(f.markPrice);
           const ip = parseFloat(f.indexPrice);
           const oi = oiMap[f.symbol] ?? 0;
           return {
-            symbol: f.symbol,
-            fundingRate: parseFloat(f.lastFundingRate),
+            symbol:          f.symbol,
+            fundingRate:     parseFloat(f.lastFundingRate),
             nextFundingTime: f.nextFundingTime,
-            markPrice: mp,
-            indexPrice: ip,
-            openInterest: oi,
+            markPrice:       mp,
+            indexPrice:      ip,
+            openInterest:    oi,
             openInterestUsd: oi * mp,
           };
         })
-        .sort((a: FundingRate, b: FundingRate) => b.openInterestUsd - a.openInterestUsd);
+        .sort((a, b) => b.openInterestUsd - a.openInterestUsd);
 
       setData({ rates, lastUpdated: Date.now() });
     } catch (e) {
@@ -177,7 +197,7 @@ const Derivatives = memo(() => {
   useEffect(() => {
     mountedRef.current = true;
     fetchData();
-    const interval = setInterval(() => { if (mountedRef.current) fetchData(); }, 60000);
+    const interval = setInterval(() => { if (mountedRef.current) fetchData(); }, 60_000);
     return () => { mountedRef.current = false; clearInterval(interval); };
   }, [fetchData]);
 
@@ -185,8 +205,8 @@ const Derivatives = memo(() => {
     if (!data?.lastUpdated) return "—";
     const diff = Math.floor((Date.now() - data.lastUpdated) / 1000);
     if (diff < 60) return `${diff}s ago`;
-    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-    return `${Math.floor(diff/3600)}h ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    return `${Math.floor(diff / 3600)}h ago`;
   }, [data]);
 
   const avgFunding = useMemo(() => {
@@ -198,8 +218,8 @@ const Derivatives = memo(() => {
   const totalOI = useMemo(() => {
     if (!data?.rates.length) return null;
     const tot = data.rates.reduce((s, r) => s + r.openInterestUsd, 0);
-    if (tot >= 1e9) return `$${(tot/1e9).toFixed(2)}B`;
-    return `$${(tot/1e6).toFixed(2)}M`;
+    if (tot >= 1e9) return `$${(tot / 1e9).toFixed(2)}B`;
+    return `$${(tot / 1e6).toFixed(2)}M`;
   }, [data]);
 
   const pageStyle = useMemo(() => ({
@@ -211,7 +231,6 @@ const Derivatives = memo(() => {
     background: C.glassBg, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: "hidden" as const,
   }), []);
 
-  // Summary: mobile=1col, tablet=2col, desktop=3col
   const summaryGridCols = isMobile ? "1fr" : isTablet ? "repeat(2,1fr)" : "repeat(3,1fr)";
 
   const handleRefresh = useCallback(() => fetchData(), [fetchData]);
@@ -234,7 +253,7 @@ const Derivatives = memo(() => {
         </button>
       </div>
 
-      {/* Summary cards — responsive grid */}
+      {/* Summary cards */}
       {data && (
         <div style={{ display: "grid", gridTemplateColumns: summaryGridCols, gap: 12, marginBottom: 20 }}>
           <div style={{ background: C.cardBg, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
@@ -255,7 +274,7 @@ const Derivatives = memo(() => {
         </div>
       )}
 
-      {/* Table — horizontal scroll on mobile */}
+      {/* Table */}
       <div style={cardStyle}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: `1px solid ${C.glassBorder}` }}>
           <span style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: C.textFaint }}>Perpetual Contracts</span>
@@ -281,10 +300,9 @@ const Derivatives = memo(() => {
         )}
 
         {!loading && !error && (
-          /* overflowX scroll wrapper for mobile */
           <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
             <div style={{ display: "grid", gridTemplateColumns: "100px 110px 110px 100px 120px 100px", gap: 12, padding: "8px 16px", borderBottom: `1px solid rgba(255,255,255,0.1)`, minWidth: "660px" }}>
-              {["Symbol","Mark Price","Funding","Next In","Open Interest","Basis"].map(h => (
+              {(["Symbol","Mark Price","Funding","Next In","Open Interest","Basis"] as const).map(h => (
                 <span key={h} style={{ fontFamily: FONT, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: C.textFaint, textAlign: h !== "Symbol" ? "right" as const : "left" as const }}>{h}</span>
               ))}
             </div>
