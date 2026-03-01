@@ -17,7 +17,7 @@ import { useMarketWorker } from '@/hooks/useMarketWorker';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import VirtualList from '@/components/shared/VirtualList';
 import SparklineChart from '@/components/shared/SparklineChart';
-import { formatPrice, formatChange, formatCompact } from '@/lib/formatters';
+import { formatPrice, formatCompact } from '@/lib/formatters';
 import type { CryptoAsset } from '@/lib/formatters';
 
 type SK = 'rank'|'name'|'price'|'change24h'|'change7d'|'marketCap'|'volume24h';
@@ -205,7 +205,34 @@ const Markets = memo(() => {
 
   useEffect(() => { m.current = true; return () => { m.current = false; }; }, []);
 
-  const { sorted } = useMarketWorker({ assets, sortKey, sortDir, search });
+  const [sorted, setSorted] = useState<CryptoAsset[]>([]);
+  const marketWorker = useMarketWorker();
+
+  // Run sort+filter via worker whenever deps change
+  useEffect(() => {
+    let cancelled = false;
+    marketWorker.sortAndFilter(assets, sortKey, sortDir, search)
+      .then(result => { if (!cancelled && m.current) setSorted(result.assets); })
+      .catch(() => {
+        // Worker unavailable — sort inline as fallback
+        if (cancelled || !m.current) return;
+        const q = search.toLowerCase();
+        let filtered = q
+          ? assets.filter(a => a.name.toLowerCase().includes(q) || a.symbol.toLowerCase().includes(q))
+          : [...assets];
+        filtered.sort((a, b) => {
+          const av = (a as Record<string, unknown>)[sortKey] ?? 0;
+          const bv = (b as Record<string, unknown>)[sortKey] ?? 0;
+          const cmp = typeof av === 'string'
+            ? (av as string).localeCompare(bv as string)
+            : (av as number) - (bv as number);
+          return sortDir === 'asc' ? cmp : -cmp;
+        });
+        setSorted(filtered);
+      });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assets, sortKey, sortDir, search]);
 
   const handleSort = useCallback((k: SK) => {
     if (!m.current) return;
@@ -319,8 +346,9 @@ const Markets = memo(() => {
           <VirtualList
             items={sorted}
             itemHeight={rowHeight}
-            containerHeight={Math.min(sorted.length * rowHeight, window.innerHeight - 200)}
+            height={Math.min(sorted.length * rowHeight, window.innerHeight - 200)}
             renderItem={renderRow}
+            getKey={(item: CryptoAsset) => item.id}
           />
         )}
       </div>
