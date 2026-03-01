@@ -1,6 +1,6 @@
 /**
- * sw.js — ZERØ MERIDIAN 2026 push107
- * push107: Cache bump zm-v4 → zm-v5 (OfflineIndicator assets)
+ * sw.js — ZERØ MERIDIAN 2026 push113
+ * push113: Cache bump zm-v4 → zm-v5 (OfflineIndicator assets)
  *        + Expanded STATIC_ASSETS: /watchlist, /onchain, /sentiment, /defi,
  *          /portfolio, /alerts, /charts, /orderbook, /derivatives, /converter,
  *          /intelligence
@@ -9,7 +9,7 @@
  *       + Offline alert queue stored in Cache Storage (IndexedDB in SW context)
  */
 
-const CACHE_NAME    = 'zm-v5';
+const CACHE_NAME    = 'zm-v6';
 const OFFLINE_URL   = '/offline.html';
 const STATIC_ASSETS = [
   '/',
