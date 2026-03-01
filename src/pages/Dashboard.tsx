@@ -1,10 +1,9 @@
 /**
- * Dashboard.tsx — ZERØ MERIDIAN 2026 push110
+ * Dashboard.tsx — ZERØ MERIDIAN push130
+ * push130: Zero :any — CGMarketCoin interface replacing marketsJson.map((t: any))
  * push110: Responsive polish — mobile 320px + desktop 1440px
- * - useBreakpoint ✓  isMobile grid adapt ✓
- * - React.memo + displayName ✓
- * - rgba() only ✓  Zero className ✓  Zero hex color ✓
- * - JetBrains Mono only ✓
+ * - React.memo + displayName ✓  rgba() only ✓  Zero className ✓
+ * - Zero hex color ✓  JetBrains Mono only ✓  Zero :any ✓
  */
 
 import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from "react";
@@ -27,27 +26,58 @@ const C = Object.freeze({
   glassBorder: "rgba(255,255,255,0.06)",
 });
 
+// ─── Raw API types ─────────────────────────────────────────────────────────────
+
+interface CGGlobalData {
+  total_market_cap:          Record<string, number>;
+  total_volume:              Record<string, number>;
+  market_cap_percentage:     Record<string, number>;
+}
+
+interface CGGlobalResponse {
+  data: CGGlobalData;
+}
+
+interface FnGItem {
+  value:                string;
+  value_classification: string;
+}
+
+interface FnGResponse {
+  data: FnGItem[];
+}
+
+interface CGMarketCoin {
+  id:                                     string;
+  symbol:                                 string;
+  name:                                   string;
+  current_price:                          number;
+  price_change_percentage_24h:            number | null;
+}
+
+// ─── App types ────────────────────────────────────────────────────────────────
+
 interface GlobalData {
   totalMarketCap: number;
-  btcDominance: number;
-  ethDominance: number;
+  btcDominance:   number;
+  ethDominance:   number;
   totalVolume24h: number;
-  fngValue: number;
-  fngLabel: string;
-  lastUpdated: number;
+  fngValue:       number;
+  fngLabel:       string;
+  lastUpdated:    number;
 }
 
 interface TopMover {
-  symbol: string;
-  name: string;
-  price: number;
+  symbol:   string;
+  name:     string;
+  price:    number;
   change24h: number;
 }
 
 interface DashboardData {
-  global: GlobalData;
+  global:     GlobalData;
   topGainers: TopMover[];
-  topLosers: TopMover[];
+  topLosers:  TopMover[];
 }
 
 // ─── MetricCard ───────────────────────────────────────────────────────────────
@@ -55,10 +85,10 @@ interface DashboardData {
 interface MetricCardProps { label: string; value: string; sub?: string; accent?: boolean; }
 const MetricCard = memo(({ label, value, sub, accent }: MetricCardProps) => {
   const s = useMemo(() => ({
-    card: { background: C.cardBg, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: 16, display: "flex" as const, flexDirection: "column" as const, gap: 8 },
+    card:  { background: C.cardBg, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: 16, display: "flex" as const, flexDirection: "column" as const, gap: 8 },
     label: { fontFamily: FONT, fontSize: 9, fontWeight: 400, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: C.textFaint },
     value: { fontFamily: FONT, fontSize: 14, fontWeight: 700, color: accent ? C.accent : C.textPrimary },
-    sub: { fontFamily: FONT, fontSize: 10, color: C.textFaint },
+    sub:   { fontFamily: FONT, fontSize: 10, color: C.textFaint },
   }), [accent]);
   return (
     <div style={s.card}>
@@ -75,7 +105,7 @@ MetricCard.displayName = "MetricCard";
 interface MoverRowProps { mover: TopMover; }
 const MoverRow = memo(({ mover }: MoverRowProps) => {
   const [hovered, setHovered] = useState(false);
-  const onEnter = useCallback(() => setHovered(true), []);
+  const onEnter = useCallback(() => setHovered(true),  []);
   const onLeave = useCallback(() => setHovered(false), []);
   const changeColor = mover.change24h >= 0 ? C.positive : C.negative;
   const rowStyle = useMemo(() => ({
@@ -127,10 +157,10 @@ EmptyState.displayName = "EmptyState";
 
 const Dashboard = memo(() => {
   const { isMobile, isTablet } = useBreakpoint();
-  const [data, setData] = useState<DashboardData | null>(null);
+  const [data, setData]       = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const mountedRef = useRef(true);
+  const [error, setError]     = useState<string | null>(null);
+  const mountedRef            = useRef(true);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -143,14 +173,19 @@ const Dashboard = memo(() => {
       ]);
       if (!mountedRef.current) return;
       if (!globalRes.ok || !fngRes.ok || !marketsRes.ok) throw new Error("API error");
-      const [globalJson, fngJson, marketsJson] = await Promise.all([globalRes.json(), fngRes.json(), marketsRes.json()]);
+
+      const [globalJson, fngJson, marketsJson] = await Promise.all([
+        globalRes.json()  as Promise<CGGlobalResponse>,
+        fngRes.json()     as Promise<FnGResponse>,
+        marketsRes.json() as Promise<CGMarketCoin[]>,
+      ]);
       if (!mountedRef.current) return;
 
       const g = globalJson.data;
-      const movers: TopMover[] = marketsJson.map((t: any) => ({
-        symbol: t.symbol.toUpperCase(),
-        name: t.name,
-        price: t.current_price,
+      const movers: TopMover[] = marketsJson.map((t): TopMover => ({
+        symbol:   t.symbol.toUpperCase(),
+        name:     t.name,
+        price:    t.current_price,
         change24h: t.price_change_percentage_24h ?? 0,
       }));
       const sorted = [...movers].sort((a, b) => b.change24h - a.change24h);
@@ -158,15 +193,15 @@ const Dashboard = memo(() => {
       setData({
         global: {
           totalMarketCap: g.total_market_cap.usd,
-          btcDominance: g.market_cap_percentage.btc,
-          ethDominance: g.market_cap_percentage.eth,
+          btcDominance:   g.market_cap_percentage.btc,
+          ethDominance:   g.market_cap_percentage.eth,
           totalVolume24h: g.total_volume.usd,
-          fngValue: parseInt(fngJson.data[0].value),
-          fngLabel: fngJson.data[0].value_classification,
-          lastUpdated: Date.now(),
+          fngValue:       parseInt(fngJson.data[0].value, 10),
+          fngLabel:       fngJson.data[0].value_classification,
+          lastUpdated:    Date.now(),
         },
         topGainers: sorted.slice(0, 5),
-        topLosers: sorted.slice(-5).reverse(),
+        topLosers:  sorted.slice(-5).reverse(),
       });
     } catch (e) {
       if (!mountedRef.current) return;
@@ -179,21 +214,22 @@ const Dashboard = memo(() => {
   useEffect(() => {
     mountedRef.current = true;
     fetchData();
-    return () => { mountedRef.current = false; };
+    const interval = setInterval(() => { if (mountedRef.current) fetchData(); }, 60_000);
+    return () => { mountedRef.current = false; clearInterval(interval); };
   }, [fetchData]);
 
   const lastUpdatedStr = useMemo(() => {
     if (!data?.global.lastUpdated) return "—";
     const diff = Math.floor((Date.now() - data.global.lastUpdated) / 1000);
     if (diff < 60) return `${diff}s ago`;
-    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-    return `${Math.floor(diff/3600)}h ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    return `${Math.floor(diff / 3600)}h ago`;
   }, [data]);
 
   const fmtBig = useCallback((n: number) => {
-    if (n >= 1e12) return `$${(n/1e12).toFixed(2)}T`;
-    if (n >= 1e9) return `$${(n/1e9).toFixed(2)}B`;
-    return `$${(n/1e6).toFixed(0)}M`;
+    if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
+    if (n >= 1e9)  return `$${(n / 1e9).toFixed(2)}B`;
+    return `$${(n / 1e6).toFixed(0)}M`;
   }, []);
 
   const pageStyle = useMemo(() => ({
@@ -201,10 +237,8 @@ const Dashboard = memo(() => {
     padding: isMobile ? "16px 12px" : "20px 16px",
   }), [isMobile]);
 
-  // Responsive: mobile=2col, tablet=3col, desktop=5col
   const metricsGridCols = isMobile ? "repeat(2,1fr)" : isTablet ? "repeat(3,1fr)" : "repeat(5,1fr)";
-  // Movers: mobile=1col stacked, desktop=2col side by side
-  const moversGridCols = isMobile ? "1fr" : "1fr 1fr";
+  const moversGridCols  = isMobile ? "1fr" : "1fr 1fr";
 
   const sectionCardStyle = useMemo(() => ({
     background: C.glassBg, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: "hidden" as const,
@@ -234,22 +268,20 @@ const Dashboard = memo(() => {
         </div>
       )}
 
-      {!loading && error && (
-        <EmptyState section="Dashboard" onRetry={fetchData} />
-      )}
+      {!loading && error && <EmptyState section="Dashboard" onRetry={fetchData} />}
 
       {!loading && !error && data && (
         <>
-          {/* Global metrics — responsive grid */}
+          {/* Global metrics */}
           <div style={{ display: "grid", gridTemplateColumns: metricsGridCols, gap: 12, marginBottom: 20 }}>
             <MetricCard label="Total Market Cap" value={fmtBig(data.global.totalMarketCap)} />
-            <MetricCard label="24H Volume" value={fmtBig(data.global.totalVolume24h)} />
-            <MetricCard label="BTC Dominance" value={`${data.global.btcDominance.toFixed(1)}%`} />
-            <MetricCard label="ETH Dominance" value={`${data.global.ethDominance.toFixed(1)}%`} />
-            <MetricCard label="Fear & Greed" value={`${data.global.fngValue} · ${data.global.fngLabel}`} accent />
+            <MetricCard label="24H Volume"        value={fmtBig(data.global.totalVolume24h)} />
+            <MetricCard label="BTC Dominance"     value={`${data.global.btcDominance.toFixed(1)}%`} />
+            <MetricCard label="ETH Dominance"     value={`${data.global.ethDominance.toFixed(1)}%`} />
+            <MetricCard label="Fear & Greed"      value={`${data.global.fngValue} · ${data.global.fngLabel}`} accent />
           </div>
 
-          {/* Movers — responsive: 1col mobile, 2col desktop */}
+          {/* Movers */}
           <div style={{ display: "grid", gridTemplateColumns: moversGridCols, gap: 12 }}>
             <div style={sectionCardStyle}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", borderBottom: `1px solid ${C.glassBorder}` }}>
@@ -275,9 +307,7 @@ const Dashboard = memo(() => {
         </>
       )}
 
-      {!loading && !error && !data && (
-        <EmptyState section="Dashboard" onRetry={fetchData} />
-      )}
+      {!loading && !error && !data && <EmptyState section="Dashboard" onRetry={fetchData} />}
     </div>
   );
 });
