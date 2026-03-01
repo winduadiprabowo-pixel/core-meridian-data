@@ -47,7 +47,7 @@ const ComingSoon = React.memo(({ title, description, icon = '⚡', eta }: Coming
   }), []);
 
   const titleStyle = useMemo(() => Object.freeze({
-    fontFamily: "'Space Grotesk', sans-serif",
+    fontFamily: "'JetBrains Mono', monospace",
     fontWeight: 700,
     fontSize: '22px',
     color: 'rgba(255,255,255,0.9)',
@@ -56,7 +56,7 @@ const ComingSoon = React.memo(({ title, description, icon = '⚡', eta }: Coming
   }), []);
 
   const descStyle = useMemo(() => Object.freeze({
-    fontFamily: "'Space Grotesk', sans-serif",
+    fontFamily: "'JetBrains Mono', monospace",
     fontSize: '14px',
     color: 'rgba(255,255,255,0.4)',
     lineHeight: 1.6,
