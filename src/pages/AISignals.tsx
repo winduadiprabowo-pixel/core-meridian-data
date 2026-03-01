@@ -77,9 +77,9 @@ const RSIGauge = memo(({ rsi, size = 64 }: RSIGaugeProps) => {
     >
       <path d={'M 4,' + half + ' A ' + r + ',' + r + ' 0 0 1 ' + (size - 4) + ',' + half} fill="none" stroke="rgba(148,163,184,0.12)" strokeWidth={5} strokeLinecap="round" />
       <path d={'M 4,' + half + ' A ' + r + ',' + r + ' 0 0 1 ' + (size - 4) + ',' + half} fill="none" stroke={color} strokeWidth={5} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} style={{ transition: 'stroke-dashoffset 0.6s ease' }} />
-      <text x={half} y={half - 2} textAnchor="middle" fontSize={11} fontFamily="monospace" fontWeight="700" fill={color}>{clampedRsi.toFixed(0)}</text>
-      <text x={4} y={half + 10} fontSize={7} fontFamily="monospace" fill="rgba(148,163,184,0.4)">OS</text>
-      <text x={size - 4} y={half + 10} fontSize={7} fontFamily="monospace" fill="rgba(148,163,184,0.4)" textAnchor="end">OB</text>
+      <text x={half} y={half - 2} textAnchor="middle" fontSize={11} fontFamily="'JetBrains Mono', monospace" fontWeight="700" fill={color}>{clampedRsi.toFixed(0)}</text>
+      <text x={4} y={half + 10} fontSize={7} fontFamily="'JetBrains Mono', monospace" fill="rgba(148,163,184,0.4)">OS</text>
+      <text x={size - 4} y={half + 10} fontSize={7} fontFamily="'JetBrains Mono', monospace" fill="rgba(148,163,184,0.4)" textAnchor="end">OB</text>
     </svg>
   );
 });
