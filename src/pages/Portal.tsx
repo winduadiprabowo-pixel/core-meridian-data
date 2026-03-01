@@ -1,5 +1,5 @@
 /**
- * Portal.tsx — ZERØ MERIDIAN push100
+ * Portal.tsx — ZERØ MERIDIAN push113
  * ══════════════════════════════════════════════════
  * Animasi MATERIALIZE — Bloomberg terminal boot feel
  *
@@ -22,7 +22,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import XLogo from '@/components/shared/XLogo';
 
-const AUTO_MS    = 2800;
+const AUTO_MS    = 1400;
 const VISITED_KEY = 'zm_visited';
 const TITLE      = 'ZERØ MERIDIAN';
 
@@ -59,24 +59,24 @@ const Portal: React.FC = () => {
 
   const doEnter = useCallback(() => {
     if (!mountedRef.current) return;
-    localStorage.setItem(VISITED_KEY, '1');
+    sessionStorage.setItem(VISITED_KEY, '1');
     navigate('/dashboard');
   }, [navigate]);
 
   useEffect(() => {
     mountedRef.current = true;
 
-    if (localStorage.getItem(VISITED_KEY)) {
+    if (sessionStorage.getItem(VISITED_KEY)) {
       navigate('/dashboard');
       return;
     }
 
     // Phase sequence timers
     const t1 = setTimeout(() => { if (mountedRef.current) setPhase(1); }, 80);
-    const t2 = setTimeout(() => { if (mountedRef.current) setPhase(2); }, 300);
-    const t3 = setTimeout(() => { if (mountedRef.current) setPhase(3); }, 800);
-    const t4 = setTimeout(() => { if (mountedRef.current) setPhase(4); }, 1800);
-    const ts = setTimeout(() => { if (mountedRef.current) setScanDone(true); }, 1000);
+    const t2 = setTimeout(() => { if (mountedRef.current) setPhase(2); }, 200);
+    const t3 = setTimeout(() => { if (mountedRef.current) setPhase(3); }, 450);
+    const t4 = setTimeout(() => { if (mountedRef.current) setPhase(4); }, 950);
+    const ts = setTimeout(() => { if (mountedRef.current) setScanDone(true); }, 650);
 
     // Typewriter
     let idx = 0;
@@ -85,7 +85,7 @@ const Portal: React.FC = () => {
       idx++;
       setTypeIdx(idx);
       if (idx >= TITLE.length) clearInterval(typeTimer);
-    }, 70);
+    }, 45);
 
     // Progress
     const start = Date.now();
