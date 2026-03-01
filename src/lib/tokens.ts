@@ -71,10 +71,10 @@ export const COLOR = Object.freeze({
 // ─── Typography ───────────────────────────────────────────────────────────────
 
 export const FONT = Object.freeze({
-  display:  "'Space Grotesk', sans-serif",
-  mono:     "'JetBrains Mono', 'IBM Plex Mono', monospace",
-  label:    "'IBM Plex Mono', monospace",
-  ui:       "'Space Grotesk', sans-serif",
+  display:  "'JetBrains Mono', monospace",
+  mono:     "'JetBrains Mono', monospace",
+  label:    "'JetBrains Mono', monospace",
+  ui:       "'JetBrains Mono', monospace",
 } as const);
 
 export const FONT_SIZE = Object.freeze({
