@@ -146,15 +146,14 @@ const Portal: React.FC = () => {
   }), []);
 
   const titleStyle = useMemo(() => ({
-    fontFamily:    "'JetBrains Mono', monospace",
-    fontSize:      30,
-    fontWeight:    700,
-    color:         'rgba(228,232,244,1)',
-    letterSpacing: '-0.02em',
+    fontFamily:    "'Inter', 'Arial Black', sans-serif",
+    fontSize:      52,
+    fontWeight:    900,
+    color:         'rgba(255,255,255,1)',
+    letterSpacing: '0.05em',
     lineHeight:    1,
-    minHeight:     36,
-    minWidth:      260,
     textAlign:     'center' as const,
+    textTransform: 'uppercase' as const,
   }), []);
 
   const taglineStyle = useMemo(() => ({
@@ -236,7 +235,11 @@ const Portal: React.FC = () => {
                 animate={rm ? {} : { opacity: 1, scale: 1 }}
                 transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
               >
-                <XLogo size={180} style={{ opacity: 0, position: "absolute" as const }} />
+                <img
+                  src="/logo.png"
+                  alt="ZERØ MERIDIAN Logo"
+                  style={{ width: 280, height: 280, objectFit: 'contain', display: 'block' }}
+                />
               </motion.div>
 
               {/* Scan line — cyan sweep top to bottom */}
@@ -278,10 +281,22 @@ const Portal: React.FC = () => {
             </div>
 
             {/* ── Title typewriter ── */}
-            <div style={{ textAlign: 'center' as const }}>
+            <div style={{ textAlign: 'center' as const, marginTop: -8 }}>
               <div style={titleStyle}>
-                {phase >= 3 ? displayText : ''}
-                {cursorActive && (
+                {phase >= 3 ? displayText.slice(0, 4) : ''}
+                {cursorActive && typeIdx <= 4 && (
+                  <motion.span
+                    animate={rm ? {} : { opacity: [1, 0, 1] }}
+                    transition={{ duration: 0.7, repeat: Infinity }}
+                    style={{ color: 'rgba(0,238,255,1)', marginLeft: 1 }}
+                  >
+                    |
+                  </motion.span>
+                )}
+              </div>
+              <div style={{ ...titleStyle, marginTop: 4 }}>
+                {phase >= 3 && typeIdx > 4 ? displayText.slice(5) : ''}
+                {cursorActive && typeIdx > 4 && (
                   <motion.span
                     animate={rm ? {} : { opacity: [1, 0, 1] }}
                     transition={{ duration: 0.7, repeat: Infinity }}
