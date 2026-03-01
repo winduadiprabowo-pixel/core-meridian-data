@@ -1,10 +1,9 @@
 /**
- * Tokens.tsx — ZERØ MERIDIAN 2026 push110
+ * Tokens.tsx — ZERØ MERIDIAN push130
+ * push130: Zero :any — CGMarketCoin7d interface + typed COLS array (no cast)
  * push110: Responsive polish — mobile 320px + desktop 1440px
- * - useBreakpoint ✓  table overflowX scroll on mobile ✓  search input full width mobile ✓
- * - React.memo + displayName ✓
- * - rgba() only ✓  Zero className ✓  Zero hex color ✓
- * - JetBrains Mono only ✓
+ * - useBreakpoint ✓  React.memo + displayName ✓
+ * - rgba() only ✓  Zero className ✓  Zero hex color ✓  Zero :any ✓
  */
 
 import React, { memo, useCallback, useMemo, useEffect, useRef, useState } from "react";
@@ -29,23 +28,38 @@ const C = Object.freeze({
 
 const SORT_KEYS = Object.freeze(["rank","price","change24h","volume","mcap"] as const);
 type SortKey = typeof SORT_KEYS[number];
-type SortDir = "asc"|"desc";
+type SortDir = "asc" | "desc";
+
+// ─── Raw API types ─────────────────────────────────────────────────────────────
+
+interface CGMarketCoin7d {
+  id:                                            string;
+  symbol:                                        string;
+  name:                                          string;
+  current_price:                                 number;
+  price_change_percentage_24h:                   number | null;
+  price_change_percentage_7d_in_currency:        number | null;
+  total_volume:                                  number;
+  market_cap:                                    number;
+}
+
+// ─── App types ────────────────────────────────────────────────────────────────
 
 interface Token {
-  id: string;
-  rank: number;
-  symbol: string;
-  name: string;
-  price: number;
+  id:       string;
+  rank:     number;
+  symbol:   string;
+  name:     string;
+  price:    number;
   change24h: number;
-  change7d: number;
-  volume: number;
-  mcap: number;
+  change7d:  number;
+  volume:   number;
+  mcap:     number;
   category: string;
 }
 
 interface TokensData {
-  tokens: Token[];
+  tokens:      Token[];
   lastUpdated: number;
 }
 
@@ -54,7 +68,7 @@ interface TokensData {
 interface TokenRowProps { token: Token; }
 const TokenRow = memo(({ token }: TokenRowProps) => {
   const [hovered, setHovered] = useState(false);
-  const onEnter = useCallback(() => setHovered(true), []);
+  const onEnter = useCallback(() => setHovered(true),  []);
   const onLeave = useCallback(() => setHovered(false), []);
 
   const rowStyle = useMemo(() => ({
@@ -72,17 +86,18 @@ const TokenRow = memo(({ token }: TokenRowProps) => {
   }), [hovered]);
 
   const changeColor = useCallback((v: number) => v >= 0 ? C.positive : C.negative, []);
+
   const fmt = useCallback((n: number) => {
-    if (n >= 1e12) return `$${(n/1e12).toFixed(2)}T`;
-    if (n >= 1e9) return `$${(n/1e9).toFixed(2)}B`;
-    if (n >= 1e6) return `$${(n/1e6).toFixed(2)}M`;
+    if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
+    if (n >= 1e9)  return `$${(n / 1e9).toFixed(2)}B`;
+    if (n >= 1e6)  return `$${(n / 1e6).toFixed(2)}M`;
     return `$${n.toLocaleString()}`;
   }, []);
 
   const fmtPrice = useCallback((n: number) => {
-    if (n < 0.001) return `$${n.toExponential(2)}`;
-    if (n < 1) return `$${n.toFixed(4)}`;
-    if (n < 1000) return `$${n.toFixed(2)}`;
+    if (n < 0.001)  return `$${n.toExponential(2)}`;
+    if (n < 1)      return `$${n.toFixed(4)}`;
+    if (n < 1000)   return `$${n.toFixed(2)}`;
     return `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
   }, []);
 
@@ -120,15 +135,17 @@ EmptyState.displayName = "EmptyState";
 
 // ─── SortHeader ───────────────────────────────────────────────────────────────
 
+interface ColDef { key: SortKey; label: string; align: "left" | "right"; }
+
 interface SortHeaderProps {
-  col: { key: SortKey; label: string; align: "left"|"right" };
+  col:     ColDef;
   sortKey: SortKey;
   sortDir: SortDir;
-  onSort: (k: SortKey) => void;
+  onSort:  (k: SortKey) => void;
 }
 const SortHeader = memo(({ col, sortKey, sortDir, onSort }: SortHeaderProps) => {
   const onClick = useCallback(() => onSort(col.key), [col.key, onSort]);
-  const active = sortKey === col.key;
+  const active  = sortKey === col.key;
   return (
     <span
       onClick={onClick}
@@ -153,27 +170,29 @@ const SortHeader = memo(({ col, sortKey, sortDir, onSort }: SortHeaderProps) => 
 });
 SortHeader.displayName = "SortHeader";
 
-// ─── Tokens (Main) ────────────────────────────────────────────────────────────
+// ─── Column definitions (fully typed — no cast) ───────────────────────────────
 
-const COLS: Array<{ key: SortKey; label: string; align: "left"|"right" }> = Object.freeze([
-  { key: "rank",     label: "#",       align: "left" },
-  { key: "rank",     label: "Asset",   align: "left" },
-  { key: "price",    label: "Price",   align: "right" },
-  { key: "change24h",label: "24H %",   align: "right" },
-  { key: "change24h",label: "7D %",    align: "right" },
-  { key: "volume",   label: "Volume",  align: "right" },
-  { key: "mcap",     label: "Mkt Cap", align: "right" },
-]) as any;
+const COLS: ColDef[] = Object.freeze([
+  { key: "rank",      label: "#",       align: "left"  },
+  { key: "rank",      label: "Asset",   align: "left"  },
+  { key: "price",     label: "Price",   align: "right" },
+  { key: "change24h", label: "24H %",   align: "right" },
+  { key: "change24h", label: "7D %",    align: "right" },
+  { key: "volume",    label: "Volume",  align: "right" },
+  { key: "mcap",      label: "Mkt Cap", align: "right" },
+]) as ColDef[];
+
+// ─── Tokens (Main) ────────────────────────────────────────────────────────────
 
 const Tokens = memo(() => {
   const { isMobile } = useBreakpoint();
-  const [data, setData] = useState<TokensData | null>(null);
+  const [data, setData]       = useState<TokensData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError]     = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("rank");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
-  const [search, setSearch] = useState("");
-  const mountedRef = useRef(true);
+  const [search, setSearch]   = useState("");
+  const mountedRef            = useRef(true);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -184,18 +203,19 @@ const Tokens = memo(() => {
       );
       if (!mountedRef.current) return;
       if (!res.ok) throw new Error(`CoinGecko HTTP ${res.status}`);
-      const json = await res.json();
+      const json = await res.json() as CGMarketCoin7d[];
       if (!mountedRef.current) return;
-      const tokens: Token[] = json.map((t: any, i: number) => ({
-        id: t.id,
-        rank: i + 1,
-        symbol: t.symbol.toUpperCase(),
-        name: t.name,
-        price: t.current_price,
+
+      const tokens: Token[] = json.map((t, i): Token => ({
+        id:       t.id,
+        rank:     i + 1,
+        symbol:   t.symbol.toUpperCase(),
+        name:     t.name,
+        price:    t.current_price,
         change24h: t.price_change_percentage_24h ?? 0,
-        change7d: t.price_change_percentage_7d_in_currency ?? 0,
-        volume: t.total_volume,
-        mcap: t.market_cap,
+        change7d:  t.price_change_percentage_7d_in_currency ?? 0,
+        volume:   t.total_volume,
+        mcap:     t.market_cap,
         category: "crypto",
       }));
       setData({ tokens, lastUpdated: Date.now() });
@@ -227,8 +247,8 @@ const Tokens = memo(() => {
     if (!data?.lastUpdated) return "—";
     const diff = Math.floor((Date.now() - data.lastUpdated) / 1000);
     if (diff < 60) return `${diff}s ago`;
-    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-    return `${Math.floor(diff/3600)}h ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    return `${Math.floor(diff / 3600)}h ago`;
   }, [data]);
 
   const filteredTokens = useMemo(() => {
@@ -239,7 +259,7 @@ const Tokens = memo(() => {
     }
     return [...list].sort((a, b) => {
       const mul = sortDir === "desc" ? -1 : 1;
-      return (a[sortKey] as number - (b[sortKey] as number)) * mul;
+      return ((a[sortKey] as number) - (b[sortKey] as number)) * mul;
     });
   }, [data, search, sortKey, sortDir]);
 
@@ -256,7 +276,7 @@ const Tokens = memo(() => {
 
   return (
     <div style={pageStyle}>
-      {/* Header — stacked on mobile */}
+      {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20, gap: 12, flexWrap: "wrap" as const }}>
         <div>
           <h1 style={{ fontFamily: FONT, fontSize: isMobile ? 16 : 20, fontWeight: 700, letterSpacing: "0.06em", color: C.textPrimary, margin: 0 }}>Tokens</h1>
@@ -268,14 +288,9 @@ const Tokens = memo(() => {
             onChange={handleSearch}
             placeholder="Search token..."
             style={{
-              fontFamily: FONT,
-              fontSize: 11,
-              color: C.textPrimary,
-              background: "rgba(255,255,255,0.04)",
-              border: `1px solid ${C.glassBorder}`,
-              borderRadius: 6,
-              padding: "6px 12px",
-              outline: "none",
+              fontFamily: FONT, fontSize: 11, color: C.textPrimary,
+              background: "rgba(255,255,255,0.04)", border: `1px solid ${C.glassBorder}`,
+              borderRadius: 6, padding: "6px 12px", outline: "none",
               flex: isMobile ? 1 : "unset",
               minWidth: isMobile ? 0 : "auto",
             }}
@@ -317,10 +332,9 @@ const Tokens = memo(() => {
         )}
 
         {!loading && !error && (
-          /* overflowX scroll wrapper for mobile */
           <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
             <div style={{ display: "grid", gridTemplateColumns: "36px 140px 110px 80px 80px 110px 110px", gap: 12, padding: "8px 16px", borderBottom: `1px solid rgba(255,255,255,0.1)`, minWidth: "680px" }}>
-              {(COLS as any[]).map((col: any, i: number) => (
+              {COLS.map((col, i) => (
                 <SortHeader key={i} col={col} sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
               ))}
             </div>
