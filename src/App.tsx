@@ -24,6 +24,7 @@ import { PWAInstallProvider } from '@/contexts/PWAInstallContext';
 import { useCryptoData } from '@/hooks/useCryptoData';
 import Skeleton from '@/components/shared/Skeleton';
 import OfflineIndicator from '@/components/shared/OfflineIndicator';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import {
   Landmark,
   Coins, Gem, DollarSign, Bot,
@@ -79,6 +80,46 @@ const PageFallback = memo(() => (
   </div>
 ));
 PageFallback.displayName = 'PageFallback';
+
+// Full-screen fallback untuk top-level crash
+const AppErrorFallback = (
+  <div style={{
+    display: 'flex', flexDirection: 'column', alignItems: 'center',
+    justifyContent: 'center', minHeight: '100vh',
+    background: 'rgba(5,7,13,1)', gap: 16,
+  }}>
+    <span style={{ fontSize: 32 }}>⚠</span>
+    <span style={{
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 13, fontWeight: 700,
+      color: 'rgba(248,113,113,0.9)',
+      letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+    }}>
+      ZERØ MERIDIAN — Startup Error
+    </span>
+    <span style={{
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 11, color: 'rgba(138,138,158,1)',
+      textAlign: 'center' as const, maxWidth: 400,
+    }}>
+      Something went wrong loading the app. Please refresh the page.
+    </span>
+    <button
+      onClick={() => window.location.reload()}
+      style={{
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 11, letterSpacing: '0.1em',
+        padding: '8px 24px', borderRadius: 6,
+        background: 'rgba(0,238,255,0.1)',
+        border: '1px solid rgba(0,238,255,0.3)',
+        color: 'rgba(0,238,255,1)', cursor: 'pointer',
+        willChange: 'transform',
+      }}
+    >
+      RELOAD APP
+    </button>
+  </div>
+);
 
 // ─── DataLoaderShell ─────────────────────────────────────────────────────────
 
@@ -145,12 +186,14 @@ const App = memo(() => (
             {/* push107: Global offline/reconnected indicator */}
             <OfflineIndicator />
             <BrowserRouter>
-              <Suspense fallback={null}>
-                <Routes>
-                  <Route path="/"  element={<Portal />} />
-                  <Route path="/*" element={<DataLoaderShell />} />
-                </Routes>
-              </Suspense>
+              <ErrorBoundary tileLabel="App" fallback={AppErrorFallback}>
+                <Suspense fallback={null}>
+                  <Routes>
+                    <Route path="/"  element={<Portal />} />
+                    <Route path="/*" element={<DataLoaderShell />} />
+                  </Routes>
+                </Suspense>
+              </ErrorBoundary>
             </BrowserRouter>
           </PWAInstallProvider>
         </CryptoProvider>
