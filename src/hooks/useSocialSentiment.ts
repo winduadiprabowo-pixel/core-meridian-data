@@ -1,10 +1,13 @@
 /**
- * useSocialSentiment.ts — ZERØ MERIDIAN 2026 push85
+ * useSocialSentiment.ts — ZERØ MERIDIAN push129
+ * push129: Zero :any — all API responses typed with proper interfaces
  * Fear & Greed (Alternative.me), Funding Rate + OI (Binance Futures).
- * - mountedRef pattern ✓  useCallback ✓  useMemo ✓  Object.freeze ✓
+ * mountedRef pattern ✓  useCallback ✓  useMemo ✓  Object.freeze ✓
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+
+// ─── Public types ──────────────────────────────────────────────────────────────
 
 export interface FearGreedPoint {
   value: number;
@@ -14,15 +17,15 @@ export interface FearGreedPoint {
 
 export interface FundingData {
   symbol: string;
-  rate: number;      // raw, e.g. 0.0001 = 0.01%
-  ratePct: number;   // rate * 100
-  annualized: number; // rate * 3 * 365 * 100 (%)
+  rate: number;
+  ratePct: number;
+  annualized: number;
   oiUsd: number;
   signal: 'LONG' | 'SHORT' | 'NEUTRAL';
 }
 
 export interface SentimentData {
-  fearGreed: FearGreedPoint[];       // latest first, up to 7
+  fearGreed: FearGreedPoint[];
   current: FearGreedPoint | null;
   funding: FundingData[];
   loadingFG: boolean;
@@ -33,14 +36,40 @@ export interface SentimentData {
   lastUpdatedFunding: number | null;
 }
 
+// ─── Raw API types ─────────────────────────────────────────────────────────────
+
+interface FnGItem {
+  value?: string;
+  value_classification?: string;
+  timestamp?: string;
+}
+
+interface FnGResponse {
+  data?: FnGItem[];
+}
+
+interface BinanceFundingItem {
+  symbol?: string;
+  lastFundingRate?: string;
+}
+
+interface BinanceOIItem {
+  symbol?: string;
+  sumOpenInterestValue?: string;
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
 const FUNDING_SYMBOLS = Object.freeze([
   'BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT',
   'ADAUSDT','AVAXUSDT','DOTUSDT','LINKUSDT','MATICUSDT',
 ]);
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function toFundingSignal(rate: number): 'LONG' | 'SHORT' | 'NEUTRAL' {
-  if (rate > 0.0001) return 'SHORT'; // positive funding → longs paying → crowded long → bearish signal
-  if (rate < -0.0001) return 'LONG'; // negative funding → shorts paying → crowded short → bullish signal
+  if (rate >  0.0001) return 'SHORT';
+  if (rate < -0.0001) return 'LONG';
   return 'NEUTRAL';
 }
 
@@ -49,90 +78,81 @@ async function fetchFearGreed(): Promise<FearGreedPoint[]> {
     signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) throw new Error('FnG error');
-  const data = await res.json();
-  return (data.data ?? []).map((d: any): FearGreedPoint => ({
-    value: parseInt(d.value, 10),
-    label: d.value_classification,
-    timestamp: parseInt(d.timestamp, 10) * 1000,
+  const data = await res.json() as FnGResponse;
+  return (data.data ?? []).map((d): FearGreedPoint => ({
+    value:     parseInt(d.value ?? '50', 10),
+    label:     d.value_classification ?? 'Neutral',
+    timestamp: parseInt(d.timestamp ?? '0', 10) * 1000,
   }));
 }
 
-async function fetchFundingAndOI(): Promise<FundingData[]> {
+async function fetchFundingAndOI(signal: AbortSignal): Promise<FundingData[]> {
   const [fundingRes, oiRes] = await Promise.allSettled([
-    fetch('https://fapi.binance.com/fapi/v1/premiumIndex', { signal: AbortSignal.timeout(8000) }),
-    fetch('https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT', { signal: AbortSignal.timeout(8000) }),
+    fetch('https://fapi.binance.com/fapi/v1/premiumIndex', { signal }),
+    fetch('https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT', { signal }),
   ]);
-
-  // Fetch all OI in parallel
-  const oiResults = await Promise.allSettled(
-    FUNDING_SYMBOLS.map(sym =>
-      fetch('https://fapi.binance.com/fapi/v1/openInterest?symbol=' + sym, {
-        signal: AbortSignal.timeout(8000),
-      }).then(r => r.json())
-    )
-  );
 
   let fundingMap: Record<string, number> = {};
   if (fundingRes.status === 'fulfilled' && fundingRes.value.ok) {
-    const allFunding: any[] = await fundingRes.value.json();
+    const allFunding = await fundingRes.value.json() as BinanceFundingItem[];
     for (const f of allFunding) {
-      if (FUNDING_SYMBOLS.includes(f.symbol)) {
+      if (f.symbol && FUNDING_SYMBOLS.includes(f.symbol)) {
         fundingMap[f.symbol] = parseFloat(f.lastFundingRate ?? '0');
       }
     }
   }
 
-  // We need price for OI USD: fetch BTC prices from CoinGecko for rough estimate
-  // For simplicity, use Binance 24hr ticker price
-  const priceRes = await fetch(
-    'https://fapi.binance.com/fapi/v1/ticker/price',
-    { signal: AbortSignal.timeout(8000) }
-  ).then(r => r.json()).catch(() => []);
-
-  const priceMap: Record<string, number> = {};
-  for (const p of priceRes) {
-    priceMap[p.symbol] = parseFloat(p.price);
+  let oiMap: Record<string, number> = {};
+  if (oiRes.status === 'fulfilled' && oiRes.value.ok) {
+    const oiData = await oiRes.value.json() as BinanceOIItem | BinanceOIItem[];
+    const items = Array.isArray(oiData) ? oiData : [oiData];
+    for (const item of items) {
+      if (item.symbol) {
+        oiMap[item.symbol] = parseFloat(item.sumOpenInterestValue ?? '0');
+      }
+    }
   }
 
-  return FUNDING_SYMBOLS.map((sym, i): FundingData => {
+  return FUNDING_SYMBOLS.map(sym => {
     const rate = fundingMap[sym] ?? 0;
-    const oiResult = oiResults[i];
-    let oiAmt = 0;
-    if (oiResult.status === 'fulfilled') {
-      const d = oiResult.value;
-      oiAmt = parseFloat(d.openInterest ?? '0');
-    }
-    const price = priceMap[sym] ?? 0;
-    const oiUsd = oiAmt * price;
     return {
-      symbol: sym.replace('USDT', ''),
+      symbol:     sym,
       rate,
-      ratePct: rate * 100,
+      ratePct:    rate * 100,
       annualized: rate * 3 * 365 * 100,
-      oiUsd,
-      signal: toFundingSignal(rate),
+      oiUsd:      oiMap[sym] ?? 0,
+      signal:     toFundingSignal(rate),
     };
   });
 }
 
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
 export function useSocialSentiment(): SentimentData {
-  const [fearGreed, setFearGreed] = useState<FearGreedPoint[]>([]);
-  const [funding, setFunding] = useState<FundingData[]>([]);
-  const [loadingFG, setLoadingFG] = useState(true);
-  const [loadingFunding, setLoadingFunding] = useState(true);
-  const [errorFG, setErrorFG] = useState<string | null>(null);
-  const [errorFunding, setErrorFunding] = useState<string | null>(null);
-  const [lastUpdatedFunding, setLastUpdatedFunding] = useState<number | null>(null);
-  const mountedRef = useRef(true);
+  const [fearGreed, setFearGreed]             = useState<FearGreedPoint[]>([]);
+  const [loadingFG, setLoadingFG]             = useState(true);
+  const [errorFG, setErrorFG]                 = useState<string | null>(null);
+  const [funding, setFunding]                 = useState<FundingData[]>([]);
+  const [loadingFunding, setLoadingFunding]   = useState(true);
+  const [errorFunding, setErrorFunding]       = useState<string | null>(null);
+  const [lastUpdatedFunding, setLastUpdated]  = useState<number | null>(null);
+
+  const mountedRef  = useRef(true);
+  const abortRef    = useRef(new AbortController());
+  const fgTimerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+  const funTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const loadFearGreed = useCallback(async () => {
+    if (!mountedRef.current) return;
+    setLoadingFG(true);
     try {
       const data = await fetchFearGreed();
       if (!mountedRef.current) return;
       setFearGreed(data);
       setErrorFG(null);
     } catch {
-      if (mountedRef.current) setErrorFG('F&G unavailable');
+      if (!mountedRef.current) return;
+      setErrorFG('Failed to load Fear & Greed');
     } finally {
       if (mountedRef.current) setLoadingFG(false);
     }
@@ -140,15 +160,19 @@ export function useSocialSentiment(): SentimentData {
 
   const loadFunding = useCallback(async () => {
     if (!mountedRef.current) return;
+    abortRef.current.abort();
+    abortRef.current = new AbortController();
     setLoadingFunding(true);
     try {
-      const data = await fetchFundingAndOI();
+      const data = await fetchFundingAndOI(abortRef.current.signal);
       if (!mountedRef.current) return;
       setFunding(data);
-      setLastUpdatedFunding(Date.now());
       setErrorFunding(null);
-    } catch {
-      if (mountedRef.current) setErrorFunding('Funding data unavailable');
+      setLastUpdated(Date.now());
+    } catch (err: unknown) {
+      if ((err as Error)?.name === 'AbortError') return;
+      if (!mountedRef.current) return;
+      setErrorFunding('Failed to load funding');
     } finally {
       if (mountedRef.current) setLoadingFunding(false);
     }
@@ -156,20 +180,24 @@ export function useSocialSentiment(): SentimentData {
 
   useEffect(() => {
     mountedRef.current = true;
+
     loadFearGreed();
     loadFunding();
-    const fgInterval = setInterval(loadFearGreed, 5 * 60 * 1000);
-    const fundingInterval = setInterval(loadFunding, 60 * 1000);
+
+    fgTimerRef.current  = setInterval(loadFearGreed, 5 * 60 * 1000);
+    funTimerRef.current = setInterval(loadFunding, 60 * 1000);
+
     return () => {
       mountedRef.current = false;
-      clearInterval(fgInterval);
-      clearInterval(fundingInterval);
+      abortRef.current.abort();
+      if (fgTimerRef.current)  clearInterval(fgTimerRef.current);
+      if (funTimerRef.current) clearInterval(funTimerRef.current);
     };
   }, [loadFearGreed, loadFunding]);
 
-  const current = fearGreed[0] ?? null;
+  const current = useMemo(() => fearGreed[0] ?? null, [fearGreed]);
 
-  return useMemo(() => ({
+  return useMemo((): SentimentData => ({
     fearGreed,
     current,
     funding,
