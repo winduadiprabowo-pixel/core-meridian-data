@@ -1,8 +1,8 @@
 /**
- * App.tsx — ZERØ MERIDIAN 2026 push115
- * push115: Fix routing — Security/SmartMoney/Sentiment wired to actual components
- *          (were incorrectly routed to PageStub despite full implementations existing)
- *          + path alignment /smart-money→/smartmoney matching sidebar nav
+ * App.tsx — ZERØ MERIDIAN 2026 push116
+ * push116: Fix routing — AISignals wired to actual component (/ai-signals→/aisignals)
+ *          All path mismatches between ZMSidebar nav and App routes resolved.
+ *          push115: Security/SmartMoney/Sentiment wired to actual components
  * push107: OfflineIndicator added — in-app offline/reconnected banner.
  * push78: PWAInstallProvider added — wraps entire app so Topbar + PWAInstallPrompt
  *         share one install prompt context (no duplicate event listeners).
@@ -26,7 +26,7 @@ import Skeleton from '@/components/shared/Skeleton';
 import OfflineIndicator from '@/components/shared/OfflineIndicator';
 import {
   Landmark,
-  Coins, Gem, DollarSign, Brain, Bot,
+  Coins, Gem, DollarSign, Bot,
   Map, Image, Bitcoin, Vote,
   Wrench, Timer,
 } from 'lucide-react';
@@ -53,6 +53,7 @@ const Tokens        = lazy(() => import('./pages/Tokens'));
 const Security      = lazy(() => import('./pages/Security'));
 const SmartMoney    = lazy(() => import('./pages/SmartMoney'));
 const Sentiment     = lazy(() => import('./pages/Sentiment'));
+const AISignals     = lazy(() => import('./pages/AISignals'));
 const NotFound      = lazy(() => import('./pages/NotFound'));
 import AppShell     from './components/layout/AppShell';
 
@@ -108,7 +109,7 @@ const DataLoaderShell = memo(() => {
           <Route path="/lending"       element={<PageStub title="Lending Deep Dive"       description="Supply/borrow APY across Aave, Compound, Morpho with liquidation risk."         icon={Coins} />} />
           <Route path="/staking"       element={<PageStub title="Staking & Yield"         description="ETH staking comparison, restaking, liquid staking peg health."                   icon={Gem} />} />
           <Route path="/stablecoins"   element={<PageStub title="Stablecoin Center"       description="Supply tracking, peg health, dominance, and yield rates."                        icon={DollarSign} />} />
-          <Route path="/ai-signals"    element={<PageStub title="AI Signals ULTRA"        description="15-asset technical analysis with RSI, MACD, Bollinger Bands, pattern detection." icon={Brain} />} />
+          <Route path="/aisignals"     element={<AISignals />} />
           <Route path="/ai-research"   element={<PageStub title="AI Research"             description="AI-generated market reports, macro analysis, narrative tracking."                icon={Bot} />} />
           <Route path="/ecosystem"     element={<PageStub title="Ecosystem Map"           description="Interactive force graph of protocol relationships and funding."                  icon={Map} />} />
           <Route path="/nft"           element={<PageStub title="NFT Intelligence"        description="Top collections, wash trading detection, whale tracker."                         icon={Image} />} />
