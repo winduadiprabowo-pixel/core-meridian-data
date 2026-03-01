@@ -1,5 +1,6 @@
 /**
- * App.tsx — ZERØ MERIDIAN 2026 push116
+ * App.tsx — ZERØ MERIDIAN 2026 push125
+ * push125: Settings page wired (/settings route + Settings.tsx)
  * push116: Fix routing — AISignals wired to actual component (/ai-signals→/aisignals)
  *          All path mismatches between ZMSidebar nav and App routes resolved.
  *          push115: Security/SmartMoney/Sentiment wired to actual components
@@ -55,6 +56,7 @@ const Security      = lazy(() => import('./pages/Security'));
 const SmartMoney    = lazy(() => import('./pages/SmartMoney'));
 const Sentiment     = lazy(() => import('./pages/Sentiment'));
 const AISignals     = lazy(() => import('./pages/AISignals'));
+const Settings      = lazy(() => import('./pages/Settings'));
 const NotFound      = lazy(() => import('./pages/NotFound'));
 import AppShell     from './components/layout/AppShell';
 
@@ -157,6 +159,7 @@ const DataLoaderShell = memo(() => {
           <Route path="/ordinals"      element={<PageStub title="Ordinals & BRC-20"       description="Inscription activity, BRC-20 tokens, rare sat tracking."                        icon={Bitcoin} />} />
           <Route path="/governance"    element={<PageStub title="Governance"              description="Active proposals, voting power, treasury balances."                              icon={Vote} />} />
           <Route path="/portfolio"     element={<Portfolio />} />
+          <Route path="/settings"      element={<Settings />} />
           <Route path="/productivity"  element={<PageStub title="Productivity Suite"      description="Tasks, notes, Pomodoro timer, trade journal, market calendar."                  icon={Timer} />} />
           <Route path="/devtools"      element={<PageStub title="Developer Tools"         description="JSON formatter, Base64, regex tester, hash generator, JWT decoder."             icon={Wrench} />} />
           <Route path="*"              element={<NotFound />} />
