@@ -136,7 +136,7 @@ const MetricCard = memo(({
     <motion.div style={cardStyle} whileHover={{ scale: 1.02, y: -2 }} transition={TRANSITION.spring}>
       <div style={topLineStyle} />
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <span style={{ fontFamily:"'IBM Plex Mono', monospace", fontSize:9, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--zm-text-faint, rgba(80,85,115,1))' }}>
+        <span style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:9, textTransform:'uppercase', letterSpacing:'0.1em', color:'var(--zm-text-faint, rgba(80,85,115,1))' }}>
           {label}
         </span>
         {Icon && <Icon size={14} style={{ color: accentColor ?? 'rgba(80,80,100,1)', flexShrink:0 }} />}
@@ -148,7 +148,7 @@ const MetricCard = memo(({
         </span>
       )}
       {subtitle && (
-        <span style={{ fontFamily:"'IBM Plex Mono', monospace", fontSize:10, color:'rgba(80,80,100,1)' }}>
+        <span style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:10, color:'rgba(80,80,100,1)' }}>
           {subtitle}
         </span>
       )}
