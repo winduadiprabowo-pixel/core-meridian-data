@@ -29,13 +29,19 @@ export function useSharedBuffer(capacity = BUFFER_CAPACITY): SharedBufferState &
   const mountedRef    = useRef(true);
   const writeIdxRef   = useRef(0);
   const [state, setState] = useState<SharedBufferState>(() => {
-    const supported = typeof SharedArrayBuffer !== 'undefined';
-    if (!supported) {
+    // typeof check alone is insufficient — SAB can exist but throw SecurityError
+    // on instantiation if COOP/COEP headers are mismatched (e.g. credentialless vs require-corp).
+    // Always wrap in try/catch to prevent app-level crash.
+    try {
+      if (typeof SharedArrayBuffer === 'undefined') {
+        return { supported: false, buffer: null, view: null, capacity, writeIndex: 0 };
+      }
+      const buffer = new SharedArrayBuffer(capacity * BYTES_PER_SLOT);
+      const view   = new Float64Array(buffer);
+      return { supported: true, buffer, view, capacity, writeIndex: 0 };
+    } catch {
       return { supported: false, buffer: null, view: null, capacity, writeIndex: 0 };
     }
-    const buffer = new SharedArrayBuffer(capacity * BYTES_PER_SLOT);
-    const view   = new Float64Array(buffer);
-    return { supported: true, buffer, view, capacity, writeIndex: 0 };
   });
 
   useEffect(() => {
